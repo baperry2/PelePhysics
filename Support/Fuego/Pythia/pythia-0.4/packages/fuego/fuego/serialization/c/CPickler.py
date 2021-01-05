@@ -297,28 +297,28 @@ class CPickler(CMill):
             '',
             'extern "C"',
             '{',
-            'AMREX_GPU_HOST_DEVICE void get_imw(double imw_new[]);',
-            'AMREX_GPU_HOST_DEVICE void get_mw(double mw_new[]);',
-            'void egtransetEPS(double *  EPS);',
-            'void egtransetSIG(double* SIG);',
-            'void atomicWeight(double *  awt);',
-            'void molecularWeight(double *  wt);',
-            'AMREX_GPU_HOST_DEVICE void gibbs(double *  species, double *  tc);',
-            'AMREX_GPU_HOST_DEVICE void helmholtz(double *  species, double *  tc);',
-            'AMREX_GPU_HOST_DEVICE void speciesInternalEnergy(double *  species, double *  tc);',
-            'AMREX_GPU_HOST_DEVICE void speciesEnthalpy(double *  species, double *  tc);',
-            'AMREX_GPU_HOST_DEVICE void speciesEntropy(double *  species, double *  tc);',
-            'AMREX_GPU_HOST_DEVICE void cp_R(double *  species, double *  tc);',
-            'AMREX_GPU_HOST_DEVICE void cv_R(double *  species, double *  tc);',
-            'void equilibriumConstants(double *  kc, double *  g_RT, double T);',
-            'AMREX_GPU_HOST_DEVICE void productionRate(double *  wdot, double *  sc, double T);',
-            'AMREX_GPU_HOST_DEVICE void comp_qfqr(double *  q_f, double *  q_r, double *  sc, double *  tc, double invT);',
+            'AMREX_GPU_HOST_DEVICE void get_imw(amrex::Real imw_new[]);',
+            'AMREX_GPU_HOST_DEVICE void get_mw(amrex::Real mw_new[]);',
+            'void egtransetEPS(amrex::Real *  EPS);',
+            'void egtransetSIG(amrex::Real* SIG);',
+            'void atomicWeight(amrex::Real *  awt);',
+            'void molecularWeight(amrex::Real *  wt);',
+            'AMREX_GPU_HOST_DEVICE void gibbs(amrex::Real *  species, amrex::Real *  tc);',
+            'AMREX_GPU_HOST_DEVICE void helmholtz(amrex::Real *  species, amrex::Real *  tc);',
+            'AMREX_GPU_HOST_DEVICE void speciesInternalEnergy(amrex::Real *  species, amrex::Real *  tc);',
+            'AMREX_GPU_HOST_DEVICE void speciesEnthalpy(amrex::Real *  species, amrex::Real *  tc);',
+            'AMREX_GPU_HOST_DEVICE void speciesEntropy(amrex::Real *  species, amrex::Real *  tc);',
+            'AMREX_GPU_HOST_DEVICE void cp_R(amrex::Real *  species, amrex::Real *  tc);',
+            'AMREX_GPU_HOST_DEVICE void cv_R(amrex::Real *  species, amrex::Real *  tc);',
+            'void equilibriumConstants(amrex::Real *  kc, amrex::Real *  g_RT, amrex::Real T);',
+            'AMREX_GPU_HOST_DEVICE void productionRate(amrex::Real *  wdot, amrex::Real *  sc, amrex::Real T);',
+            'AMREX_GPU_HOST_DEVICE void comp_qfqr(amrex::Real *  q_f, amrex::Real *  q_r, amrex::Real *  sc, amrex::Real *  tc, amrex::Real invT);',
             '#ifndef AMREX_USE_CUDA',
-            'void comp_k_f(double *  tc, double invT, double *  k_f);',
-            'void comp_Kc(double *  tc, double invT, double *  Kc);',
+            'void comp_k_f(amrex::Real *  tc, amrex::Real invT, amrex::Real *  k_f);',
+            'void comp_Kc(amrex::Real *  tc, amrex::Real invT, amrex::Real *  Kc);',
             '#endif',
-            'AMREX_GPU_HOST_DEVICE void progressRate(double *  qdot, double *  speciesConc, double T);',
-            'AMREX_GPU_HOST_DEVICE void progressRateFR(double *  q_f, double *  q_r, double *  speciesConc, double T);',
+            'AMREX_GPU_HOST_DEVICE void progressRate(amrex::Real *  qdot, amrex::Real *  speciesConc, amrex::Real T);',
+            'AMREX_GPU_HOST_DEVICE void progressRateFR(amrex::Real *  q_f, amrex::Real *  q_r, amrex::Real *  speciesConc, amrex::Real T);',
             ##'#ifndef AMREX_USE_CUDA',
             'AMREX_GPU_HOST_DEVICE void CKINIT'+sym+'();',
             'AMREX_GPU_HOST_DEVICE void CKFINALIZE'+sym+'();',
@@ -327,82 +327,82 @@ class CPickler(CMill):
             'void SetAllDefaults();',
             '#endif',
             'void CKINDX'+sym+'(int * mm, int * kk, int * ii, int * nfit );',
-            'void CKXNUM'+sym+'(char * line, int * nexp, int * lout, int * nval, double *  rval, int * kerr, int lenline);',
-            'void CKSNUM'+sym+'(char * line, int * nexp, int * lout, char * kray, int * nn, int * knum, int * nval, double *  rval, int * kerr, int lenline, int lenkray);',
+            'void CKXNUM'+sym+'(char * line, int * nexp, int * lout, int * nval, amrex::Real *  rval, int * kerr, int lenline);',
+            'void CKSNUM'+sym+'(char * line, int * nexp, int * lout, char * kray, int * nn, int * knum, int * nval, amrex::Real *  rval, int * kerr, int lenline, int lenkray);',
             'void CKSYME_STR(amrex::Vector<std::string>& ename);',
             'void CKSYME(int * kname, int * lenkname);',
             'void CKSYMS_STR(amrex::Vector<std::string>& kname);',
             'void CKSYMS(int * kname, int * lenkname);',
-            'void CKRP'+sym+'(double *  ru, double *  ruc, double *  pa);',
-            'void CKPX'+sym+'(double *  rho, double *  T, double *  x, double *  P);',
-            'AMREX_GPU_HOST_DEVICE void CKPY'+sym+'(double *  rho, double *  T, double *  y, double *  P);',
-            'void CKPC'+sym+'(double *  rho, double *  T, double *  c, double *  P);',
-            'void CKRHOX'+sym+'(double *  P, double *  T, double *  x, double *  rho);',
-            'AMREX_GPU_HOST_DEVICE void CKRHOY'+sym+'(double *  P, double *  T, double *  y, double *  rho);',
-            'void CKRHOC'+sym+'(double *  P, double *  T, double *  c, double *  rho);',
-            'void CKWT'+sym+'(double *  wt);',
-            'void CKAWT'+sym+'(double *  awt);',
-            'AMREX_GPU_HOST_DEVICE void CKMMWY'+sym+'(double *  y, double *  wtm);',
-            'void CKMMWX'+sym+'(double *  x, double *  wtm);',
-            'void CKMMWC'+sym+'(double *  c, double *  wtm);',
-            'AMREX_GPU_HOST_DEVICE void CKYTX'+sym+'(double *  y, double *  x);',
-            'void CKYTCP'+sym+'(double *  P, double *  T, double *  y, double *  c);',
-            'AMREX_GPU_HOST_DEVICE void CKYTCR'+sym+'(double *  rho, double *  T, double *  y, double *  c);',
-            'AMREX_GPU_HOST_DEVICE void CKXTY'+sym+'(double *  x, double *  y);',
-            'void CKXTCP'+sym+'(double *  P, double *  T, double *  x, double *  c);',
-            'void CKXTCR'+sym+'(double *  rho, double *  T, double *  x, double *  c);',
-            'void CKCTX'+sym+'(double *  c, double *  x);',
-            'void CKCTY'+sym+'(double *  c, double *  y);',
-            'void CKCPOR'+sym+'(double *  T, double *  cpor);',
-            'void CKHORT'+sym+'(double *  T, double *  hort);',
-            'void CKSOR'+sym+'(double *  T, double *  sor);',
+            'void CKRP'+sym+'(amrex::Real *  ru, amrex::Real *  ruc, amrex::Real *  pa);',
+            'void CKPX'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x, amrex::Real *  P);',
+            'AMREX_GPU_HOST_DEVICE void CKPY'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y, amrex::Real *  P);',
+            'void CKPC'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  c, amrex::Real *  P);',
+            'void CKRHOX'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  rho);',
+            'AMREX_GPU_HOST_DEVICE void CKRHOY'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  rho);',
+            'void CKRHOC'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  c, amrex::Real *  rho);',
+            'void CKWT'+sym+'(amrex::Real *  wt);',
+            'void CKAWT'+sym+'(amrex::Real *  awt);',
+            'AMREX_GPU_HOST_DEVICE void CKMMWY'+sym+'(amrex::Real *  y, amrex::Real *  wtm);',
+            'void CKMMWX'+sym+'(amrex::Real *  x, amrex::Real *  wtm);',
+            'void CKMMWC'+sym+'(amrex::Real *  c, amrex::Real *  wtm);',
+            'AMREX_GPU_HOST_DEVICE void CKYTX'+sym+'(amrex::Real *  y, amrex::Real *  x);',
+            'void CKYTCP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  c);',
+            'AMREX_GPU_HOST_DEVICE void CKYTCR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y, amrex::Real *  c);',
+            'AMREX_GPU_HOST_DEVICE void CKXTY'+sym+'(amrex::Real *  x, amrex::Real *  y);',
+            'void CKXTCP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  c);',
+            'void CKXTCR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x, amrex::Real *  c);',
+            'void CKCTX'+sym+'(amrex::Real *  c, amrex::Real *  x);',
+            'void CKCTY'+sym+'(amrex::Real *  c, amrex::Real *  y);',
+            'void CKCPOR'+sym+'(amrex::Real *  T, amrex::Real *  cpor);',
+            'void CKHORT'+sym+'(amrex::Real *  T, amrex::Real *  hort);',
+            'void CKSOR'+sym+'(amrex::Real *  T, amrex::Real *  sor);',
             
-            'void CKCVML'+sym+'(double *  T, double *  cvml);',
-            'void CKCPML'+sym+'(double *  T, double *  cvml);',
-            'void CKUML'+sym+'(double *  T, double *  uml);',
-            'void CKHML'+sym+'(double *  T, double *  uml);',
-            'void CKGML'+sym+'(double *  T, double *  gml);',
-            'void CKAML'+sym+'(double *  T, double *  aml);',
-            'void CKSML'+sym+'(double *  T, double *  sml);',
+            'void CKCVML'+sym+'(amrex::Real *  T, amrex::Real *  cvml);',
+            'void CKCPML'+sym+'(amrex::Real *  T, amrex::Real *  cvml);',
+            'void CKUML'+sym+'(amrex::Real *  T, amrex::Real *  uml);',
+            'void CKHML'+sym+'(amrex::Real *  T, amrex::Real *  uml);',
+            'void CKGML'+sym+'(amrex::Real *  T, amrex::Real *  gml);',
+            'void CKAML'+sym+'(amrex::Real *  T, amrex::Real *  aml);',
+            'void CKSML'+sym+'(amrex::Real *  T, amrex::Real *  sml);',
             
-            'AMREX_GPU_HOST_DEVICE void CKCVMS'+sym+'(double *  T, double *  cvms);',
-            'AMREX_GPU_HOST_DEVICE void CKCPMS'+sym+'(double *  T, double *  cvms);',
-            'AMREX_GPU_HOST_DEVICE void CKUMS'+sym+'(double *  T, double *  ums);',
-            'AMREX_GPU_HOST_DEVICE void CKHMS'+sym+'(double *  T, double *  ums);',
-            'void CKGMS'+sym+'(double *  T, double *  gms);',
-            'void CKAMS'+sym+'(double *  T, double *  ams);',
-            'void CKSMS'+sym+'(double *  T, double *  sms);',
+            'AMREX_GPU_HOST_DEVICE void CKCVMS'+sym+'(amrex::Real *  T, amrex::Real *  cvms);',
+            'AMREX_GPU_HOST_DEVICE void CKCPMS'+sym+'(amrex::Real *  T, amrex::Real *  cvms);',
+            'AMREX_GPU_HOST_DEVICE void CKUMS'+sym+'(amrex::Real *  T, amrex::Real *  ums);',
+            'AMREX_GPU_HOST_DEVICE void CKHMS'+sym+'(amrex::Real *  T, amrex::Real *  ums);',
+            'void CKGMS'+sym+'(amrex::Real *  T, amrex::Real *  gms);',
+            'void CKAMS'+sym+'(amrex::Real *  T, amrex::Real *  ams);',
+            'void CKSMS'+sym+'(amrex::Real *  T, amrex::Real *  sms);',
             
-            'void CKCPBL'+sym+'(double *  T, double *  x, double *  cpbl);',
-            'AMREX_GPU_HOST_DEVICE void CKCPBS'+sym+'(double *  T, double *  y, double *  cpbs);',
-            'void CKCVBL'+sym+'(double *  T, double *  x, double *  cpbl);',
-            'AMREX_GPU_HOST_DEVICE void CKCVBS'+sym+'(double *  T, double *  y, double *  cpbs);',
+            'void CKCPBL'+sym+'(amrex::Real *  T, amrex::Real *  x, amrex::Real *  cpbl);',
+            'AMREX_GPU_HOST_DEVICE void CKCPBS'+sym+'(amrex::Real *  T, amrex::Real *  y, amrex::Real *  cpbs);',
+            'void CKCVBL'+sym+'(amrex::Real *  T, amrex::Real *  x, amrex::Real *  cpbl);',
+            'AMREX_GPU_HOST_DEVICE void CKCVBS'+sym+'(amrex::Real *  T, amrex::Real *  y, amrex::Real *  cpbs);',
             
-            'void CKHBML'+sym+'(double *  T, double *  x, double *  hbml);',
-            'AMREX_GPU_HOST_DEVICE void CKHBMS'+sym+'(double *  T, double *  y, double *  hbms);',
-            'void CKUBML'+sym+'(double *  T, double *  x, double *  ubml);',
-            'AMREX_GPU_HOST_DEVICE void CKUBMS'+sym+'(double *  T, double *  y, double *  ubms);',
-            'void CKSBML'+sym+'(double *  P, double *  T, double *  x, double *  sbml);',
-            'void CKSBMS'+sym+'(double *  P, double *  T, double *  y, double *  sbms);',
-            'void CKGBML'+sym+'(double *  P, double *  T, double *  x, double *  gbml);',
-            'void CKGBMS'+sym+'(double *  P, double *  T, double *  y, double *  gbms);',
-            'void CKABML'+sym+'(double *  P, double *  T, double *  x, double *  abml);',
-            'void CKABMS'+sym+'(double *  P, double *  T, double *  y, double *  abms);',
+            'void CKHBML'+sym+'(amrex::Real *  T, amrex::Real *  x, amrex::Real *  hbml);',
+            'AMREX_GPU_HOST_DEVICE void CKHBMS'+sym+'(amrex::Real *  T, amrex::Real *  y, amrex::Real *  hbms);',
+            'void CKUBML'+sym+'(amrex::Real *  T, amrex::Real *  x, amrex::Real *  ubml);',
+            'AMREX_GPU_HOST_DEVICE void CKUBMS'+sym+'(amrex::Real *  T, amrex::Real *  y, amrex::Real *  ubms);',
+            'void CKSBML'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  sbml);',
+            'void CKSBMS'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  sbms);',
+            'void CKGBML'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  gbml);',
+            'void CKGBMS'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  gbms);',
+            'void CKABML'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  abml);',
+            'void CKABMS'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  abms);',
 
             
-            'AMREX_GPU_HOST_DEVICE void CKWC'+sym+'(double *  T, double *  C, double *  wdot);',
-            'void CKWYP'+sym+'(double *  P, double *  T, double *  y, double *  wdot);',
-            'void CKWXP'+sym+'(double *  P, double *  T, double *  x, double *  wdot);',
-            'AMREX_GPU_HOST_DEVICE void CKWYR'+sym+'(double *  rho, double *  T, double *  y, double *  wdot);',
-            'void CKWXR'+sym+'(double *  rho, double *  T, double *  x, double *  wdot);',
+            'AMREX_GPU_HOST_DEVICE void CKWC'+sym+'(amrex::Real *  T, amrex::Real *  C, amrex::Real *  wdot);',
+            'void CKWYP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  wdot);',
+            'void CKWXP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  wdot);',
+            'AMREX_GPU_HOST_DEVICE void CKWYR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y, amrex::Real *  wdot);',
+            'void CKWXR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x, amrex::Real *  wdot);',
 
             
-            'void CKQC'+sym+'(double *  T, double *  C, double *  qdot);',
-            'void CKKFKR(double *  P, double *  T, double *  x, double *  q_f, double *  q_r);',
-            'void CKQYP'+sym+'(double *  P, double *  T, double *  y, double *  qdot);',
-            'void CKQXP'+sym+'(double *  P, double *  T, double *  x, double *  qdot);',
-            'void CKQYR'+sym+'(double *  rho, double *  T, double *  y, double *  qdot);',
-            'void CKQXR'+sym+'(double *  rho, double *  T, double *  x, double *  qdot);',
+            'void CKQC'+sym+'(amrex::Real *  T, amrex::Real *  C, amrex::Real *  qdot);',
+            'void CKKFKR(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  q_f, amrex::Real *  q_r);',
+            'void CKQYP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  qdot);',
+            'void CKQXP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  qdot);',
+            'void CKQYR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y, amrex::Real *  qdot);',
+            'void CKQXR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x, amrex::Real *  qdot);',
             
             'void CKNU'+sym+'(int * kdim, int * nuki);',
             '#ifndef AMREX_USE_CUDA',
@@ -410,16 +410,16 @@ class CPickler(CMill):
             '#endif',
             'void CKNCF'+sym+'(int * ncf);',
             
-            'void CKABE'+sym+'(double *  a, double *  b, double *  e );',
-            'void CKEQC'+sym+'(double *  T, double *  C , double *  eqcon );',
-            'void CKEQYP'+sym+'(double *  P, double *  T, double *  y, double *  eqcon);',
-            'void CKEQXP'+sym+'(double *  P, double *  T, double *  x, double *  eqcon);',
-            'void CKEQYR'+sym+'(double *  rho, double *  T, double *  y, double *  eqcon);',
-            'void CKEQXR'+sym+'(double *  rho, double *  T, double *  x, double *  eqcon);',
+            'void CKABE'+sym+'(amrex::Real *  a, amrex::Real *  b, amrex::Real *  e );',
+            'void CKEQC'+sym+'(amrex::Real *  T, amrex::Real *  C , amrex::Real *  eqcon );',
+            'void CKEQYP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  eqcon);',
+            'void CKEQXP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  eqcon);',
+            'void CKEQYR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y, amrex::Real *  eqcon);',
+            'void CKEQXR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x, amrex::Real *  eqcon);',
             'void CKCHRG'+sym+'(int * kcharge);',
-            'AMREX_GPU_HOST_DEVICE void DWDOT(double *  J, double *  sc, double *  T, int * consP);',
-            'AMREX_GPU_HOST_DEVICE void DWDOT_SIMPLIFIED(double *  J, double *  sc, double *  Tp, int * HP);',
-            #'AMREX_GPU_HOST_DEVICE void SLJ_PRECOND_CSC(double *  Jsps, int * indx, int * len, double * sc, double * Tp, int * HP, double * gamma);',
+            'AMREX_GPU_HOST_DEVICE void DWDOT(amrex::Real *  J, amrex::Real *  sc, amrex::Real *  T, int * consP);',
+            'AMREX_GPU_HOST_DEVICE void DWDOT_SIMPLIFIED(amrex::Real *  J, amrex::Real *  sc, amrex::Real *  Tp, int * HP);',
+            #'AMREX_GPU_HOST_DEVICE void SLJ_PRECOND_CSC(amrex::Real *  Jsps, int * indx, int * len, amrex::Real * sc, amrex::Real * Tp, int * HP, amrex::Real * gamma);',
             'AMREX_GPU_HOST_DEVICE void SPARSITY_INFO(int * nJdata, int * consP, int NCELLS);',
             'AMREX_GPU_HOST_DEVICE void SPARSITY_INFO_SYST(int * nJdata, int * consP, int NCELLS);',
             'AMREX_GPU_HOST_DEVICE void SPARSITY_INFO_SYST_SIMPLIFIED(int * nJdata, int * consP);',
@@ -428,39 +428,39 @@ class CPickler(CMill):
             'AMREX_GPU_HOST_DEVICE void SPARSITY_PREPROC_SYST_CSR(int * colVals, int * rowPtrs, int * consP, int NCELLS, int base);',
             'AMREX_GPU_HOST_DEVICE void SPARSITY_PREPROC_SYST_SIMPLIFIED_CSC(int * rowVals, int * colPtrs, int * indx, int * consP);',
             'AMREX_GPU_HOST_DEVICE void SPARSITY_PREPROC_SYST_SIMPLIFIED_CSR(int * colVals, int * rowPtr, int * consP, int base);',
-            'AMREX_GPU_HOST_DEVICE void aJacobian(double *  J, double *  sc, double T, int consP);',
-            'AMREX_GPU_HOST_DEVICE void aJacobian_precond(double *  J, double *  sc, double T, int HP);',
-            'AMREX_GPU_HOST_DEVICE void dcvpRdT(double *  species, double *  tc);',
-            'AMREX_GPU_HOST_DEVICE void GET_T_GIVEN_EY(double *  e, double *  y, double *  t, int *ierr);',
-            'AMREX_GPU_HOST_DEVICE void GET_T_GIVEN_HY(double *  h, double *  y, double *  t, int *ierr);',
-            'void GET_CRITPARAMS(double *  Tci, double *  ai, double *  bi, double *  acentric_i);',
+            'AMREX_GPU_HOST_DEVICE void aJacobian(amrex::Real *  J, amrex::Real *  sc, amrex::Real T, int consP);',
+            'AMREX_GPU_HOST_DEVICE void aJacobian_precond(amrex::Real *  J, amrex::Real *  sc, amrex::Real T, int HP);',
+            'AMREX_GPU_HOST_DEVICE void dcvpRdT(amrex::Real *  species, amrex::Real *  tc);',
+            'AMREX_GPU_HOST_DEVICE void GET_T_GIVEN_EY(amrex::Real *  e, amrex::Real *  y, amrex::Real *  t, int *ierr);',
+            'AMREX_GPU_HOST_DEVICE void GET_T_GIVEN_HY(amrex::Real *  h, amrex::Real *  y, amrex::Real *  t, int *ierr);',
+            'void GET_CRITPARAMS(amrex::Real *  Tci, amrex::Real *  ai, amrex::Real *  bi, amrex::Real *  acentric_i);',
             self.line('vector version'),
-            'void VCKYTX'+sym+'(int *  np, double *  y, double *  x);',
-            'void VCKHMS'+sym+'(int *  np, double *  T, double *  ums);',
-            'void VCKWYR'+sym+'(int *  np, double *  rho, double *  T,',
-            '            double *  y,',
-            '            double *  wdot);',
+            'void VCKYTX'+sym+'(int *  np, amrex::Real *  y, amrex::Real *  x);',
+            'void VCKHMS'+sym+'(int *  np, amrex::Real *  T, amrex::Real *  ums);',
+            'void VCKWYR'+sym+'(int *  np, amrex::Real *  rho, amrex::Real *  T,',
+            '            amrex::Real *  y,',
+            '            amrex::Real *  wdot);',
             '#ifndef AMREX_USE_CUDA',
-            'void vproductionRate(int npt, double *  wdot, double *  c, double *  T);',
-            'void VCKPY'+sym+'(int *  np, double *  rho, double *  T, double *  y, double *  P);',
-            'void vcomp_k_f(int npt, double *  k_f_s, double *  tc, double *  invT);',
-            'void vcomp_gibbs(int npt, double *  g_RT, double *  tc);',
-            'void vcomp_Kc(int npt, double *  Kc_s, double *  g_RT, double *  invT);',
+            'void vproductionRate(int npt, amrex::Real *  wdot, amrex::Real *  c, amrex::Real *  T);',
+            'void VCKPY'+sym+'(int *  np, amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y, amrex::Real *  P);',
+            'void vcomp_k_f(int npt, amrex::Real *  k_f_s, amrex::Real *  tc, amrex::Real *  invT);',
+            'void vcomp_gibbs(int npt, amrex::Real *  g_RT, amrex::Real *  tc);',
+            'void vcomp_Kc(int npt, amrex::Real *  Kc_s, amrex::Real *  g_RT, amrex::Real *  invT);',
             
             ]
         nReactions = len(mechanism.reaction())
         if nReactions <= 50:
             self._rep += [
-                'void vcomp_wdot(int npt, double *  wdot, double *  mixture, double *  sc,',
-                '                double *  k_f_s, double *  Kc_s,',
-                '                double *  tc, double *  invT, double *  T);',
+                'void vcomp_wdot(int npt, amrex::Real *  wdot, amrex::Real *  mixture, amrex::Real *  sc,',
+                '                amrex::Real *  k_f_s, amrex::Real *  Kc_s,',
+                '                amrex::Real *  tc, amrex::Real *  invT, amrex::Real *  T);',
                 ]
         else:
             for i in range(0,nReactions,50):
                 self._rep += [
-                    'void vcomp_wdot_%d_%d(int npt, double *  wdot, double *  mixture, double *  sc,' % (i+1,min(i+50,nReactions)),
-                    '                double *  k_f_s, double *  Kc_s,',
-                    '                double *  tc, double *  invT, double *  T);',
+                    'void vcomp_wdot_%d_%d(int npt, amrex::Real *  wdot, amrex::Real *  mixture, amrex::Real *  sc,' % (i+1,min(i+50,nReactions)),
+                    '                amrex::Real *  k_f_s, amrex::Real *  Kc_s,',
+                    '                amrex::Real *  tc, amrex::Real *  invT, amrex::Real *  T);',
                     ]                
 
         self._rep += [
@@ -471,24 +471,24 @@ class CPickler(CMill):
                 'void egtransetNO(int* NO);',
                 'void egtransetKK(int* KK);',
                 'void egtransetNLITE(int* NLITE);',
-                'void egtransetPATM(double* PATM);',
-                'void egtransetWT(double* WT);',
-                'void egtransetEPS(double* EPS);',
-                'void egtransetSIG(double* SIG);',
-                'void egtransetDIP(double* DIP);',
-                'void egtransetPOL(double* POL);',
-                'void egtransetZROT(double* ZROT);',
+                'void egtransetPATM(amrex::Real* PATM);',
+                'void egtransetWT(amrex::Real* WT);',
+                'void egtransetEPS(amrex::Real* EPS);',
+                'void egtransetSIG(amrex::Real* SIG);',
+                'void egtransetDIP(amrex::Real* DIP);',
+                'void egtransetPOL(amrex::Real* POL);',
+                'void egtransetZROT(amrex::Real* ZROT);',
                 'void egtransetNLIN(int* NLIN);',
-                'void egtransetCOFETA(double* COFETA);',
-                'void egtransetCOFLAM(double* COFLAM);',
-                'void egtransetCOFD(double* COFD);',
+                'void egtransetCOFETA(amrex::Real* COFETA);',
+                'void egtransetCOFLAM(amrex::Real* COFLAM);',
+                'void egtransetCOFD(amrex::Real* COFD);',
                 'void egtransetKTDIF(int* KTDIF);',
             ]
 
         self._rep += [
                 self.line('gauss-jordan solver external routine'),
-                'AMREX_GPU_HOST_DEVICE void sgjsolve(double* A, double* x, double* b);',
-                'AMREX_GPU_HOST_DEVICE void sgjsolve_simplified(double* A, double* x, double* b);',
+                'AMREX_GPU_HOST_DEVICE void sgjsolve(amrex::Real* A, amrex::Real* x, amrex::Real* b);',
+                'AMREX_GPU_HOST_DEVICE void sgjsolve_simplified(amrex::Real* A, amrex::Real* x, amrex::Real* b);',
                 '}',
                 ]
 
@@ -505,42 +505,42 @@ class CPickler(CMill):
 
         nReactions = len(mechanism.reaction())
         self._write()
-        self._write('extern double fwd_A[%d], fwd_beta[%d], fwd_Ea[%d];' 
+        self._write('extern amrex::Real fwd_A[%d], fwd_beta[%d], fwd_Ea[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('extern double low_A[%d], low_beta[%d], low_Ea[%d];' 
+        self._write('extern amrex::Real low_A[%d], low_beta[%d], low_Ea[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('extern double rev_A[%d], rev_beta[%d], rev_Ea[%d];' 
+        self._write('extern amrex::Real rev_A[%d], rev_beta[%d], rev_Ea[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('extern double troe_a[%d],troe_Ts[%d], troe_Tss[%d], troe_Tsss[%d];' 
+        self._write('extern amrex::Real troe_a[%d],troe_Ts[%d], troe_Tss[%d], troe_Tsss[%d];' 
                     % (nReactions,nReactions,nReactions,nReactions))
-        self._write('extern double sri_a[%d], sri_b[%d], sri_c[%d], sri_d[%d], sri_e[%d];'
+        self._write('extern amrex::Real sri_a[%d], sri_b[%d], sri_c[%d], sri_d[%d], sri_e[%d];'
                     % (nReactions,nReactions,nReactions,nReactions,nReactions))
-        self._write('extern double activation_units[%d], prefactor_units[%d], phase_units[%d];'
+        self._write('extern amrex::Real activation_units[%d], prefactor_units[%d], phase_units[%d];'
                     % (nReactions,nReactions,nReactions))
         self._write('extern int is_PD[%d], troe_len[%d], sri_len[%d], nTB[%d], *TBid[%d];' 
                     % (nReactions,nReactions,nReactions,nReactions,nReactions))
-        self._write('extern double *TB[%d];' 
+        self._write('extern amrex::Real *TB[%d];' 
                     % (nReactions))
 
-        self._write('extern std::vector<std::vector<double>> kiv; ')
-        self._write('extern std::vector<std::vector<double>> nuv; ')
+        self._write('extern std::vector<std::vector<amrex::Real>> kiv; ')
+        self._write('extern std::vector<std::vector<amrex::Real>> nuv; ')
 
         self._write()
-        self._write('extern double fwd_A_DEF[%d], fwd_beta_DEF[%d], fwd_Ea_DEF[%d];' 
+        self._write('extern amrex::Real fwd_A_DEF[%d], fwd_beta_DEF[%d], fwd_Ea_DEF[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('extern double low_A_DEF[%d], low_beta_DEF[%d], low_Ea_DEF[%d];' 
+        self._write('extern amrex::Real low_A_DEF[%d], low_beta_DEF[%d], low_Ea_DEF[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('extern double rev_A_DEF[%d], rev_beta_DEF[%d], rev_Ea_DEF[%d];' 
+        self._write('extern amrex::Real rev_A_DEF[%d], rev_beta_DEF[%d], rev_Ea_DEF[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('extern double troe_a_DEF[%d],troe_Ts_DEF[%d], troe_Tss_DEF[%d], troe_Tsss_DEF[%d];' 
+        self._write('extern amrex::Real troe_a_DEF[%d],troe_Ts_DEF[%d], troe_Tss_DEF[%d], troe_Tsss_DEF[%d];' 
                     % (nReactions,nReactions,nReactions,nReactions))
-        self._write('extern double sri_a_DEF[%d], sri_b_DEF[%d], sri_c_DEF[%d], sri_d_DEF[%d], sri_e_DEF[%d];'
+        self._write('extern amrex::Real sri_a_DEF[%d], sri_b_DEF[%d], sri_c_DEF[%d], sri_d_DEF[%d], sri_e_DEF[%d];'
                     % (nReactions,nReactions,nReactions,nReactions,nReactions))
-        self._write('extern double activation_units_DEF[%d], prefactor_units_DEF[%d], phase_units_DEF[%d];'
+        self._write('extern amrex::Real activation_units_DEF[%d], prefactor_units_DEF[%d], phase_units_DEF[%d];'
                     % (nReactions,nReactions,nReactions))
         self._write('extern int is_PD_DEF[%d], troe_len_DEF[%d], sri_len_DEF[%d], nTB_DEF[%d], *TBid_DEF[%d];' 
                     % (nReactions,nReactions,nReactions,nReactions,nReactions))
-        self._write('extern double *TB_DEF[%d];' 
+        self._write('extern amrex::Real *TB_DEF[%d];' 
                     % (nReactions))
         self._write('extern std::vector<int> rxn_map;')
 
@@ -576,46 +576,46 @@ class CPickler(CMill):
         self._write('namespace thermo')
         self._write('{')
         self._indent()
-        self._write('double fwd_A[%d], fwd_beta[%d], fwd_Ea[%d];' 
+        self._write('amrex::Real fwd_A[%d], fwd_beta[%d], fwd_Ea[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('double low_A[%d], low_beta[%d], low_Ea[%d];' 
+        self._write('amrex::Real low_A[%d], low_beta[%d], low_Ea[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('double rev_A[%d], rev_beta[%d], rev_Ea[%d];' 
+        self._write('amrex::Real rev_A[%d], rev_beta[%d], rev_Ea[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('double troe_a[%d],troe_Ts[%d], troe_Tss[%d], troe_Tsss[%d];' 
+        self._write('amrex::Real troe_a[%d],troe_Ts[%d], troe_Tss[%d], troe_Tsss[%d];' 
                     % (nReactions,nReactions,nReactions,nReactions))
-        self._write('double sri_a[%d], sri_b[%d], sri_c[%d], sri_d[%d], sri_e[%d];'
+        self._write('amrex::Real sri_a[%d], sri_b[%d], sri_c[%d], sri_d[%d], sri_e[%d];'
                     % (nReactions,nReactions,nReactions,nReactions,nReactions))
-        self._write('double activation_units[%d], prefactor_units[%d], phase_units[%d];'
+        self._write('amrex::Real activation_units[%d], prefactor_units[%d], phase_units[%d];'
                     % (nReactions,nReactions,nReactions))
         self._write('int is_PD[%d], troe_len[%d], sri_len[%d], nTB[%d], *TBid[%d];' 
                     % (nReactions,nReactions,nReactions,nReactions,nReactions))
-        self._write('double *TB[%d];' 
+        self._write('amrex::Real *TB[%d];' 
                     % (nReactions))
 
         if nspecial > 0:  
-                self._write('double prefactor_units_rev[%d], activation_units_rev[%d];' 
+                self._write('amrex::Real prefactor_units_rev[%d], activation_units_rev[%d];' 
                             % (nReactions,nReactions))
 
-        self._write('std::vector<std::vector<double>> kiv(%d); ' % (nReactions))
-        self._write('std::vector<std::vector<double>> nuv(%d); ' % (nReactions))
+        self._write('std::vector<std::vector<amrex::Real>> kiv(%d); ' % (nReactions))
+        self._write('std::vector<std::vector<amrex::Real>> nuv(%d); ' % (nReactions))
 
         self._write()
-        self._write('double fwd_A_DEF[%d], fwd_beta_DEF[%d], fwd_Ea_DEF[%d];' 
+        self._write('amrex::Real fwd_A_DEF[%d], fwd_beta_DEF[%d], fwd_Ea_DEF[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('double low_A_DEF[%d], low_beta_DEF[%d], low_Ea_DEF[%d];' 
+        self._write('amrex::Real low_A_DEF[%d], low_beta_DEF[%d], low_Ea_DEF[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('double rev_A_DEF[%d], rev_beta_DEF[%d], rev_Ea_DEF[%d];' 
+        self._write('amrex::Real rev_A_DEF[%d], rev_beta_DEF[%d], rev_Ea_DEF[%d];' 
                     % (nReactions,nReactions,nReactions))
-        self._write('double troe_a_DEF[%d],troe_Ts_DEF[%d], troe_Tss_DEF[%d], troe_Tsss_DEF[%d];' 
+        self._write('amrex::Real troe_a_DEF[%d],troe_Ts_DEF[%d], troe_Tss_DEF[%d], troe_Tsss_DEF[%d];' 
                     % (nReactions,nReactions,nReactions,nReactions))
-        self._write('double sri_a_DEF[%d], sri_b_DEF[%d], sri_c_DEF[%d], sri_d_DEF[%d], sri_e_DEF[%d];'
+        self._write('amrex::Real sri_a_DEF[%d], sri_b_DEF[%d], sri_c_DEF[%d], sri_d_DEF[%d], sri_e_DEF[%d];'
                     % (nReactions,nReactions,nReactions,nReactions,nReactions))
-        self._write('double activation_units_DEF[%d], prefactor_units_DEF[%d], phase_units_DEF[%d];'
+        self._write('amrex::Real activation_units_DEF[%d], prefactor_units_DEF[%d], phase_units_DEF[%d];'
                     % (nReactions,nReactions,nReactions))
         self._write('int is_PD_DEF[%d], troe_len_DEF[%d], sri_len_DEF[%d], nTB_DEF[%d], *TBid_DEF[%d];' 
                     % (nReactions,nReactions,nReactions,nReactions,nReactions))
-        self._write('double *TB_DEF[%d];' 
+        self._write('amrex::Real *TB_DEF[%d];' 
                     % (nReactions))
         self._write('std::vector<int> rxn_map;')
 
@@ -632,7 +632,7 @@ class CPickler(CMill):
 
         self._write(self.line(' Inverse molecular weights'))
         self._write(self.line(' TODO: check necessity on CPU'))
-        self._write('static AMREX_GPU_DEVICE_MANAGED double imw[%d] = {' %nSpecies )
+        self._write('static AMREX_GPU_DEVICE_MANAGED amrex::Real imw[%d] = {' %nSpecies )
         self._indent()
         for i in range(0,self.nSpecies):
             species = self.species[i]
@@ -647,7 +647,7 @@ class CPickler(CMill):
 
         self._write(self.line(' Inverse molecular weights'))
         self._write(self.line(' TODO: check necessity because redundant with molecularWeight'))
-        self._write('static AMREX_GPU_DEVICE_MANAGED double molecular_weights[%d] = {' %nSpecies )
+        self._write('static AMREX_GPU_DEVICE_MANAGED amrex::Real molecular_weights[%d] = {' %nSpecies )
         self._indent()
         for i in range(0,self.nSpecies):
             species = self.species[i]
@@ -661,7 +661,7 @@ class CPickler(CMill):
         self._write()
 
         self._write('AMREX_GPU_HOST_DEVICE')
-        self._write('void get_imw(double imw_new[]){')
+        self._write('void get_imw(amrex::Real imw_new[]){')
         ##self._write('#pragma unroll')
         self._indent()
         self._write('for(int i = 0; i<%d; ++i) imw_new[i] = imw[i];' %nSpecies )
@@ -671,7 +671,7 @@ class CPickler(CMill):
 
         self._write(self.line(' TODO: check necessity because redundant with CKWT'))
         self._write('AMREX_GPU_HOST_DEVICE')
-        self._write('void get_mw(double mw_new[]){')
+        self._write('void get_mw(amrex::Real mw_new[]){')
         ##self._write('#pragma unroll')
         self._indent()
         self._write('for(int i = 0; i<%d; ++i) mw_new[i] = molecular_weights[i];' %nSpecies )
@@ -810,7 +810,7 @@ class CPickler(CMill):
                 efficiencies = reaction.efficiencies
                 if (len(efficiencies) > 0):
                     self._write("nTB[%d] = %d;" % (id, len(efficiencies)))
-                    self._write("TB[%d] = (double *) malloc(%d * sizeof(double));" % (id, len(efficiencies)))
+                    self._write("TB[%d] = (amrex::Real *) malloc(%d * sizeof(amrex::Real));" % (id, len(efficiencies)))
                     self._write("TBid[%d] = (int *) malloc(%d * sizeof(int));" % (id, len(efficiencies)))
                     for i, eff in enumerate(efficiencies):
                         symbol, efficiency = eff
@@ -841,7 +841,7 @@ class CPickler(CMill):
         self._write()
 
         self._write("#include <ReactionData.H>")
-        self._write("double* GetParamPtr(int                reaction_id,")
+        self._write("amrex::Real* GetParamPtr(int                reaction_id,")
         self._write("                    REACTION_PARAMETER param_id,")
         self._write("                    int                species_id,")
         self._write("                    int                get_default)")
@@ -851,7 +851,7 @@ class CPickler(CMill):
             self._write("  abort();")
             self._write("  return 0;")
         else:
-            self._write("  double* ret = 0;")
+            self._write("  amrex::Real* ret = 0;")
             self._write("  if (reaction_id<0 || reaction_id>=%d) {" % (nReactions))
             self._write("    printf(\"Bad reaction id = %d\",reaction_id);")
             self._write("    abort();")
@@ -952,7 +952,7 @@ class CPickler(CMill):
         self._write("")
         self._write("        nTB[i]  = nTB_DEF[i];")
         self._write("        if (nTB[i] != 0) {")
-        self._write("           TB[i] = (double *) malloc(sizeof(double) * nTB[i]);")
+        self._write("           TB[i] = (amrex::Real *) malloc(sizeof(amrex::Real) * nTB[i]);")
         self._write("           TBid[i] = (int *) malloc(sizeof(int) * nTB[i]);")
         self._write("           for (int j=0; j<nTB[i]; j++) {")
         self._write("             TB[i][j] = TB_DEF[i][j];")
@@ -1004,7 +1004,7 @@ class CPickler(CMill):
         self._write("")
         self._write("        nTB_DEF[i]  = nTB[i];")
         self._write("        if (nTB_DEF[i] != 0) {")
-        self._write("           TB_DEF[i] = (double *) malloc(sizeof(double) * nTB_DEF[i]);")
+        self._write("           TB_DEF[i] = (amrex::Real *) malloc(sizeof(amrex::Real) * nTB_DEF[i]);")
         self._write("           TBid_DEF[i] = (int *) malloc(sizeof(int) * nTB_DEF[i]);")
         self._write("           for (int j=0; j<nTB_DEF[i]; j++) {")
         self._write("             TB_DEF[i][j] = TB[i][j];")
@@ -1076,7 +1076,7 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line(' ckxnum... for parsing strings '))
-        self._write('void CKXNUM'+sym+'(char * line, int * nexp, int * lout, int * nval, double *  rval, int * kerr, int lenline )')
+        self._write('void CKXNUM'+sym+'(char * line, int * nexp, int * lout, int * nval, amrex::Real *  rval, int * kerr, int lenline )')
         self._write('{')
         self._indent()
         self._write('int n,i; /*Loop Counters */')
@@ -1123,7 +1123,7 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line(' cksnum... for parsing strings '))
-        self._write('void CKSNUM'+sym+'(char * line, int * nexp, int * lout, char * kray, int * nn, int * knum, int * nval, double *  rval, int * kerr, int lenline, int lenkray)')
+        self._write('void CKSNUM'+sym+'(char * line, int * nexp, int * lout, char * kray, int * nn, int * knum, int * nval, amrex::Real *  rval, int * kerr, int lenline, int lenkray)')
         self._write('{')
         self._indent()
         
@@ -1248,7 +1248,7 @@ class CPickler(CMill):
         self._write()
         self._write(
             self.line(' Returns R, Rc, Patm' ))
-        self._write('void CKRP'+sym+'(double *  ru, double *  ruc, double *  pa)')
+        self._write('void CKRP'+sym+'(amrex::Real *  ru, amrex::Real *  ruc, amrex::Real *  pa)')
         self._write('{')
         self._indent()
         
@@ -1266,11 +1266,11 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Compute P = rhoRT/W(x)'))
-        self._write('void CKPX'+sym+'(double *  rho, double *  T, double *  x, double *  P)')
+        self._write('void CKPX'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x, amrex::Real *  P)')
         self._write('{')
         self._indent()
 
-        self._write('double XW = 0;'+
+        self._write('amrex::Real XW = 0;'+
                     self.line(' To hold mean molecular wt'))
         
         # molecular weights of all species
@@ -1294,11 +1294,11 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Compute P = rhoRT/W(y)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKPY'+sym+'(double *  rho, double *  T, double *  y,  double *  P)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKPY'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  P)')
         self._write('{')
         self._indent()
 
-        self._write('double YOW = 0;'+self.line(' for computing mean MW'))
+        self._write('amrex::Real YOW = 0;'+self.line(' for computing mean MW'))
         
         # molecular weights of all species
         for species in self.species:
@@ -1324,13 +1324,13 @@ class CPickler(CMill):
         self._write()
         self._write('#ifndef AMREX_USE_CUDA')
         self._write(self.line('Compute P = rhoRT/W(y)'))
-        self._write('void VCKPY'+sym+'(int *  np, double *  rho, double *  T, double *  y,  double *  P)')
+        self._write('void VCKPY'+sym+'(int *  np, amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  P)')
         self._write('{')
         self._indent()
 
         species = self.species
         nSpec = len(species)
-        self._write('double YOW[*np];')
+        self._write('amrex::Real YOW[*np];')
         self._write('for (int i=0; i<(*np); i++) {')
         self._indent()
         self._write('YOW[i] = 0.0;')
@@ -1371,15 +1371,15 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Compute P = rhoRT/W(c)'))
-        self._write('void CKPC'+sym+'(double *  rho, double *  T, double *  c,  double *  P)')
+        self._write('void CKPC'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  c,  amrex::Real *  P)')
         
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
         self._write(self.line('See Eq 5 in CK Manual'))
-        self._write('double W = 0;')
-        self._write('double sumC = 0;')
+        self._write('amrex::Real W = 0;')
+        self._write('amrex::Real sumC = 0;')
         
         # molecular weights of all species
         for species in self.species:
@@ -1412,11 +1412,11 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Compute rho = PW(x)/RT'))
-        self._write('void CKRHOX'+sym+'(double *  P, double *  T, double *  x,  double *  rho)')
+        self._write('void CKRHOX'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x,  amrex::Real *  rho)')
         self._write('{')
         self._indent()
 
-        self._write('double XW = 0;'+
+        self._write('amrex::Real XW = 0;'+
                     self.line(' To hold mean molecular wt'))
         
         # molecular weights of all species
@@ -1442,11 +1442,11 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Compute rho = P*W(y)/RT'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKRHOY'+sym+'(double *  P, double *  T, double *  y,  double *  rho)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKRHOY'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  rho)')
         self._write('{')
         self._indent()
-        self._write('double YOW = 0;')
-        self._write('double tmp[%d];' % (nSpec))
+        self._write('amrex::Real YOW = 0;')
+        self._write('amrex::Real tmp[%d];' % (nSpec))
         self._write('')
         self._write('for (int i = 0; i < %d; i++)' % (nSpec))
         self._write('{')
@@ -1472,15 +1472,15 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Compute rho = P*W(c)/(R*T)'))
-        self._write('void CKRHOC'+sym+'(double *  P, double *  T, double *  c,  double *  rho)')
+        self._write('void CKRHOC'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  c,  amrex::Real *  rho)')
         
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
         self._write(self.line('See Eq 5 in CK Manual'))
-        self._write('double W = 0;')
-        self._write('double sumC = 0;')
+        self._write('amrex::Real W = 0;')
+        self._write('amrex::Real sumC = 0;')
         
         # molecular weights of all species
         for species in self.species:
@@ -1512,7 +1512,7 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('get molecular weight for all species'))
-        self._write('void CKWT'+sym+'( double *  wt)')
+        self._write('void CKWT'+sym+'( amrex::Real *  wt)')
         self._write('{')
         self._indent()
         # call molecularWeight
@@ -1526,7 +1526,7 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('get atomic weight for all elements'))
-        self._write('void CKAWT'+sym+'( double *  awt)')
+        self._write('void CKAWT'+sym+'( amrex::Real *  awt)')
         self._write('{')
         self._indent()
         # call atomicWeight
@@ -1541,13 +1541,13 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('given y[species]: mass fractions'))
         self._write(self.line('returns mean molecular weight (gm/mole)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKMMWY'+sym+'(double *  y,  double *  wtm)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKMMWY'+sym+'(amrex::Real *  y,  amrex::Real *  wtm)')
         self._write('{')
         self._indent()
         species = self.species
         nSpec = len(species)
-        self._write('double YOW = 0;')
-        self._write('double tmp[%d];' % (nSpec))
+        self._write('amrex::Real YOW = 0;')
+        self._write('amrex::Real tmp[%d];' % (nSpec))
         self._write('')
         self._write('for (int i = 0; i < %d; i++)' % (nSpec))
         self._write('{')
@@ -1575,10 +1575,10 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('given x[species]: mole fractions'))
         self._write(self.line('returns mean molecular weight (gm/mole)'))
-        self._write('void CKMMWX'+sym+'(double *  x,  double *  wtm)')
+        self._write('void CKMMWX'+sym+'(amrex::Real *  x,  amrex::Real *  wtm)')
         self._write('{')
         self._indent()
-        self._write('double XW = 0;'+self.line(' see Eq 4 in CK Manual'))
+        self._write('amrex::Real XW = 0;'+self.line(' see Eq 4 in CK Manual'))
         # molecular weights of all species
         for species in self.species:
             self._write('XW += x[%d]*%f; ' % (
@@ -1597,13 +1597,13 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('given c[species]: molar concentration'))
         self._write(self.line('returns mean molecular weight (gm/mole)'))
-        self._write('void CKMMWC'+sym+'(double *  c,  double *  wtm)')
+        self._write('void CKMMWC'+sym+'(amrex::Real *  c,  amrex::Real *  wtm)')
         self._write('{')
         self._indent()
         self._write('int id; ' + self.line('loop counter'))
         self._write(self.line('See Eq 5 in CK Manual'))
-        self._write('double W = 0;')
-        self._write('double sumC = 0;')
+        self._write('amrex::Real W = 0;')
+        self._write('amrex::Real sumC = 0;')
         # molecular weights of all species
         for species in self.species:
             self._write('W += c[%d]*%f; ' % (
@@ -1629,14 +1629,14 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert y[species] (mass fracs) to x[species] (mole fracs)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKYTX'+sym+'(double *  y,  double *  x)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKYTX'+sym+'(amrex::Real *  y,  amrex::Real *  x)')
         self._write('{')
         self._indent()
 
         species = self.species
         nSpec = len(species)
-        self._write('double YOW = 0;')
-        self._write('double tmp[%d];' % (nSpec))
+        self._write('amrex::Real YOW = 0;')
+        self._write('amrex::Real tmp[%d];' % (nSpec))
         self._write('')
         self._write('for (int i = 0; i < %d; i++)' % (nSpec))
         self._write('{')
@@ -1651,7 +1651,7 @@ class CPickler(CMill):
         self._outdent()
         self._write('}')
         self._write('')
-        self._write('double YOWINV = 1.0/YOW;')
+        self._write('amrex::Real YOWINV = 1.0/YOW;')
         self._write('')
         self._write('for (int i = 0; i < %d; i++)' % (nSpec))
         self._write('{')
@@ -1672,13 +1672,13 @@ class CPickler(CMill):
         self._write('#ifndef AMREX_USE_CUDA')
         self._write(self.line(
             'convert y[npoints*species] (mass fracs) to x[npoints*species] (mole fracs)'))
-        self._write('void VCKYTX'+sym+'(int *  np, double *  y,  double *  x)')
+        self._write('void VCKYTX'+sym+'(int *  np, amrex::Real *  y,  amrex::Real *  x)')
         self._write('{')
         self._indent()
 
         species = self.species
         nSpec = len(species)
-        self._write('double YOW[*np];')
+        self._write('amrex::Real YOW[*np];')
         self._write('for (int i=0; i<(*np); i++) {')
         self._indent()
         self._write('YOW[i] = 0.0;')
@@ -1719,7 +1719,7 @@ class CPickler(CMill):
         self._write('}')
         self._write('#else') 
         self._write(self.line('TODO: remove this on GPU'))
-        self._write('void VCKYTX'+sym+'(int *  np, double *  y,  double *  x)')
+        self._write('void VCKYTX'+sym+'(int *  np, amrex::Real *  y,  amrex::Real *  x)')
         self._write('{')
         self._write('}')
         self._write('#endif') 
@@ -1732,14 +1732,14 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert y[species] (mass fracs) to c[species] (molar conc)'))
-        self._write('void CKYTCP'+sym+'(double *  P, double *  T, double *  y,  double *  c)')
+        self._write('void CKYTCP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  c)')
         self._write('{')
         self._indent()
 
         species = self.species
         nSpec = len(species)
-        self._write('double YOW = 0;')
-        self._write('double PWORT;')
+        self._write('amrex::Real YOW = 0;')
+        self._write('amrex::Real PWORT;')
         self._write('')
         self._write(self.line('Compute inverse of mean molecular wt first'))
         self._write('for (int i = 0; i < %d; i++)' % (nSpec))
@@ -1779,7 +1779,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert y[species] (mass fracs) to c[species] (molar conc)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKYTCR'+sym+'(double *  rho, double *  T, double *  y,  double *  c)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKYTCR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  c)')
         self._write('{')
         self._indent()
         species = self.species
@@ -1890,7 +1890,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('get specific heat at constant volume as a function '))
         self._write(self.line('of T for all species (molar units)'))
-        self._write('void CKCVML'+sym+'(double *  T,  double *  cvml)')
+        self._write('void CKCVML'+sym+'(amrex::Real *  T,  amrex::Real *  cvml)')
         self._write('{')
         self._indent()
 
@@ -1898,10 +1898,10 @@ class CPickler(CMill):
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         
         # call routine
@@ -1928,7 +1928,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('get specific heat at constant pressure as a '))
         self._write(self.line('function of T for all species (molar units)'))
-        self._write('void CKCPML'+sym+'(double *  T,  double *  cpml)')
+        self._write('void CKCPML'+sym+'(amrex::Real *  T,  amrex::Real *  cpml)')
         self._write('{')
         self._indent()
 
@@ -1936,10 +1936,10 @@ class CPickler(CMill):
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         
         # call routine
@@ -1965,7 +1965,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('get internal energy as a function '))
         self._write(self.line('of T for all species (molar units)'))
-        self._write('void CKUML'+sym+'(double *  T,  double *  uml)')
+        self._write('void CKUML'+sym+'(amrex::Real *  T,  amrex::Real *  uml)')
         self._write('{')
         self._indent()
 
@@ -1973,13 +1973,13 @@ class CPickler(CMill):
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2006,7 +2006,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('get enthalpy as a function '))
         self._write(self.line('of T for all species (molar units)'))
-        self._write('void CKHML'+sym+'(double *  T,  double *  hml)')
+        self._write('void CKHML'+sym+'(amrex::Real *  T,  amrex::Real *  hml)')
         self._write('{')
         self._indent()
 
@@ -2014,13 +2014,13 @@ class CPickler(CMill):
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2047,7 +2047,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('get standard-state Gibbs energy as a function '))
         self._write(self.line('of T for all species (molar units)'))
-        self._write('void CKGML'+sym+'(double *  T,  double *  gml)')
+        self._write('void CKGML'+sym+'(amrex::Real *  T,  amrex::Real *  gml)')
         self._write('{')
         self._indent()
 
@@ -2055,13 +2055,13 @@ class CPickler(CMill):
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2088,7 +2088,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('get standard-state Helmholtz free energy as a '))
         self._write(self.line('function of T for all species (molar units)'))
-        self._write('void CKAML'+sym+'(double *  T,  double *  aml)')
+        self._write('void CKAML'+sym+'(amrex::Real *  T,  amrex::Real *  aml)')
         self._write('{')
         self._indent()
 
@@ -2096,13 +2096,13 @@ class CPickler(CMill):
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2128,7 +2128,7 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns the standard-state entropies in molar units'))
-        self._write('void CKSML'+sym+'(double *  T,  double *  sml)')
+        self._write('void CKSML'+sym+'(amrex::Real *  T,  amrex::Real *  sml)')
         self._write('{')
         self._indent()
 
@@ -2136,10 +2136,10 @@ class CPickler(CMill):
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         
         # call routine
@@ -2165,19 +2165,19 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns internal energy in mass units (Eq 30.)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKUMS'+sym+'(double *  T,  double *  ums)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKUMS'+sym+'(amrex::Real *  T,  amrex::Real *  ums)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2201,19 +2201,19 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns enthalpy in mass units (Eq 27.)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKHMS'+sym+'(double *  T,  double *  hms)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKHMS'+sym+'(amrex::Real *  T,  amrex::Real *  hms)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2239,14 +2239,14 @@ class CPickler(CMill):
         self._write()
         self._write('#ifndef AMREX_USE_CUDA')
         self._write(self.line('Returns enthalpy in mass units (Eq 27.)'))
-        self._write('void VCKHMS'+sym+'(int *  np, double *  T,  double *  hms)')
+        self._write('void VCKHMS'+sym+'(int *  np, amrex::Real *  T,  amrex::Real *  hms)')
         self._write('{')
         self._indent()
 
         species = self.species
         nSpec = len(species)
 
-        self._write('double tc[5], h[%d];' % nSpec)
+        self._write('amrex::Real tc[5], h[%d];' % nSpec)
 
         self._write()
 
@@ -2285,7 +2285,7 @@ class CPickler(CMill):
         self._write('}')
         self._write('#else')
         self._write(self.line('TODO: remove this on GPU'))
-        self._write('void VCKHMS'+sym+'(int *  np, double *  T,  double *  hms)')
+        self._write('void VCKHMS'+sym+'(int *  np, amrex::Real *  T,  amrex::Real *  hms)')
         self._write('{')
         self._write('}')
         self._write('#endif')
@@ -2296,19 +2296,19 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns helmholtz in mass units (Eq 32.)'))
-        self._write('void CKAMS'+sym+'(double *  T,  double *  ams)')
+        self._write('void CKAMS'+sym+'(amrex::Real *  T,  amrex::Real *  ams)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2332,19 +2332,19 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns gibbs in mass units (Eq 31.)'))
-        self._write('void CKGMS'+sym+'(double *  T,  double *  gms)')
+        self._write('void CKGMS'+sym+'(amrex::Real *  T,  amrex::Real *  gms)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2370,16 +2370,16 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the specific heats at constant volume'))
         self._write(self.line('in mass units (Eq. 29)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKCVMS'+sym+'(double *  T,  double *  cvms)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKCVMS'+sym+'(amrex::Real *  T,  amrex::Real *  cvms)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         
         # call routine
@@ -2404,16 +2404,16 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the specific heats at constant pressure'))
         self._write(self.line('in mass units (Eq. 26)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKCPMS'+sym+'(double *  T,  double *  cpms)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKCPMS'+sym+'(amrex::Real *  T,  amrex::Real *  cpms)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         
         # call routine
@@ -2438,16 +2438,16 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns the entropies in mass units (Eq 28.)'))
-        self._write('void CKSMS'+sym+'(double *  T,  double *  sms)')
+        self._write('void CKSMS'+sym+'(amrex::Real *  T,  amrex::Real *  sms)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         
         # call routine
@@ -2472,22 +2472,22 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns the mean specific heat at CP (Eq. 33)'))
-        self._write('void CKCPBL'+sym+'(double *  T, double *  x,  double *  cpbl)')
+        self._write('void CKCPBL'+sym+'(amrex::Real *  T, amrex::Real *  x,  amrex::Real *  cpbl)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double cpor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real cpor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         
         # call routine
         self._write('cp_R(cpor, tc);')
@@ -2515,21 +2515,21 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns the mean specific heat at CP (Eq. 34)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKCPBS'+sym+'(double *  T, double *  y,  double *  cpbs)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKCPBS'+sym+'(amrex::Real *  T, amrex::Real *  y,  amrex::Real *  cpbs)')
         self._write('{')
         self._indent()
 
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double cpor[%d], tresult[%d]; ' % (self.nSpecies,self.nSpecies) + self.line(' temporary storage'))
+            'amrex::Real cpor[%d], tresult[%d]; ' % (self.nSpecies,self.nSpecies) + self.line(' temporary storage'))
         
         # call routine
         self._write('cp_R(cpor, tc);')
@@ -2565,22 +2565,22 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns the mean specific heat at CV (Eq. 35)'))
-        self._write('void CKCVBL'+sym+'(double *  T, double *  x,  double *  cvbl)')
+        self._write('void CKCVBL'+sym+'(amrex::Real *  T, amrex::Real *  x,  amrex::Real *  cvbl)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double cvor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real cvor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         
         # call routine
         self._write('cv_R(cvor, tc);')
@@ -2607,21 +2607,21 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns the mean specific heat at CV (Eq. 36)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKCVBS'+sym+'(double *  T, double *  y,  double *  cvbs)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKCVBS'+sym+'(amrex::Real *  T, amrex::Real *  y,  amrex::Real *  cvbs)')
         self._write('{')
         self._indent()
 
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double cvor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real cvor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         
         # call routine
         self._write('cv_R(cvor, tc);')
@@ -2645,24 +2645,24 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns the mean enthalpy of the mixture in molar units'))
-        self._write('void CKHBML'+sym+'(double *  T, double *  x,  double *  hbml)')
+        self._write('void CKHBML'+sym+'(amrex::Real *  T, amrex::Real *  x,  amrex::Real *  hbml)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double hml[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real hml[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2691,24 +2691,24 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns mean enthalpy of mixture in mass units'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKHBMS'+sym+'(double *  T, double *  y,  double *  hbms)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKHBMS'+sym+'(amrex::Real *  T, amrex::Real *  y,  amrex::Real *  hbms)')
         self._write('{')
         self._indent()
 
-        self._write('double result = 0;')
+        self._write('amrex::Real result = 0;')
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double hml[%d], tmp[%d]; ' % (self.nSpecies,self.nSpecies) + self.line(' temporary storage'))
+            'amrex::Real hml[%d], tmp[%d]; ' % (self.nSpecies,self.nSpecies) + self.line(' temporary storage'))
         
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2740,24 +2740,24 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('get mean internal energy in molar units'))
-        self._write('void CKUBML'+sym+'(double *  T, double *  x,  double *  ubml)')
+        self._write('void CKUBML'+sym+'(amrex::Real *  T, amrex::Real *  x,  amrex::Real *  ubml)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double uml[%d]; ' % self.nSpecies + self.line(' temporary energy array'))
+            'amrex::Real uml[%d]; ' % self.nSpecies + self.line(' temporary energy array'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2785,24 +2785,24 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('get mean internal energy in mass units'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKUBMS'+sym+'(double *  T, double *  y,  double *  ubms)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKUBMS'+sym+'(amrex::Real *  T, amrex::Real *  y,  amrex::Real *  ubms)')
         self._write('{')
         self._indent()
 
-        self._write('double result = 0;')
+        self._write('amrex::Real result = 0;')
         
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double ums[%d]; ' % self.nSpecies + self.line(' temporary energy array'))
+            'amrex::Real ums[%d]; ' % self.nSpecies + self.line(' temporary energy array'))
         
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         
         # call routine
@@ -2830,24 +2830,24 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('get mixture entropy in molar units'))
-        self._write('void CKSBML'+sym+'(double *  P, double *  T, double *  x,  double *  sbml)')
+        self._write('void CKSBML'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x,  amrex::Real *  sbml)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(self.line('Log of normalized pressure in cgs units dynes/cm^2 by Patm'))
-        self._write( 'double logPratio = log ( *P / 1013250.0 ); ')
+        self._write( 'amrex::Real logPratio = log ( *P / 1013250.0 ); ')
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double sor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real sor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         
         
         # call routine
@@ -2877,27 +2877,27 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('get mixture entropy in mass units'))
-        self._write('void CKSBMS'+sym+'(double *  P, double *  T, double *  y,  double *  sbms)')
+        self._write('void CKSBMS'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  sbms)')
         self._write('{')
         self._indent()
 
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(self.line('Log of normalized pressure in cgs units dynes/cm^2 by Patm'))
-        self._write( 'double logPratio = log ( *P / 1013250.0 ); ')
+        self._write( 'amrex::Real logPratio = log ( *P / 1013250.0 ); ')
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double sor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real sor[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         self._write(
-            'double x[%d]; ' % self.nSpecies + self.line(' need a ytx conversion'))
+            'amrex::Real x[%d]; ' % self.nSpecies + self.line(' need a ytx conversion'))
 
-        self._write('double YOW = 0; '+self.line('See Eq 4, 6 in CK Manual'))
+        self._write('amrex::Real YOW = 0; '+self.line('See Eq 4, 6 in CK Manual'))
         
         
         # compute inverse of mean molecular weight first (eq 3)
@@ -2934,27 +2934,27 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns mean gibbs free energy in molar units'))
-        self._write('void CKGBML'+sym+'(double *  P, double *  T, double *  x,  double *  gbml)')
+        self._write('void CKGBML'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x,  amrex::Real *  gbml)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(self.line('Log of normalized pressure in cgs units dynes/cm^2 by Patm'))
-        self._write( 'double logPratio = log ( *P / 1013250.0 ); ')
+        self._write( 'amrex::Real logPratio = log ( *P / 1013250.0 ); ')
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         self._write(
-            'double gort[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real gort[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         
         # call routine
         self._write(self.line('Compute g/RT'))
@@ -2985,31 +2985,31 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns mixture gibbs free energy in mass units'))
-        self._write('void CKGBMS'+sym+'(double *  P, double *  T, double *  y,  double *  gbms)')
+        self._write('void CKGBMS'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  gbms)')
         self._write('{')
         self._indent()
 
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(self.line('Log of normalized pressure in cgs units dynes/cm^2 by Patm'))
-        self._write( 'double logPratio = log ( *P / 1013250.0 ); ')
+        self._write( 'amrex::Real logPratio = log ( *P / 1013250.0 ); ')
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         self._write(
-            'double gort[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real gort[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         self._write(
-            'double x[%d]; ' % self.nSpecies + self.line(' need a ytx conversion'))
+            'amrex::Real x[%d]; ' % self.nSpecies + self.line(' need a ytx conversion'))
 
         self._write(
-            'double YOW = 0; '
+            'amrex::Real YOW = 0; '
             + self.line('To hold 1/molecularweight'))
         
         
@@ -3048,27 +3048,27 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns mean helmholtz free energy in molar units'))
-        self._write('void CKABML'+sym+'(double *  P, double *  T, double *  x,  double *  abml)')
+        self._write('void CKABML'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x,  amrex::Real *  abml)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(self.line('Log of normalized pressure in cgs units dynes/cm^2 by Patm'))
-        self._write( 'double logPratio = log ( *P / 1013250.0 ); ')
+        self._write( 'amrex::Real logPratio = log ( *P / 1013250.0 ); ')
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         self._write(
-            'double aort[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real aort[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         
         # call routine
         self._write(self.line('Compute g/RT'))
@@ -3099,31 +3099,31 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns mixture helmholtz free energy in mass units'))
-        self._write('void CKABMS'+sym+'(double *  P, double *  T, double *  y,  double *  abms)')
+        self._write('void CKABMS'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  abms)')
         self._write('{')
         self._indent()
 
-        self._write('double result = 0; ')
+        self._write('amrex::Real result = 0; ')
         
         # get temperature cache
         self._write(self.line('Log of normalized pressure in cgs units dynes/cm^2 by Patm'))
-        self._write( 'double logPratio = log ( *P / 1013250.0 ); ')
+        self._write( 'amrex::Real logPratio = log ( *P / 1013250.0 ); ')
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
+            'amrex::Real RT = %1.14e*tT; ' % (R*kelvin*mole/erg)
             + self.line('R*T'))
         self._write(
-            'double aort[%d]; ' % self.nSpecies + self.line(' temporary storage'))
+            'amrex::Real aort[%d]; ' % self.nSpecies + self.line(' temporary storage'))
         self._write(
-            'double x[%d]; ' % self.nSpecies + self.line(' need a ytx conversion'))
+            'amrex::Real x[%d]; ' % self.nSpecies + self.line(' need a ytx conversion'))
 
         self._write(
-            'double YOW = 0; '
+            'amrex::Real YOW = 0; '
             + self.line('To hold 1/molecularweight'))
         
         
@@ -3162,7 +3162,7 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('compute the production rate for each species'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKWC'+sym+'(double *  T, double *  C,  double *  wdot)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKWC'+sym+'(amrex::Real *  T, amrex::Real *  C,  amrex::Real *  wdot)')
         self._write('{')
         self._indent()
 
@@ -3203,15 +3203,15 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the molar production rate of species'))
         self._write(self.line('Given P, T, and mass fractions'))
-        self._write('void CKWYP'+sym+'(double *  P, double *  T, double *  y,  double *  wdot)')
+        self._write('void CKWYP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  wdot)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double c[%d]; ' % self.nSpecies + self.line('temporary storage'))
-        self._write('double YOW = 0; ')
-        self._write('double PWORT; ')
+        self._write('amrex::Real c[%d]; ' % self.nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real YOW = 0; ')
+        self._write('amrex::Real PWORT; ')
         
         # compute inverse of mean molecular weight first (eq 3)
         self._write(self.line('Compute inverse of mean molecular wt first'))
@@ -3257,15 +3257,15 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the molar production rate of species'))
         self._write(self.line('Given P, T, and mole fractions'))
-        self._write('void CKWXP'+sym+'(double *  P, double *  T, double *  x,  double *  wdot)')
+        self._write('void CKWXP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x,  amrex::Real *  wdot)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double c[%d]; ' % self.nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real c[%d]; ' % self.nSpecies + self.line('temporary storage'))
         
-        self._write('double PORT = 1e6 * (*P)/(%1.14e * (*T)); ' % (R*kelvin*mole/erg) +
+        self._write('amrex::Real PORT = 1e6 * (*P)/(%1.14e * (*T)); ' % (R*kelvin*mole/erg) +
                     self.line('1e6 * P/RT so c goes to SI units'))
         
         # now compute conversion
@@ -3303,13 +3303,13 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the molar production rate of species'))
         self._write(self.line('Given rho, T, and mass fractions'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKWYR'+sym+'(double *  rho, double *  T, double *  y,  double *  wdot)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKWYR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y,  amrex::Real *  wdot)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double c[%d]; ' % self.nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real c[%d]; ' % self.nSpecies + self.line('temporary storage'))
 
         # now compute conversion
         self._write(self.line('See Eq 8 with an extra 1e6 so c goes to SI'))
@@ -3343,14 +3343,14 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the molar production rate of species'))
         self._write(self.line('Given rho, T, and mass fractions'))
-        self._write('void VCKWYR'+sym+'(int *  np, double *  rho, double *  T,')
-        self._write('	    double *  y,')
-        self._write('	    double *  wdot)')
+        self._write('void VCKWYR'+sym+'(int *  np, amrex::Real *  rho, amrex::Real *  T,')
+        self._write('	    amrex::Real *  y,')
+        self._write('	    amrex::Real *  wdot)')
         self._write('{')
         self._write('#ifndef AMREX_USE_CUDA')
         self._indent()
 
-        self._write('double c[%d*(*np)]; ' % self.nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real c[%d*(*np)]; ' % self.nSpecies + self.line('temporary storage'))
 
         # now compute conversion
         self._write(self.line('See Eq 8 with an extra 1e6 so c goes to SI'))
@@ -3391,16 +3391,16 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the molar production rate of species'))
         self._write(self.line('Given rho, T, and mole fractions'))
-        self._write('void CKWXR'+sym+'(double *  rho, double *  T, double *  x,  double *  wdot)')
+        self._write('void CKWXR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x,  amrex::Real *  wdot)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double c[%d]; ' % self.nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real c[%d]; ' % self.nSpecies + self.line('temporary storage'))
         
-        self._write('double XW = 0; '+self.line('See Eq 4, 11 in CK Manual'))
-        self._write('double ROW; ')
+        self._write('amrex::Real XW = 0; '+self.line('See Eq 4, 11 in CK Manual'))
+        self._write('amrex::Real ROW; ')
         
         # compute mean molecular weight first (eq 3)
         self._write(self.line('Compute mean molecular wt first'))
@@ -3585,7 +3585,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the arrehenius coefficients '))
         self._write(self.line('for all reactions'))
-        self._write('void CKABE'+sym+'( double *  a, double *  b, double *  e)')
+        self._write('void CKABE'+sym+'( amrex::Real *  a, amrex::Real *  b, amrex::Real *  e)')
         self._write('{')
         self._indent()
 
@@ -3613,11 +3613,11 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert x[species] (mole fracs) to y[species] (mass fracs)'))
-        self._write('AMREX_GPU_HOST_DEVICE void CKXTY'+sym+'(double *  x,  double *  y)')
+        self._write('AMREX_GPU_HOST_DEVICE void CKXTY'+sym+'(amrex::Real *  x,  amrex::Real *  y)')
         self._write('{')
         self._indent()
 
-        self._write('double XW = 0; '+self.line('See Eq 4, 9 in CK Manual'))
+        self._write('amrex::Real XW = 0; '+self.line('See Eq 4, 9 in CK Manual'))
         
         # compute mean molecular weight first (eq 3)
         self._write(self.line('Compute mean molecular wt first'))
@@ -3627,7 +3627,7 @@ class CPickler(CMill):
  
         # now compute conversion
         self._write(self.line('Now compute conversion'))
-        self._write('double XWinv = 1.0/XW;')
+        self._write('amrex::Real XWinv = 1.0/XW;')
         for species in self.species:
             self._write('y[%d] = x[%d]*%f*XWinv; ' % (
                 species.id, species.id, species.weight) )
@@ -3645,12 +3645,12 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert x[species] (mole fracs) to c[species] (molar conc)'))
-        self._write('void CKXTCP'+sym+'(double *  P, double *  T, double *  x,  double *  c)')
+        self._write('void CKXTCP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x,  amrex::Real *  c)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double PORT = (*P)/(%1.14e * (*T)); ' % (R*kelvin*mole/erg) +
+        self._write('amrex::Real PORT = (*P)/(%1.14e * (*T)); ' % (R*kelvin*mole/erg) +
                     self.line('P/RT'))
         # now compute conversion
         self._write()
@@ -3674,13 +3674,13 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert x[species] (mole fracs) to c[species] (molar conc)'))
-        self._write('void CKXTCR'+sym+'(double *  rho, double *  T, double *  x, double *  c)')
+        self._write('void CKXTCR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x, amrex::Real *  c)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double XW = 0; '+self.line('See Eq 4, 11 in CK Manual'))
-        self._write('double ROW; ')
+        self._write('amrex::Real XW = 0; '+self.line('See Eq 4, 11 in CK Manual'))
+        self._write('amrex::Real ROW; ')
         
         # compute mean molecular weight first (eq 3)
         self._write(self.line('Compute mean molecular wt first'))
@@ -3711,12 +3711,12 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert c[species] (molar conc) to x[species] (mole fracs)'))
-        self._write('void CKCTX'+sym+'(double *  c, double *  x)')
+        self._write('void CKCTX'+sym+'(amrex::Real *  c, amrex::Real *  x)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
-        self._write('double sumC = 0; ')
+        self._write('amrex::Real sumC = 0; ')
 
         self._write()
         self._write(self.line('compute sum of c '))
@@ -3729,7 +3729,7 @@ class CPickler(CMill):
         # now compute conversion
         self._write()
         self._write(self.line(' See Eq 13 '))
-        self._write('double sumCinv = 1.0/sumC;')
+        self._write('amrex::Real sumCinv = 1.0/sumC;')
         self._write('for (id = 0; id < %d; ++id) {' % self.nSpecies)
         self._indent()
         self._write('x[id] = c[id]*sumCinv;')
@@ -3749,11 +3749,11 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert c[species] (molar conc) to y[species] (mass fracs)'))
-        self._write('void CKCTY'+sym+'(double *  c, double *  y)')
+        self._write('void CKCTY'+sym+'(amrex::Real *  c, amrex::Real *  y)')
         self._write('{')
         self._indent()
 
-        self._write('double CW = 0; '+self.line('See Eq 12 in CK Manual'))
+        self._write('amrex::Real CW = 0; '+self.line('See Eq 12 in CK Manual'))
         
         # compute denominator in eq 12
         self._write(self.line('compute denominator in eq 12 first'))
@@ -3763,7 +3763,7 @@ class CPickler(CMill):
 
         # now compute conversion
         self._write(self.line('Now compute conversion'))
-        self._write('double CWinv = 1.0/CW;')
+        self._write('amrex::Real CWinv = 1.0/CW;')
         for species in self.species:
             self._write('y[%d] = c[%d]*%f*CWinv; ' % (
                 species.id, species.id, species.weight) )
@@ -3781,16 +3781,16 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('get Cp/R as a function of T '))
         self._write(self.line('for all species (Eq 19)'))
-        self._write('void CKCPOR'+sym+'(double *  T, double *  cpor)')
+        self._write('void CKCPOR'+sym+'(amrex::Real *  T, amrex::Real *  cpor)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         
         # call routine
@@ -3807,16 +3807,16 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('get H/RT as a function of T '))
         self._write(self.line('for all species (Eq 20)'))
-        self._write('void CKHORT'+sym+'(double *  T, double *  hort)')
+        self._write('void CKHORT'+sym+'(amrex::Real *  T, amrex::Real *  hort)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { 0, tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         
         # call routine
@@ -3833,16 +3833,16 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('get S/R as a function of T '))
         self._write(self.line('for all species (Eq 21)'))
-        self._write('void CKSOR'+sym+'(double *  T, double *  sor)')
+        self._write('void CKSOR'+sym+'(amrex::Real *  T, amrex::Real *  sor)')
         self._write('{')
         self._indent()
 
         # get temperature cache
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         
         # call routine
@@ -3863,7 +3863,7 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns the rate of progress for each reaction'))
-        self._write('void CKQC'+sym+'(double *  T, double *  C, double *  qdot)')
+        self._write('void CKQC'+sym+'(amrex::Real *  T, amrex::Real *  C, amrex::Real *  qdot)')
         self._write('{')
         self._indent()
 
@@ -3916,15 +3916,15 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the progress rates of each reactions'))
         self._write(self.line('Given P, T, and mole fractions'))
-        self._write('void CKKFKR'+sym+'(double *  P, double *  T, double *  x, double *  q_f, double *  q_r)')
+        self._write('void CKKFKR'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  q_f, amrex::Real *  q_r)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double c[%d]; ' % nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real c[%d]; ' % nSpecies + self.line('temporary storage'))
         
-        self._write('double PORT = 1e6 * (*P)/(%1.14e * (*T)); ' % (R*kelvin*mole/erg) +
+        self._write('amrex::Real PORT = 1e6 * (*P)/(%1.14e * (*T)); ' % (R*kelvin*mole/erg) +
                     self.line('1e6 * P/RT so c goes to SI units'))
         
         # now compute conversion
@@ -3967,15 +3967,15 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the progress rates of each reactions'))
         self._write(self.line('Given P, T, and mass fractions'))
-        self._write('void CKQYP'+sym+'(double *  P, double *  T, double *  y, double *  qdot)')
+        self._write('void CKQYP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  qdot)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double c[%d]; ' % nSpecies + self.line('temporary storage'))
-        self._write('double YOW = 0; ')
-        self._write('double PWORT; ')
+        self._write('amrex::Real c[%d]; ' % nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real YOW = 0; ')
+        self._write('amrex::Real PWORT; ')
         
         # compute inverse of mean molecular weight first (eq 3)
         self._write(self.line('Compute inverse of mean molecular wt first'))
@@ -4025,15 +4025,15 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the progress rates of each reactions'))
         self._write(self.line('Given P, T, and mole fractions'))
-        self._write('void CKQXP'+sym+'(double *  P, double *  T, double *  x, double *  qdot)')
+        self._write('void CKQXP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  qdot)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double c[%d]; ' % nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real c[%d]; ' % nSpecies + self.line('temporary storage'))
         
-        self._write('double PORT = 1e6 * (*P)/(%1.14e * (*T)); ' % (R*kelvin*mole/erg) +
+        self._write('amrex::Real PORT = 1e6 * (*P)/(%1.14e * (*T)); ' % (R*kelvin*mole/erg) +
                     self.line('1e6 * P/RT so c goes to SI units'))
         
         # now compute conversion
@@ -4075,13 +4075,13 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the progress rates of each reactions'))
         self._write(self.line('Given rho, T, and mass fractions'))
-        self._write('void CKQYR'+sym+'(double *  rho, double *  T, double *  y, double *  qdot)')
+        self._write('void CKQYR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y, amrex::Real *  qdot)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double c[%d]; ' % nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real c[%d]; ' % nSpecies + self.line('temporary storage'))
 
         # now compute conversion
         self._write(self.line('See Eq 8 with an extra 1e6 so c goes to SI'))
@@ -4119,16 +4119,16 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the progress rates of each reactions'))
         self._write(self.line('Given rho, T, and mole fractions'))
-        self._write('void CKQXR'+sym+'(double *  rho, double *  T, double *  x, double *  qdot)')
+        self._write('void CKQXR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x, amrex::Real *  qdot)')
         self._write('{')
         self._indent()
 
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double c[%d]; ' % nSpecies + self.line('temporary storage'))
+        self._write('amrex::Real c[%d]; ' % nSpecies + self.line('temporary storage'))
         
-        self._write('double XW = 0; '+self.line('See Eq 4, 11 in CK Manual'))
-        self._write('double ROW; ')
+        self._write('amrex::Real XW = 0; '+self.line('See Eq 4, 11 in CK Manual'))
+        self._write('amrex::Real ROW; ')
         
         # compute mean molecular weight first (eq 3)
         self._write(self.line('Compute mean molecular wt first'))
@@ -4174,13 +4174,13 @@ class CPickler(CMill):
         nReactions = len(mechanism.reaction())
 
         self._write(
-            'double tT = *T; '
+            'amrex::Real tT = *T; '
             + self.line('temporary temperature'))
         self._write(
-            'double tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
+            'amrex::Real tc[] = { log(tT), tT, tT*tT, tT*tT*tT, tT*tT*tT*tT }; '
             + self.line('temperature cache'))
         self._write(
-            'double gort[%d]; ' % nSpecies + self.line(' temporary storage'))
+            'amrex::Real gort[%d]; ' % nSpecies + self.line(' temporary storage'))
 
         # compute the gibbs free energy
         self._write()
@@ -4217,7 +4217,7 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('Returns the equil constants for each reaction'))
-        self._write('void CKEQC'+sym+'(double *  T, double *  C, double *  eqcon)')
+        self._write('void CKEQC'+sym+'(amrex::Real *  T, amrex::Real *  C, amrex::Real *  eqcon)')
         self._write('{')
         self._indent()
 
@@ -4239,7 +4239,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the equil constants for each reaction'))
         self._write(self.line('Given P, T, and mass fractions'))
-        self._write('void CKEQYP'+sym+'(double *  P, double *  T, double *  y, double *  eqcon)')
+        self._write('void CKEQYP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  y, amrex::Real *  eqcon)')
         self._write('{')
         self._indent()
 
@@ -4261,7 +4261,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the equil constants for each reaction'))
         self._write(self.line('Given P, T, and mole fractions'))
-        self._write('void CKEQXP'+sym+'(double *  P, double *  T, double *  x, double *  eqcon)')
+        self._write('void CKEQXP'+sym+'(amrex::Real *  P, amrex::Real *  T, amrex::Real *  x, amrex::Real *  eqcon)')
         self._write('{')
         self._indent()
 
@@ -4283,7 +4283,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the equil constants for each reaction'))
         self._write(self.line('Given rho, T, and mass fractions'))
-        self._write('void CKEQYR'+sym+'(double *  rho, double *  T, double *  y, double *  eqcon)')
+        self._write('void CKEQYR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  y, amrex::Real *  eqcon)')
         self._write('{')
         self._indent()
 
@@ -4305,7 +4305,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line('Returns the equil constants for each reaction'))
         self._write(self.line('Given rho, T, and mole fractions'))
-        self._write('void CKEQXR'+sym+'(double *  rho, double *  T, double *  x, double *  eqcon)')
+        self._write('void CKEQXR'+sym+'(amrex::Real *  rho, amrex::Real *  T, amrex::Real *  x, amrex::Real *  eqcon)')
         self._write('{')
         self._indent()
 
@@ -4351,16 +4351,16 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'get temperature given internal energy in mass units and mass fracs'))
-        self._write('int feeytt'+fsym+'(double *  e, double *  y, double *  t)')
+        self._write('int feeytt'+fsym+'(amrex::Real *  e, amrex::Real *  y, amrex::Real *  t)')
         self._write('{')
         self._indent()
 
         self._write('const int maxiter = 50;')
-        self._write('const double tol  = 0.001;')
-        self._write('double ein  = *e;')
-        self._write('double tmin = %g; // max lower bound for thermo def' % lowT)
-        self._write('double tmax = %g; // min upper bound for thermo def' % highT)
-        self._write('double e1,emin,emax,cv,t1,dt;')
+        self._write('const amrex::Real tol  = 0.001;')
+        self._write('amrex::Real ein  = *e;')
+        self._write('amrex::Real tmin = %g; // max lower bound for thermo def' % lowT)
+        self._write('amrex::Real tmax = %g; // min upper bound for thermo def' % highT)
+        self._write('amrex::Real e1,emin,emax,cv,t1,dt;')
         self._write('int i; // loop counter')
         self._write('CKUBMS'+sym+'(&tmin, y, &emin);')
         self._write('CKUBMS'+sym+'(&tmax, y, &emax);')
@@ -4414,16 +4414,16 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'get temperature given enthalpy in mass units and mass fracs'))
-        self._write('int fehytt'+fsym+'(double *  h, double *  y, double *  t)')
+        self._write('int fehytt'+fsym+'(amrex::Real *  h, amrex::Real *  y, amrex::Real *  t)')
         self._write('{')
         self._indent()
 
         self._write('const int maxiter = 50;')
-        self._write('const double tol  = 0.001;')
-        self._write('double hin  = *h;')
-        self._write('double tmin = %g; // max lower bound for thermo def' % lowT)
-        self._write('double tmax = %g; // min upper bound for thermo def' % highT)
-        self._write('double h1,hmin,hmax,cp,t1,dt;')
+        self._write('const amrex::Real tol  = 0.001;')
+        self._write('amrex::Real hin  = *h;')
+        self._write('amrex::Real tmin = %g; // max lower bound for thermo def' % lowT)
+        self._write('amrex::Real tmax = %g; // min upper bound for thermo def' % highT)
+        self._write('amrex::Real h1,hmin,hmax,cp,t1,dt;')
         self._write('int i; // loop counter')
         self._write('CKHBMS'+sym+'(&tmin, y, &hmin);')
         self._write('CKHBMS'+sym+'(&tmax, y, &hmax);')
@@ -4473,11 +4473,11 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert phi[species] (specific mole nums) to y[species] (mass fracs)'))
-        self._write('void fephity'+fsym+'(double *  phi, double *  y)')
+        self._write('void fephity'+fsym+'(amrex::Real *  phi, amrex::Real *  y)')
         self._write('{')
         self._indent()
 
-        self._write('double XW  = 0; ')
+        self._write('amrex::Real XW  = 0; ')
         self._write('int id; ' + self.line('loop counter'))
         
         # compute mean molecular weight first (eq 3)
@@ -4507,7 +4507,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'convert y[species] (mass fracs) to phi[species] (specific mole num)'))
-        self._write('void feytphi'+fsym+'(double *  y, double *  phi)')
+        self._write('void feytphi'+fsym+'(amrex::Real *  y, amrex::Real *  phi)')
         self._write('{')
         self._indent()
 
@@ -4530,7 +4530,7 @@ class CPickler(CMill):
         self._write()
         self._write(self.line(
             'reverse of ytcr, useful for rate computations'))
-        self._write('void fectyr'+fsym+'(double *  c, double *  rho, double *  y)')
+        self._write('void fectyr'+fsym+'(amrex::Real *  c, amrex::Real *  rho, amrex::Real *  y)')
         self._write('{')
         self._indent()
 
@@ -4558,16 +4558,16 @@ class CPickler(CMill):
             'rwrk[0] and rwrk[1] should contain rho and ene respectively'))
         self._write(self.line(
             'working variable phi contains specific mole numbers'))
-        self._write('void fecvrhs'+fsym+'(double *  time, double *  phi, double *  phidot)')
+        self._write('void fecvrhs'+fsym+'(amrex::Real *  time, amrex::Real *  phi, amrex::Real *  phidot)')
 
 	self._write('{')
 	self._indent()
 	# main body
-        self._write('double rho,ene; ' + self.line('CV Parameters'))
-        self._write('double y[%s], wdot[%s]; ' % (self.nSpecies, self.nSpecies) +
+        self._write('amrex::Real rho,ene; ' + self.line('CV Parameters'))
+        self._write('amrex::Real y[%s], wdot[%s]; ' % (self.nSpecies, self.nSpecies) +
                     self.line('temporary storage'))
         self._write('int i; ' + self.line('Loop counter'))
-        self._write('double temperature,pressure; ' + self.line('temporary var'))
+        self._write('amrex::Real temperature,pressure; ' + self.line('temporary var'))
         self._write('rho = rwrk[0];')
         self._write('ene = rwrk[1];')
         self._write('fephity'+fsym+'(phi, y);')
@@ -4610,19 +4610,19 @@ class CPickler(CMill):
         self._write(self.line( 'rwrk[1] : preshock density (g/cc) '))
         self._write(self.line( 'rwrk[2] : detonation velocity (cm/s) '))
         self._write(self.line( 'solution vector: [P; rho; y0 ... ylast] '))
-        self._write('void fezndrhs'+fsym+'(double *  time, double *  z, double *  zdot)')
+        self._write('void fezndrhs'+fsym+'(amrex::Real *  time, amrex::Real *  z, amrex::Real *  zdot)')
 
 	self._write('{')
 	self._indent()
 	# main body
-        self._write('double psc,rho1,udet; ' + self.line('ZND Parameters'))
-        self._write('double wt[%s], hms[%s], wdot[%s]; ' %
+        self._write('amrex::Real psc,rho1,udet; ' + self.line('ZND Parameters'))
+        self._write('amrex::Real wt[%s], hms[%s], wdot[%s]; ' %
                     (self.nSpecies, self.nSpecies, self.nSpecies) +
                     self.line('temporary storage'))
         self._write('int i; ' + self.line('Loop counter'))
         self._write(self.line('temporary variables'))
-        self._write('double ru, T, uvel, wtm, p, rho, gam, son, xm, sum, drdy, eta, cp, cv ;')
-        self._write('double *  y; ' + self.line('mass frac pointer'))
+        self._write('amrex::Real ru, T, uvel, wtm, p, rho, gam, son, xm, sum, drdy, eta, cp, cv ;')
+        self._write('amrex::Real *  y; ' + self.line('mass frac pointer'))
         self._write()
         self._write('ru = %1.14e;' % (R * mole * kelvin / erg))
         self._write()
@@ -4753,7 +4753,7 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('save atomic weights into array'))
-        self._write('void atomicWeight(double *  awt)')
+        self._write('void atomicWeight(amrex::Real *  awt)')
         self._write('{')
         self._indent()
         import pyre
@@ -4859,7 +4859,7 @@ class CPickler(CMill):
     ##            self._write("user_data->nTB[%d] = %d;" % (id, len(efficiencies)))
 
     ##            if (len(efficiencies) > 0):
-    ##                self._write("cudaMallocManaged(&user_data->TB[%d], %d * sizeof(double));"% (id, len(efficiencies)))
+    ##                self._write("cudaMallocManaged(&user_data->TB[%d], %d * sizeof(amrex::Real));"% (id, len(efficiencies)))
     ##                self._write("cudaMallocManaged(&user_data->TBid[%d], %d * sizeof(int));"% (id, len(efficiencies)))
     ##                for i, eff in enumerate(efficiencies):
     ##                    symbol, efficiency = eff
@@ -4904,18 +4904,18 @@ class CPickler(CMill):
         self._write('#ifdef AMREX_USE_CUDA')
         self._write(self.line('GPU version of productionRate: no more use of thermo namespace vectors'))
         self._write(self.line('compute the production rate for each species'))
-        self._write('AMREX_GPU_HOST_DEVICE inline void  productionRate(double * wdot, double * sc, double T)')
+        self._write('AMREX_GPU_HOST_DEVICE inline void  productionRate(amrex::Real * wdot, amrex::Real * sc, amrex::Real T)')
         self._write('{')
         self._indent()
 
-        self._write('double tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
-        self._write('double invT = 1.0 / tc[1];')
+        self._write('amrex::Real tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
+        self._write('amrex::Real invT = 1.0 / tc[1];')
         
         if (nReactions == 0):
             self._write()
         else:
             self._write()
-            self._write('double qdot, q_f[%d], q_r[%d];' % (nReactions,nReactions))
+            self._write('amrex::Real qdot, q_f[%d], q_r[%d];' % (nReactions,nReactions))
             self._write('comp_qfqr(q_f, q_r, sc, tc, invT);');
 
         self._write()
@@ -4958,7 +4958,7 @@ class CPickler(CMill):
 
         # k_f function
         ##self._write()
-        ##self._write('AMREX_GPU_HOST_DEVICE void comp_k_f(double *  tc, double invT, double *  k_f)')
+        ##self._write('AMREX_GPU_HOST_DEVICE void comp_k_f(amrex::Real *  tc, amrex::Real invT, amrex::Real *  k_f)')
         ##self._write('{')
         ##self._indent()
         ##for j in range(nReactions):
@@ -4984,12 +4984,12 @@ class CPickler(CMill):
 
         # Kc
         ##self._write()
-        ##self._write('AMREX_GPU_HOST_DEVICE inline void comp_Kc(double *  tc, double invT, double *  Kc)')
+        ##self._write('AMREX_GPU_HOST_DEVICE inline void comp_Kc(amrex::Real *  tc, amrex::Real invT, amrex::Real *  Kc)')
         ##self._write('{')
         ##self._indent()
 
         ##self._write(self.line('compute the Gibbs free energy'))
-        ##self._write('double g_RT[%d];' % (nSpecies))
+        ##self._write('amrex::Real g_RT[%d];' % (nSpecies))
         ##self._write('gibbs(g_RT, tc);')
 
         ##self._write()
@@ -5016,8 +5016,8 @@ class CPickler(CMill):
         ##self._write()
 
         ##self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-        ##self._write('double refC = %g / %g * invT;' % (atm.value, R.value))
-        ##self._write('double refCinv = 1 / refC;')
+        ##self._write('amrex::Real refC = %g / %g * invT;' % (atm.value, R.value))
+        ##self._write('amrex::Real refCinv = 1 / refC;')
 
         ##self._write()
 
@@ -5035,7 +5035,7 @@ class CPickler(CMill):
 
         # qdot
         self._write()
-        self._write('AMREX_GPU_HOST_DEVICE inline void comp_qfqr(double *  qf, double * qr, double * sc, double * tc, double invT)')
+        self._write('AMREX_GPU_HOST_DEVICE inline void comp_qfqr(amrex::Real *  qf, amrex::Real * qr, amrex::Real * sc, amrex::Real * tc, amrex::Real invT)')
         self._write('{')
         self._indent()
 
@@ -5061,7 +5061,7 @@ class CPickler(CMill):
 
             # Mixt concentration for PD & TB
             self._write(self.line('compute the mixture concentration'))
-            self._write('double mixture = 0.0;')
+            self._write('amrex::Real mixture = 0.0;')
             self._write('for (int i = 0; i < %d; ++i) {' % nSpecies)
             self._indent()
             self._write('mixture += sc[i];')
@@ -5071,26 +5071,26 @@ class CPickler(CMill):
 
             # Kc stuff
             self._write(self.line('compute the Gibbs free energy'))
-            self._write('double g_RT[%d];' % (nSpecies))
+            self._write('amrex::Real g_RT[%d];' % (nSpecies))
             self._write('gibbs(g_RT, tc);')
 
             self._write()
 
             self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-            self._write('double refC = %g / %g * invT;' % (atm.value, R.value))
-            self._write('double refCinv = 1 / refC;')
+            self._write('amrex::Real refC = %g / %g * invT;' % (atm.value, R.value))
+            self._write('amrex::Real refCinv = 1 / refC;')
 
             self._write()
             
             # kfs
             self._write("/* Evaluate the kfs */")
-            #self._write("double k_f[%d];"% nclassd)
-            #self._write("double Corr[%d];" % nclassd)
-            self._write("double k_f, k_r, Corr;")
+            #self._write("amrex::Real k_f[%d];"% nclassd)
+            #self._write("amrex::Real Corr[%d];" % nclassd)
+            self._write("amrex::Real k_f, k_r, Corr;")
             if ntroe > 0:
-                self._write("double redP, F, logPred, logFcent, troe_c, troe_n, troe, F_troe;")
+                self._write("amrex::Real redP, F, logPred, logFcent, troe_c, troe_n, troe, F_troe;")
             if nsri > 0:
-                self._write("double redP, F, X, F_sri;")
+                self._write("amrex::Real redP, F, X, F_sri;")
             self._write()
 
             # build reverse reaction map
@@ -5257,17 +5257,17 @@ class CPickler(CMill):
         # OMP stuff
         self._write()
         self._write("#ifndef AMREX_USE_CUDA")
-        self._write('static double T_save = -1;')
+        self._write('static amrex::Real T_save = -1;')
         self._write('#ifdef _OPENMP')
         self._write('#pragma omp threadprivate(T_save)')
         self._write('#endif')
         self._write()
-        self._write('static double k_f_save[%d];' % nReactions)
+        self._write('static amrex::Real k_f_save[%d];' % nReactions)
         self._write('#ifdef _OPENMP')
         self._write('#pragma omp threadprivate(k_f_save)')
         self._write('#endif')
         self._write()
-        self._write('static double Kc_save[%d];' % nReactions)
+        self._write('static amrex::Real Kc_save[%d];' % nReactions)
         self._write('#ifdef _OPENMP')
         self._write('#pragma omp threadprivate(Kc_save)')
         self._write('#endif')
@@ -5276,12 +5276,12 @@ class CPickler(CMill):
         # main function
         self._write()
         self._write(self.line('compute the production rate for each species pointwise on CPU'))
-        self._write('void productionRate(double *  wdot, double *  sc, double T)')
+        self._write('void productionRate(amrex::Real *  wdot, amrex::Real *  sc, amrex::Real T)')
         self._write('{')
         self._indent()
 
-        self._write('double tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
-        self._write('double invT = 1.0 / tc[1];')
+        self._write('amrex::Real tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
+        self._write('amrex::Real invT = 1.0 / tc[1];')
         
         self._write()
         self._write('if (T != T_save)')
@@ -5294,7 +5294,7 @@ class CPickler(CMill):
         self._write("}")
 
         self._write()
-        self._write('double qdot, q_f[%d], q_r[%d];' % (nReactions,nReactions))
+        self._write('amrex::Real qdot, q_f[%d], q_r[%d];' % (nReactions,nReactions))
         self._write('comp_qfqr(q_f, q_r, sc, tc, invT);');
 
         self._write()
@@ -5337,7 +5337,7 @@ class CPickler(CMill):
 
         # k_f function
         self._write()
-        self._write('void comp_k_f(double *  tc, double invT, double *  k_f)')
+        self._write('void comp_k_f(amrex::Real *  tc, amrex::Real invT, amrex::Real *  k_f)')
         self._write('{')
         self._indent()
         self._outdent()
@@ -5359,12 +5359,12 @@ class CPickler(CMill):
 
         # Kc
         self._write()
-        self._write('void comp_Kc(double *  tc, double invT, double *  Kc)')
+        self._write('void comp_Kc(amrex::Real *  tc, amrex::Real invT, amrex::Real *  Kc)')
         self._write('{')
         self._indent()
 
         self._write(self.line('compute the Gibbs free energy'))
-        self._write('double g_RT[%d];' % (nSpecies))
+        self._write('amrex::Real g_RT[%d];' % (nSpecies))
         self._write('gibbs(g_RT, tc);')
 
         self._write()
@@ -5391,8 +5391,8 @@ class CPickler(CMill):
         self._write()
 
         self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-        self._write('double refC = %g / %g * invT;' % (atm.value, R.value))
-        self._write('double refCinv = 1 / refC;')
+        self._write('amrex::Real refC = %g / %g * invT;' % (atm.value, R.value))
+        self._write('amrex::Real refCinv = 1 / refC;')
 
         self._write()
 
@@ -5409,7 +5409,7 @@ class CPickler(CMill):
 
         # qdot
         self._write()
-        self._write('void comp_qfqr(double *  qf, double *  qr, double *  sc, double *  tc, double invT)')
+        self._write('void comp_qfqr(amrex::Real *  qf, amrex::Real *  qr, amrex::Real *  sc, amrex::Real *  tc, amrex::Real invT)')
         self._write('{')
         self._indent()
 
@@ -5430,10 +5430,10 @@ class CPickler(CMill):
                 self._write("qr[%d] = 0.0;" % (i))
 
         self._write()
-        self._write('double T = tc[1];')
+        self._write('amrex::Real T = tc[1];')
         self._write()
         self._write(self.line('compute the mixture concentration'))
-        self._write('double mixture = 0.0;')
+        self._write('amrex::Real mixture = 0.0;')
         self._write('for (int i = 0; i < %d; ++i) {' % nSpecies)
         self._indent()
         self._write('mixture += sc[i];')
@@ -5441,7 +5441,7 @@ class CPickler(CMill):
         self._write('}')
 
         self._write()
-        self._write("double Corr[%d];" % nclassd)
+        self._write("amrex::Real Corr[%d];" % nclassd)
         self._write('for (int i = 0; i < %d; ++i) {' % nclassd)
         self._indent()
         self._write('Corr[i] = 1.0;')
@@ -5453,7 +5453,7 @@ class CPickler(CMill):
             self._write(self.line(" troe"))
             self._write("{")
             self._indent()
-            self._write("double alpha[%d];" % ntroe)
+            self._write("amrex::Real alpha[%d];" % ntroe)
             alpha_d = {}
             for i in range(itroe[0],itroe[1]):
                 ii = i - itroe[0]
@@ -5481,7 +5481,7 @@ class CPickler(CMill):
             self._write("for (int i=%d; i<%d; i++)" %(itroe[0],itroe[1]))
             self._write("{")
             self._indent()
-            self._write("double redP, F, logPred, logFcent, troe_c, troe_n, troe, F_troe;")
+            self._write("amrex::Real redP, F, logPred, logFcent, troe_c, troe_n, troe, F_troe;")
             self._write("redP = alpha[i-%d] / k_f_save[i] * phase_units[i] * low_A[i] * exp(low_beta[i] * tc[0] - activation_units[i] * low_Ea[i] *invT);" % itroe[0])
             self._write("F = redP / (1.0 + redP);")
             self._write("logPred = log10(redP);")
@@ -5505,8 +5505,8 @@ class CPickler(CMill):
             self._write(self.line(" SRI"))
             self._write("{")
             self._indent()
-            self._write("double alpha[%d];" % nsri)
-            self._write("double redP, F, X, F_sri;")
+            self._write("amrex::Real alpha[%d];" % nsri)
+            self._write("amrex::Real redP, F, X, F_sri;")
             alpha_d = {}
             for i in range(isri[0],isri[1]):
                 ii = i - isri[0]
@@ -5554,9 +5554,9 @@ class CPickler(CMill):
             self._write("{")
             self._indent()
             if nlindemann > 1:
-                self._write("double alpha[%d];" % nlindemann)
+                self._write("amrex::Real alpha[%d];" % nlindemann)
             else:
-                self._write("double alpha;")
+                self._write("amrex::Real alpha;")
 
             for i in range(ilindemann[0],ilindemann[1]):
                 ii = i - ilindemann[0]
@@ -5569,7 +5569,7 @@ class CPickler(CMill):
                         self._write("alpha = %s;" %(alpha))
 
             if nlindemann == 1:
-                self._write("double redP = alpha / k_f_save[%d] * phase_units[%d] * low_A[%d] * exp(low_beta[%d] * tc[0] - activation_units[%d] * low_Ea[%d] * invT);" 
+                self._write("amrex::Real redP = alpha / k_f_save[%d] * phase_units[%d] * low_A[%d] * exp(low_beta[%d] * tc[0] - activation_units[%d] * low_Ea[%d] * invT);" 
                             % (ilindemann[0],ilindemann[0],ilindemann[0],ilindemann[0],ilindemann[0],ilindemann[0]))
                 self._write("Corr[%d] = redP / (1. + redP);" % ilindemann[0])
             else:
@@ -5584,7 +5584,7 @@ class CPickler(CMill):
                 self._write("for (int i=%d; i<%d; i++)" % (ilindemann[0], ilindemann[1]))
                 self._write("{")
                 self._indent()
-                self._write("double redP = alpha[i-%d] / k_f_save[i] * phase_units[i] * low_A[i] * exp(low_beta[i] * tc[0] - activation_units[i] * low_Ea[i] * invT);"
+                self._write("amrex::Real redP = alpha[i-%d] / k_f_save[i] * phase_units[i] * low_A[i] * exp(low_beta[i] * tc[0] - activation_units[i] * low_Ea[i] * invT);"
                             % ilindemann[0])
                 self._write("Corr[i] = redP / (1. + redP);")
                 self._outdent()
@@ -5598,7 +5598,7 @@ class CPickler(CMill):
             self._write(self.line(" simple three-body correction"))
             self._write("{")
             self._indent()
-            self._write("double alpha;")
+            self._write("amrex::Real alpha;")
             alpha_save = ""
             for i in range(i3body[0],i3body[1]):
                 reaction = mechanism.reaction(id=i)
@@ -5631,25 +5631,25 @@ class CPickler(CMill):
 
             self._write(self.line("reactions: %d to %d" % (ispecial[0]+1,ispecial[1])))
 
-            #self._write('double Kc;                      ' + self.line('equilibrium constant'))
-            self._write('double k_f;                     ' + self.line('forward reaction rate'))
-            self._write('double k_r;                     ' + self.line('reverse reaction rate'))
-            self._write('double q_f;                     ' + self.line('forward progress rate'))
-            self._write('double q_r;                     ' + self.line('reverse progress rate'))
-            self._write('double phi_f;                   '
+            #self._write('amrex::Real Kc;                      ' + self.line('equilibrium constant'))
+            self._write('amrex::Real k_f;                     ' + self.line('forward reaction rate'))
+            self._write('amrex::Real k_r;                     ' + self.line('reverse reaction rate'))
+            self._write('amrex::Real q_f;                     ' + self.line('forward progress rate'))
+            self._write('amrex::Real q_r;                     ' + self.line('reverse progress rate'))
+            self._write('amrex::Real phi_f;                   '
                         + self.line('forward phase space factor'))
-            self._write('double phi_r;                   ' + self.line('reverse phase space factor'))
-            self._write('double alpha;                   ' + self.line('enhancement'))
+            self._write('amrex::Real phi_r;                   ' + self.line('reverse phase space factor'))
+            self._write('amrex::Real alpha;                   ' + self.line('enhancement'))
 
-            #self._write('double redP;                    ' + self.line('reduced pressure'))
-            #self._write('double logPred;                 ' + self.line('log of above'))
-            #self._write('double F;                       ' + self.line('fallof rate enhancement'))
+            #self._write('amrex::Real redP;                    ' + self.line('reduced pressure'))
+            #self._write('amrex::Real logPred;                 ' + self.line('log of above'))
+            #self._write('amrex::Real F;                       ' + self.line('fallof rate enhancement'))
             #self._write()
-            #self._write('double F_troe;                  ' + self.line('TROE intermediate'))
-            #self._write('double logFcent;                ' + self.line('TROE intermediate'))
-            #self._write('double troe;                    ' + self.line('TROE intermediate'))
-            #self._write('double troe_c;                  ' + self.line('TROE intermediate'))
-            #self._write('double troe_n;                  ' + self.line('TROE intermediate'))
+            #self._write('amrex::Real F_troe;                  ' + self.line('TROE intermediate'))
+            #self._write('amrex::Real logFcent;                ' + self.line('TROE intermediate'))
+            #self._write('amrex::Real troe;                    ' + self.line('TROE intermediate'))
+            #self._write('amrex::Real troe_c;                  ' + self.line('TROE intermediate'))
+            #self._write('amrex::Real troe_n;                  ' + self.line('TROE intermediate'))
 
             for i in range(ispecial[0],ispecial[1]):
                 self._write()
@@ -5684,12 +5684,12 @@ class CPickler(CMill):
         self._write('#ifdef USE_PYJAC')
         self._write()
         self._write(self.line('compute the reaction Jacobian using PyJac'))
-        self._write('void DWDOT_PYJAC(double *  J, double *  y, double *  Tp, double *  Press)')
+        self._write('void DWDOT_PYJAC(amrex::Real *  J, amrex::Real *  y, amrex::Real *  Tp, amrex::Real *  Press)')
         self._write('{')
         self._indent()
 
-        self._write('double y_pyjac[%d];' % (nSpecies + 1))
-        self._write('double J_reorg[%d];' % (nSpecies+1)**2)
+        self._write('amrex::Real y_pyjac[%d];' % (nSpecies + 1))
+        self._write('amrex::Real J_reorg[%d];' % (nSpecies+1)**2)
 
         self._write()
         self._write(self.line(' INPUT Y'))
@@ -5701,7 +5701,7 @@ class CPickler(CMill):
         self._write('}')
 
         self._write()
-        self._write('double Press_MKS = *Press / 10.0;')
+        self._write('amrex::Real Press_MKS = *Press / 10.0;')
 
         self._write()
         self._write('for (int k=0; k<%d; k++) {' % (nSpecies+1)**2)
@@ -5766,11 +5766,11 @@ class CPickler(CMill):
 
         self._write()
         self._write(self.line('compute the reaction Jacobian'))
-        self._write('AMREX_GPU_HOST_DEVICE void DWDOT(double *  J, double *  sc, double *  Tp, int * consP)')
+        self._write('AMREX_GPU_HOST_DEVICE void DWDOT(amrex::Real *  J, amrex::Real *  sc, amrex::Real *  Tp, int * consP)')
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
+        self._write('amrex::Real c[%d];' % (nSpecies))
         self._write()
         self._write('for (int k=0; k<%d; k++) {' % nSpecies)
         self._indent()
@@ -5806,11 +5806,11 @@ class CPickler(CMill):
 
         self._write()
         self._write(self.line('compute an approx to the reaction Jacobian (for preconditioning)'))
-        self._write('AMREX_GPU_HOST_DEVICE void DWDOT_SIMPLIFIED(double *  J, double *  sc, double *  Tp, int * HP)')
+        self._write('AMREX_GPU_HOST_DEVICE void DWDOT_SIMPLIFIED(amrex::Real *  J, amrex::Real *  sc, amrex::Real *  Tp, int * HP)')
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
+        self._write('amrex::Real c[%d];' % (nSpecies))
         self._write()
         self._write('for (int k=0; k<%d; k++) {' % nSpecies)
         self._indent()
@@ -5846,13 +5846,13 @@ class CPickler(CMill):
 
         self._write()
         self._write(self.line('compute an approx to the SPS Jacobian'))
-        self._write('AMREX_GPU_HOST_DEVICE void SLJ_PRECOND_CSC(double *  Jsps, int * indx, int * len, double * sc, double * Tp, int * HP, double * gamma)')
+        self._write('AMREX_GPU_HOST_DEVICE void SLJ_PRECOND_CSC(amrex::Real *  Jsps, int * indx, int * len, amrex::Real * sc, amrex::Real * Tp, int * HP, amrex::Real * gamma)')
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
-        self._write('double J[%d];' % ((nSpecies+1) * (nSpecies+1)))
-        self._write('double mwt[%d];' % (nSpecies))
+        self._write('amrex::Real c[%d];' % (nSpecies))
+        self._write('amrex::Real J[%d];' % ((nSpecies+1) * (nSpecies+1)))
+        self._write('amrex::Real mwt[%d];' % (nSpecies))
         self._write()
         self._write('get_mw(mwt);')
         self._write()
@@ -5925,8 +5925,8 @@ class CPickler(CMill):
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
-        self._write('double J[%d];' % (nSpecies+1)**2)
+        self._write('amrex::Real c[%d];' % (nSpecies))
+        self._write('amrex::Real J[%d];' % (nSpecies+1)**2)
         self._write()
         self._write('for (int k=0; k<%d; k++) {' % nSpecies)
         self._indent()
@@ -5971,8 +5971,8 @@ class CPickler(CMill):
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
-        self._write('double J[%d];' % (nSpecies+1)**2)
+        self._write('amrex::Real c[%d];' % (nSpecies))
+        self._write('amrex::Real J[%d];' % (nSpecies+1)**2)
         self._write()
         self._write('for (int k=0; k<%d; k++) {' % nSpecies)
         self._indent()
@@ -6025,8 +6025,8 @@ class CPickler(CMill):
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
-        self._write('double J[%d];' % (nSpecies+1)**2)
+        self._write('amrex::Real c[%d];' % (nSpecies))
+        self._write('amrex::Real J[%d];' % (nSpecies+1)**2)
         self._write()
         self._write('for (int k=0; k<%d; k++) {' % nSpecies)
         self._indent()
@@ -6079,8 +6079,8 @@ class CPickler(CMill):
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
-        self._write('double J[%d];' % (nSpecies+1)**2)
+        self._write('amrex::Real c[%d];' % (nSpecies))
+        self._write('amrex::Real J[%d];' % (nSpecies+1)**2)
         self._write('int offset_row;')
         self._write('int offset_col;')
         self._write()
@@ -6131,8 +6131,8 @@ class CPickler(CMill):
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
-        self._write('double J[%d];' % (nSpecies+1)**2)
+        self._write('amrex::Real c[%d];' % (nSpecies))
+        self._write('amrex::Real J[%d];' % (nSpecies+1)**2)
         self._write('int offset;')
         self._write()
         self._write('for (int k=0; k<%d; k++) {' % nSpecies)
@@ -6212,8 +6212,8 @@ class CPickler(CMill):
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
-        self._write('double J[%d];' % (nSpecies+1)**2)
+        self._write('amrex::Real c[%d];' % (nSpecies))
+        self._write('amrex::Real J[%d];' % (nSpecies+1)**2)
         self._write('int offset;')
 
         self._write()
@@ -6311,8 +6311,8 @@ class CPickler(CMill):
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
-        self._write('double J[%d];' % (nSpecies+1)**2)
+        self._write('amrex::Real c[%d];' % (nSpecies))
+        self._write('amrex::Real J[%d];' % (nSpecies+1)**2)
         self._write()
         self._write('for (int k=0; k<%d; k++) {' % nSpecies)
         self._indent()
@@ -6367,8 +6367,8 @@ class CPickler(CMill):
         self._write('{')
         self._indent()
 
-        self._write('double c[%d];' % (nSpecies))
-        self._write('double J[%d];' % (nSpecies+1)**2)
+        self._write('amrex::Real c[%d];' % (nSpecies))
+        self._write('amrex::Real J[%d];' % (nSpecies+1)**2)
         self._write()
         self._write('for (int k=0; k<%d; k++) {' % nSpecies)
         self._indent()
@@ -6457,7 +6457,7 @@ class CPickler(CMill):
 
         self._write()
         self._write(self.line('compute an approx to the reaction Jacobian'))
-        self._write('AMREX_GPU_HOST_DEVICE void aJacobian_precond(double *  J, double *  sc, double T, int HP)')
+        self._write('AMREX_GPU_HOST_DEVICE void aJacobian_precond(amrex::Real *  J, amrex::Real *  sc, amrex::Real T, int HP)')
         self._write('{')
         self._indent()
 
@@ -6469,7 +6469,7 @@ class CPickler(CMill):
         
         self._write()
 
-        self._write('double wdot[%d];' % (nSpecies))
+        self._write('amrex::Real wdot[%d];' % (nSpecies))
         self._write('for (int k=0; k<%d; k++) {' % (nSpecies))
         self._indent()
         self._write('wdot[k] = 0.0;')
@@ -6478,20 +6478,20 @@ class CPickler(CMill):
         
         self._write()
 
-        self._write('double tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
-        self._write('double invT = 1.0 / tc[1];')
-        self._write('double invT2 = invT * invT;')
+        self._write('amrex::Real tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
+        self._write('amrex::Real invT = 1.0 / tc[1];')
+        self._write('amrex::Real invT2 = invT * invT;')
 
         self._write()
 
         self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-        self._write('double refC = %g / %g / T;' % (atm.value, R.value))
-        self._write('double refCinv = 1.0 / refC;')
+        self._write('amrex::Real refC = %g / %g / T;' % (atm.value, R.value))
+        self._write('amrex::Real refCinv = 1.0 / refC;')
 
         self._write()
 
         self._write(self.line('compute the mixture concentration'))
-        self._write('double mixture = 0.0;')
+        self._write('amrex::Real mixture = 0.0;')
         self._write('for (int k = 0; k < %d; ++k) {' % nSpecies)
         self._indent()
         self._write('mixture += sc[k];')
@@ -6501,27 +6501,27 @@ class CPickler(CMill):
         self._write()
 
         self._write(self.line('compute the Gibbs free energy'))
-        self._write('double g_RT[%d];' % (nSpecies))
+        self._write('amrex::Real g_RT[%d];' % (nSpecies))
         self._write('gibbs(g_RT, tc);')
 
         self._write()
 
         self._write(self.line('compute the species enthalpy'))
-        self._write('double h_RT[%d];' % (nSpecies))
+        self._write('amrex::Real h_RT[%d];' % (nSpecies))
         self._write('speciesEnthalpy(h_RT, tc);')
 
         self._write()
 
-        self._write('double phi_f, k_f, k_r, phi_r, Kc, q, q_nocor, Corr, alpha;') 
-        self._write('double dlnkfdT, dlnk0dT, dlnKcdT, dkrdT, dqdT;')
-        self._write('double dqdci, dcdc_fac, dqdc[%d];' % (nSpecies))
-        self._write('double Pr, fPr, F, k_0, logPr;') 
-        self._write('double logFcent, troe_c, troe_n, troePr_den, troePr, troe;')
-        self._write('double Fcent1, Fcent2, Fcent3, Fcent;')
-        self._write('double dlogFdc, dlogFdn, dlogFdcn_fac;')
-        self._write('double dlogPrdT, dlogfPrdT, dlogFdT, dlogFcentdT, dlogFdlogPr, dlnCorrdT;')
-        self._write('const double ln10 = log(10.0);')
-        self._write('const double log10e = 1.0/log(10.0);')
+        self._write('amrex::Real phi_f, k_f, k_r, phi_r, Kc, q, q_nocor, Corr, alpha;') 
+        self._write('amrex::Real dlnkfdT, dlnk0dT, dlnKcdT, dkrdT, dqdT;')
+        self._write('amrex::Real dqdci, dcdc_fac, dqdc[%d];' % (nSpecies))
+        self._write('amrex::Real Pr, fPr, F, k_0, logPr;') 
+        self._write('amrex::Real logFcent, troe_c, troe_n, troePr_den, troePr, troe;')
+        self._write('amrex::Real Fcent1, Fcent2, Fcent3, Fcent;')
+        self._write('amrex::Real dlogFdc, dlogFdn, dlogFdcn_fac;')
+        self._write('amrex::Real dlogPrdT, dlogfPrdT, dlogFdT, dlogFcentdT, dlogFdlogPr, dlnCorrdT;')
+        self._write('const amrex::Real ln10 = log(10.0);')
+        self._write('const amrex::Real log10e = 1.0/log(10.0);')
 
         for i, reaction in zip(range(nReactions), mechanism.reaction()):
 
@@ -6542,8 +6542,8 @@ class CPickler(CMill):
                 self._ajac_reaction_precond(mechanism, reaction, 3)
             self._write()
 
-        self._write('double c_R[%d], dcRdT[%d], e_RT[%d];' % (nSpecies, nSpecies, nSpecies))
-        self._write('double * eh_RT;')
+        self._write('amrex::Real c_R[%d], dcRdT[%d], e_RT[%d];' % (nSpecies, nSpecies, nSpecies))
+        self._write('amrex::Real * eh_RT;')
         self._write('if (HP) {')
         self._indent()
 
@@ -6566,7 +6566,7 @@ class CPickler(CMill):
 
         self._write()
 
-        self._write('double cmix = 0.0, ehmix = 0.0, dcmixdT=0.0, dehmixdT=0.0;')
+        self._write('amrex::Real cmix = 0.0, ehmix = 0.0, dcmixdT=0.0, dehmixdT=0.0;')
         self._write('for (int k = 0; k < %d; ++k) {' % nSpecies)
         self._indent()
         self._write('cmix += c_R[k]*sc[k];')
@@ -6578,11 +6578,11 @@ class CPickler(CMill):
         self._write('}')
 
         self._write()
-        self._write('double cmixinv = 1.0/cmix;')
-        self._write('double tmp1 = ehmix*cmixinv;')
-        self._write('double tmp3 = cmixinv*T;')
-        self._write('double tmp2 = tmp1*tmp3;')
-        self._write('double dehmixdc;')
+        self._write('amrex::Real cmixinv = 1.0/cmix;')
+        self._write('amrex::Real tmp1 = ehmix*cmixinv;')
+        self._write('amrex::Real tmp3 = cmixinv*T;')
+        self._write('amrex::Real tmp2 = tmp1*tmp3;')
+        self._write('amrex::Real dehmixdc;')
 
         self._write('/* dTdot/d[X] */')
         self._write('for (int k = 0; k < %d; ++k) {' % nSpecies)
@@ -7014,7 +7014,7 @@ class CPickler(CMill):
         self._write('#ifdef AMREX_USE_CUDA')
         self._write(self.line('compute the reaction Jacobian on GPU'))
         self._write('AMREX_GPU_HOST_DEVICE')
-        self._write('void aJacobian(double * J, double * sc, double T, int consP)')
+        self._write('void aJacobian(amrex::Real * J, amrex::Real * sc, amrex::Real T, int consP)')
         self._write('{')
         self._indent()
 
@@ -7030,7 +7030,7 @@ class CPickler(CMill):
         
         self._write()
 
-        self._write('double wdot[%d];' % (nSpecies))
+        self._write('amrex::Real wdot[%d];' % (nSpecies))
         self._write('for (int k=0; k<%d; k++) {' % (nSpecies))
         self._indent()
         self._write('wdot[k] = 0.0;')
@@ -7039,20 +7039,20 @@ class CPickler(CMill):
         
         self._write()
 
-        self._write('double tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
-        self._write('double invT = 1.0 / tc[1];')
-        self._write('double invT2 = invT * invT;')
+        self._write('amrex::Real tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
+        self._write('amrex::Real invT = 1.0 / tc[1];')
+        self._write('amrex::Real invT2 = invT * invT;')
 
         self._write()
 
         self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-        self._write('double refC = %g / %g / T;' % (atm.value, R.value))
-        self._write('double refCinv = 1.0 / refC;')
+        self._write('amrex::Real refC = %g / %g / T;' % (atm.value, R.value))
+        self._write('amrex::Real refCinv = 1.0 / refC;')
 
         self._write()
 
         self._write(self.line('compute the mixture concentration'))
-        self._write('double mixture = 0.0;')
+        self._write('amrex::Real mixture = 0.0;')
         self._write('for (int k = 0; k < %d; ++k) {' % nSpecies)
         self._indent()
         self._write('mixture += sc[k];')
@@ -7062,27 +7062,27 @@ class CPickler(CMill):
         self._write()
 
         self._write(self.line('compute the Gibbs free energy'))
-        self._write('double g_RT[%d];' % (nSpecies))
+        self._write('amrex::Real g_RT[%d];' % (nSpecies))
         self._write('gibbs(g_RT, tc);')
 
         self._write()
 
         self._write(self.line('compute the species enthalpy'))
-        self._write('double h_RT[%d];' % (nSpecies))
+        self._write('amrex::Real h_RT[%d];' % (nSpecies))
         self._write('speciesEnthalpy(h_RT, tc);')
 
         self._write()
 
-        self._write('double phi_f, k_f, k_r, phi_r, Kc, q, q_nocor, Corr, alpha;') 
-        self._write('double dlnkfdT, dlnk0dT, dlnKcdT, dkrdT, dqdT;')
-        self._write('double dqdci, dcdc_fac, dqdc[%d];' % (nSpecies))
-        self._write('double Pr, fPr, F, k_0, logPr;') 
-        self._write('double logFcent, troe_c, troe_n, troePr_den, troePr, troe;')
-        self._write('double Fcent1, Fcent2, Fcent3, Fcent;')
-        self._write('double dlogFdc, dlogFdn, dlogFdcn_fac;')
-        self._write('double dlogPrdT, dlogfPrdT, dlogFdT, dlogFcentdT, dlogFdlogPr, dlnCorrdT;')
-        self._write('const double ln10 = log(10.0);')
-        self._write('const double log10e = 1.0/log(10.0);')
+        self._write('amrex::Real phi_f, k_f, k_r, phi_r, Kc, q, q_nocor, Corr, alpha;') 
+        self._write('amrex::Real dlnkfdT, dlnk0dT, dlnKcdT, dkrdT, dqdT;')
+        self._write('amrex::Real dqdci, dcdc_fac, dqdc[%d];' % (nSpecies))
+        self._write('amrex::Real Pr, fPr, F, k_0, logPr;') 
+        self._write('amrex::Real logFcent, troe_c, troe_n, troePr_den, troePr, troe;')
+        self._write('amrex::Real Fcent1, Fcent2, Fcent3, Fcent;')
+        self._write('amrex::Real dlogFdc, dlogFdn, dlogFdcn_fac;')
+        self._write('amrex::Real dlogPrdT, dlogfPrdT, dlogFdT, dlogFcentdT, dlogFdlogPr, dlnCorrdT;')
+        self._write('const amrex::Real ln10 = log(10.0);')
+        self._write('const amrex::Real log10e = 1.0/log(10.0);')
 
         for i, reaction in zip(range(nReactions), mechanism.reaction()):
 
@@ -7103,8 +7103,8 @@ class CPickler(CMill):
                 self._ajac_reaction_d(mechanism, reaction, 3)
             self._write()
 
-        self._write('double c_R[%d], dcRdT[%d], e_RT[%d];' % (nSpecies, nSpecies, nSpecies))
-        self._write('double * eh_RT;')
+        self._write('amrex::Real c_R[%d], dcRdT[%d], e_RT[%d];' % (nSpecies, nSpecies, nSpecies))
+        self._write('amrex::Real * eh_RT;')
         self._write('if (consP) {')
         self._indent()
 
@@ -7127,7 +7127,7 @@ class CPickler(CMill):
 
         self._write()
 
-        self._write('double cmix = 0.0, ehmix = 0.0, dcmixdT=0.0, dehmixdT=0.0;')
+        self._write('amrex::Real cmix = 0.0, ehmix = 0.0, dcmixdT=0.0, dehmixdT=0.0;')
         self._write('for (int k = 0; k < %d; ++k) {' % nSpecies)
         self._indent()
         self._write('cmix += c_R[k]*sc[k];')
@@ -7139,11 +7139,11 @@ class CPickler(CMill):
         self._write('}')
 
         self._write()
-        self._write('double cmixinv = 1.0/cmix;')
-        self._write('double tmp1 = ehmix*cmixinv;')
-        self._write('double tmp3 = cmixinv*T;')
-        self._write('double tmp2 = tmp1*tmp3;')
-        self._write('double dehmixdc;')
+        self._write('amrex::Real cmixinv = 1.0/cmix;')
+        self._write('amrex::Real tmp1 = ehmix*cmixinv;')
+        self._write('amrex::Real tmp3 = cmixinv*T;')
+        self._write('amrex::Real tmp2 = tmp1*tmp3;')
+        self._write('amrex::Real dehmixdc;')
 
         self._write('/* dTdot/d[X] */')
         self._write('for (int k = 0; k < %d; ++k) {' % nSpecies)
@@ -7573,7 +7573,7 @@ class CPickler(CMill):
         self._write()
         self._write('#ifndef AMREX_USE_CUDA')
         self._write(self.line('compute the reaction Jacobian on CPU'))
-        self._write('void aJacobian(double *  J, double *  sc, double T, int consP)')
+        self._write('void aJacobian(amrex::Real *  J, amrex::Real *  sc, amrex::Real T, int consP)')
         self._write('{')
         self._indent()
 
@@ -7585,7 +7585,7 @@ class CPickler(CMill):
         
         self._write()
 
-        self._write('double wdot[%d];' % (nSpecies))
+        self._write('amrex::Real wdot[%d];' % (nSpecies))
         self._write('for (int k=0; k<%d; k++) {' % (nSpecies))
         self._indent()
         self._write('wdot[k] = 0.0;')
@@ -7594,20 +7594,20 @@ class CPickler(CMill):
         
         self._write()
 
-        self._write('double tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
-        self._write('double invT = 1.0 / tc[1];')
-        self._write('double invT2 = invT * invT;')
+        self._write('amrex::Real tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
+        self._write('amrex::Real invT = 1.0 / tc[1];')
+        self._write('amrex::Real invT2 = invT * invT;')
 
         self._write()
 
         self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-        self._write('double refC = %g / %g / T;' % (atm.value, R.value))
-        self._write('double refCinv = 1.0 / refC;')
+        self._write('amrex::Real refC = %g / %g / T;' % (atm.value, R.value))
+        self._write('amrex::Real refCinv = 1.0 / refC;')
 
         self._write()
 
         self._write(self.line('compute the mixture concentration'))
-        self._write('double mixture = 0.0;')
+        self._write('amrex::Real mixture = 0.0;')
         self._write('for (int k = 0; k < %d; ++k) {' % nSpecies)
         self._indent()
         self._write('mixture += sc[k];')
@@ -7617,27 +7617,27 @@ class CPickler(CMill):
         self._write()
 
         self._write(self.line('compute the Gibbs free energy'))
-        self._write('double g_RT[%d];' % (nSpecies))
+        self._write('amrex::Real g_RT[%d];' % (nSpecies))
         self._write('gibbs(g_RT, tc);')
 
         self._write()
 
         self._write(self.line('compute the species enthalpy'))
-        self._write('double h_RT[%d];' % (nSpecies))
+        self._write('amrex::Real h_RT[%d];' % (nSpecies))
         self._write('speciesEnthalpy(h_RT, tc);')
 
         self._write()
 
-        self._write('double phi_f, k_f, k_r, phi_r, Kc, q, q_nocor, Corr, alpha;') 
-        self._write('double dlnkfdT, dlnk0dT, dlnKcdT, dkrdT, dqdT;')
-        self._write('double dqdci, dcdc_fac, dqdc[%d];' % (nSpecies))
-        self._write('double Pr, fPr, F, k_0, logPr;') 
-        self._write('double logFcent, troe_c, troe_n, troePr_den, troePr, troe;')
-        self._write('double Fcent1, Fcent2, Fcent3, Fcent;')
-        self._write('double dlogFdc, dlogFdn, dlogFdcn_fac;')
-        self._write('double dlogPrdT, dlogfPrdT, dlogFdT, dlogFcentdT, dlogFdlogPr, dlnCorrdT;')
-        self._write('const double ln10 = log(10.0);')
-        self._write('const double log10e = 1.0/log(10.0);')
+        self._write('amrex::Real phi_f, k_f, k_r, phi_r, Kc, q, q_nocor, Corr, alpha;') 
+        self._write('amrex::Real dlnkfdT, dlnk0dT, dlnKcdT, dkrdT, dqdT;')
+        self._write('amrex::Real dqdci, dcdc_fac, dqdc[%d];' % (nSpecies))
+        self._write('amrex::Real Pr, fPr, F, k_0, logPr;') 
+        self._write('amrex::Real logFcent, troe_c, troe_n, troePr_den, troePr, troe;')
+        self._write('amrex::Real Fcent1, Fcent2, Fcent3, Fcent;')
+        self._write('amrex::Real dlogFdc, dlogFdn, dlogFdcn_fac;')
+        self._write('amrex::Real dlogPrdT, dlogfPrdT, dlogFdT, dlogFcentdT, dlogFdlogPr, dlnCorrdT;')
+        self._write('const amrex::Real ln10 = log(10.0);')
+        self._write('const amrex::Real log10e = 1.0/log(10.0);')
 
         for i, reaction in zip(range(nReactions), mechanism.reaction()):
 
@@ -7658,8 +7658,8 @@ class CPickler(CMill):
                 self._ajac_reaction(mechanism, reaction, 3)
             self._write()
 
-        self._write('double c_R[%d], dcRdT[%d], e_RT[%d];' % (nSpecies, nSpecies, nSpecies))
-        self._write('double * eh_RT;')
+        self._write('amrex::Real c_R[%d], dcRdT[%d], e_RT[%d];' % (nSpecies, nSpecies, nSpecies))
+        self._write('amrex::Real * eh_RT;')
         self._write('if (consP) {')
         self._indent()
 
@@ -7682,7 +7682,7 @@ class CPickler(CMill):
 
         self._write()
 
-        self._write('double cmix = 0.0, ehmix = 0.0, dcmixdT=0.0, dehmixdT=0.0;')
+        self._write('amrex::Real cmix = 0.0, ehmix = 0.0, dcmixdT=0.0, dehmixdT=0.0;')
         self._write('for (int k = 0; k < %d; ++k) {' % nSpecies)
         self._indent()
         self._write('cmix += c_R[k]*sc[k];')
@@ -7694,11 +7694,11 @@ class CPickler(CMill):
         self._write('}')
 
         self._write()
-        self._write('double cmixinv = 1.0/cmix;')
-        self._write('double tmp1 = ehmix*cmixinv;')
-        self._write('double tmp3 = cmixinv*T;')
-        self._write('double tmp2 = tmp1*tmp3;')
-        self._write('double dehmixdc;')
+        self._write('amrex::Real cmixinv = 1.0/cmix;')
+        self._write('amrex::Real tmp1 = ehmix*cmixinv;')
+        self._write('amrex::Real tmp3 = cmixinv*T;')
+        self._write('amrex::Real tmp2 = tmp1*tmp3;')
+        self._write('amrex::Real dehmixdc;')
 
         self._write('/* dTdot/d[X] */')
         self._write('for (int k = 0; k < %d; ++k) {' % nSpecies)
@@ -8106,13 +8106,13 @@ class CPickler(CMill):
         self._write()
         self._write('#ifndef AMREX_USE_CUDA')
         self._write(self.line('compute the production rate for each species'))
-        self._write('void vproductionRate(int npt, double *  wdot, double *  sc, double *  T)')
+        self._write('void vproductionRate(int npt, amrex::Real *  wdot, amrex::Real *  sc, amrex::Real *  T)')
         self._write('{')
         self._indent()
 
-        self._write('double k_f_s[%d*npt], Kc_s[%d*npt], mixture[npt], g_RT[%d*npt];'
+        self._write('amrex::Real k_f_s[%d*npt], Kc_s[%d*npt], mixture[npt], g_RT[%d*npt];'
                     % (nReactions, nReactions, nSpecies))
-        self._write('double tc[5*npt], invT[npt];')
+        self._write('amrex::Real tc[5*npt], invT[npt];')
 
         self._write()
 
@@ -8171,7 +8171,7 @@ class CPickler(CMill):
 
         self._write()
 
-        self._write('void vcomp_k_f(int npt, double *  k_f_s, double *  tc, double *  invT)')
+        self._write('void vcomp_k_f(int npt, amrex::Real *  k_f_s, amrex::Real *  tc, amrex::Real *  invT)')
         self._write('{')
         # self._write('#ifdef __INTEL_COMPILER')
         # self._indent()
@@ -8192,13 +8192,13 @@ class CPickler(CMill):
 
         self._write()
 
-        self._write('void vcomp_gibbs(int npt, double *  g_RT, double *  tc)')
+        self._write('void vcomp_gibbs(int npt, amrex::Real *  g_RT, amrex::Real *  tc)')
         self._write('{')
         self._indent()
         self._write(self.line('compute the Gibbs free energy'))
         self._write('for (int i=0; i<npt; i++) {')
         self._indent()
-        self._write('double tg[5], g[%d];' % nSpecies)
+        self._write('amrex::Real tg[5], g[%d];' % nSpecies)
         self._write('tg[0] = tc[0*npt+i];')
         self._write('tg[1] = tc[1*npt+i];')
         self._write('tg[2] = tc[2*npt+i];')
@@ -8216,7 +8216,7 @@ class CPickler(CMill):
 
         self._write()
 
-        self._write('void vcomp_Kc(int npt, double *  Kc_s, double *  g_RT, double *  invT)')
+        self._write('void vcomp_Kc(int npt, amrex::Real *  Kc_s, amrex::Real *  g_RT, amrex::Real *  invT)')
         self._write('{')
         # self._write('#ifdef __INTEL_COMPILER')
         # self._indent()
@@ -8227,8 +8227,8 @@ class CPickler(CMill):
         self._write('for (int i=0; i<npt; i++) {')
         self._indent()
         self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-        self._write('double refC = (101325. / 8.31451) * invT[i];');
-        self._write('double refCinv = 1.0 / refC;');
+        self._write('amrex::Real refC = (101325. / 8.31451) * invT[i];');
+        self._write('amrex::Real refCinv = 1.0 / refC;');
         self._write()
         for reaction in mechanism.reaction():
             K_c = self._vKc(mechanism, reaction)
@@ -8240,18 +8240,18 @@ class CPickler(CMill):
 
         self._write()
         if nReactions <= 50:
-            self._write('void vcomp_wdot(int npt, double *  wdot, double *  mixture, double *  sc,')
-            self._write('		double *  k_f_s, double *  Kc_s,')
-            self._write('		double *  tc, double *  invT, double *  T)')
+            self._write('void vcomp_wdot(int npt, amrex::Real *  wdot, amrex::Real *  mixture, amrex::Real *  sc,')
+            self._write('		amrex::Real *  k_f_s, amrex::Real *  Kc_s,')
+            self._write('		amrex::Real *  tc, amrex::Real *  invT, amrex::Real *  T)')
             self._write('{')
             self._vcomp_wdot(mechanism,0,nReactions)
             self._write('}')
         else:
             for i in range(0,nReactions,50):
                 nr = min(50, nReactions-i)
-                self._write('void vcomp_wdot_%d_%d(int npt, double *  wdot, double *  mixture, double *  sc,' % (i+1,i+nr))
-                self._write('		double *  k_f_s, double *  Kc_s,')
-                self._write('		double *  tc, double *  invT, double *  T)')
+                self._write('void vcomp_wdot_%d_%d(int npt, amrex::Real *  wdot, amrex::Real *  mixture, amrex::Real *  sc,' % (i+1,i+nr))
+                self._write('		amrex::Real *  k_f_s, amrex::Real *  Kc_s,')
+                self._write('		amrex::Real *  tc, amrex::Real *  invT, amrex::Real *  T)')
                 self._write('{')
                 self._vcomp_wdot(mechanism,i,nr)
                 self._write('}')
@@ -8289,18 +8289,18 @@ class CPickler(CMill):
         self._write('for (int i=0; i<npt; i++) {')
         self._indent()
 
-        self._write('double qdot, q_f, q_r, phi_f, phi_r, k_f, k_r, Kc;')
-        self._write('double alpha;')
+        self._write('amrex::Real qdot, q_f, q_r, phi_f, phi_r, k_f, k_r, Kc;')
+        self._write('amrex::Real alpha;')
         #if istart < isimple[0]:
-        #    self._write('double alpha;')
+        #    self._write('amrex::Real alpha;')
         if istart < i3body[0]:
-            self._write('double redP, F;') 
+            self._write('amrex::Real redP, F;') 
         if istart < ilindemann[0]:
-            self._write('double logPred;')
+            self._write('amrex::Real logPred;')
             if ntroe>0:
-                self._write('double logFcent, troe_c, troe_n, troe, F_troe;')
+                self._write('amrex::Real logFcent, troe_c, troe_n, troe, F_troe;')
             if nsri>0:
-                self._write('double X, F_sri;')
+                self._write('amrex::Real X, F_sri;')
 
         first_id = istart + 1
         last_id  = istart + nr
@@ -8377,12 +8377,12 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('compute the progress rate for each reaction'))
-        self._write('AMREX_GPU_HOST_DEVICE void progressRate(double *  qdot, double *  sc, double T)')
+        self._write('AMREX_GPU_HOST_DEVICE void progressRate(amrex::Real *  qdot, amrex::Real *  sc, amrex::Real T)')
         self._write('{')
         self._indent()
 
-        self._write('double tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
-        self._write('double invT = 1.0 / tc[1];')
+        self._write('amrex::Real tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
+        self._write('amrex::Real invT = 1.0 / tc[1];')
         
         self._write()
         self._outdent()
@@ -8404,7 +8404,7 @@ class CPickler(CMill):
             self._write()
         else:
             self._write()
-            self._write('double q_f[%d], q_r[%d];' % (nReactions,nReactions))
+            self._write('amrex::Real q_f[%d], q_r[%d];' % (nReactions,nReactions))
             self._write('comp_qfqr(q_f, q_r, sc, tc, invT);');
             self._write()
             self._write('for (int i = 0; i < %d; ++i) {' % nReactions)
@@ -8431,47 +8431,47 @@ class CPickler(CMill):
         self._write()
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double mixture;                 '
+        self._write('amrex::Real mixture;                 '
                     + self.line('mixture concentration'))
-        self._write('double g_RT[%d];                ' % nSpecies
+        self._write('amrex::Real g_RT[%d];                ' % nSpecies
                     + self.line('Gibbs free energy'))
 
-        self._write('double Kc;                      ' + self.line('equilibrium constant'))
-        self._write('double k_f;                     ' + self.line('forward reaction rate'))
-        self._write('double k_r;                     ' + self.line('reverse reaction rate'))
-        self._write('double q_f;                     ' + self.line('forward progress rate'))
-        self._write('double q_r;                     ' + self.line('reverse progress rate'))
-        self._write('double phi_f;                   '
+        self._write('amrex::Real Kc;                      ' + self.line('equilibrium constant'))
+        self._write('amrex::Real k_f;                     ' + self.line('forward reaction rate'))
+        self._write('amrex::Real k_r;                     ' + self.line('reverse reaction rate'))
+        self._write('amrex::Real q_f;                     ' + self.line('forward progress rate'))
+        self._write('amrex::Real q_r;                     ' + self.line('reverse progress rate'))
+        self._write('amrex::Real phi_f;                   '
                     + self.line('forward phase space factor'))
-        self._write('double phi_r;                   '
+        self._write('amrex::Real phi_r;                   '
                     + self.line('reverse phase space factor'))
-        self._write('double alpha;                   ' + self.line('enhancement'))
+        self._write('amrex::Real alpha;                   ' + self.line('enhancement'))
 
 
-        self._write('double redP;                    ' + self.line('reduced pressure'))
-        self._write('double logPred;                 ' + self.line('log of above'))
-        self._write('double F;                       '
+        self._write('amrex::Real redP;                    ' + self.line('reduced pressure'))
+        self._write('amrex::Real logPred;                 ' + self.line('log of above'))
+        self._write('amrex::Real F;                       '
                     + self.line('fallof rate enhancement'))
         self._write()
-        self._write('double F_troe;                  ' + self.line('TROE intermediate'))
-        self._write('double logFcent;                ' + self.line('TROE intermediate'))
-        self._write('double troe;                    ' + self.line('TROE intermediate'))
-        self._write('double troe_c;                  ' + self.line('TROE intermediate'))
-        self._write('double troe_n;                  ' + self.line('TROE intermediate'))
+        self._write('amrex::Real F_troe;                  ' + self.line('TROE intermediate'))
+        self._write('amrex::Real logFcent;                ' + self.line('TROE intermediate'))
+        self._write('amrex::Real troe;                    ' + self.line('TROE intermediate'))
+        self._write('amrex::Real troe_c;                  ' + self.line('TROE intermediate'))
+        self._write('amrex::Real troe_n;                  ' + self.line('TROE intermediate'))
         self._write()
 
         self._write(
-            'double tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; '
+            'amrex::Real tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; '
             + self.line('temperature cache'))
 
         self._write()
-        self._write('double invT = 1.0 / tc[1];')
+        self._write('amrex::Real invT = 1.0 / tc[1];')
 
         # compute the reference concentration
         self._write()
         self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-        self._write('double refC = %g / %g / T;' % (atm.value, R.value))
-        self._write('double refCinv = 1 / refC;')
+        self._write('amrex::Real refC = %g / %g / T;' % (atm.value, R.value))
+        self._write('amrex::Real refCinv = 1 / refC;')
 
         # compute the mixture concentration
         self._write()
@@ -8722,14 +8722,14 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('compute the progress rate for each reaction'))
-        self._write('AMREX_GPU_HOST_DEVICE void progressRateFR(double *  q_f, double *  q_r, double *  sc, double T)')
+        self._write('AMREX_GPU_HOST_DEVICE void progressRateFR(amrex::Real *  q_f, amrex::Real *  q_r, amrex::Real *  sc, amrex::Real T)')
         self._write('{')
         self._indent()
 
         if (nReactions > 0):
 
-            self._write('double tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
-            self._write('double invT = 1.0 / tc[1];')
+            self._write('amrex::Real tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; /*temperature cache */')
+            self._write('amrex::Real invT = 1.0 / tc[1];')
             
             self._outdent()
             self._write('#ifndef AMREX_USE_CUDA')
@@ -8785,18 +8785,18 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('compute the critical parameters for each species'))
-        self._write('void GET_CRITPARAMS(double *  Tci, double *  ai, double *  bi, double *  acentric_i)')
+        self._write('void GET_CRITPARAMS(amrex::Real *  Tci, amrex::Real *  ai, amrex::Real *  bi, amrex::Real *  acentric_i)')
         self._write('{')
         self._write()
         self._indent()
         
         
-        self._write('double   EPS[%d];'%nSpecies)
-        self._write('double   SIG[%d];' %nSpecies)
-        self._write('double    wt[%d];' %nSpecies)
-        self._write('double avogadro = 6.02214199e23;')
-        self._write('double boltzmann = 1.3806503e-16; //we work in CGS')
-        self._write('double Rcst = 83.144598; //in bar [CGS] !')
+        self._write('amrex::Real   EPS[%d];'%nSpecies)
+        self._write('amrex::Real   SIG[%d];' %nSpecies)
+        self._write('amrex::Real    wt[%d];' %nSpecies)
+        self._write('amrex::Real avogadro = 6.02214199e23;')
+        self._write('amrex::Real boltzmann = 1.3806503e-16; //we work in CGS')
+        self._write('amrex::Real Rcst = 83.144598; //in bar [CGS] !')
         
         self._write()
 
@@ -8849,44 +8849,44 @@ class CPickler(CMill):
         self._write()
         self._write('int id; ' + self.line('loop counter'))
 
-        self._write('double mixture;                 '
+        self._write('amrex::Real mixture;                 '
                     + self.line('mixture concentration'))
-        self._write('double g_RT[%d];                ' % nSpecies
+        self._write('amrex::Real g_RT[%d];                ' % nSpecies
                     + self.line('Gibbs free energy'))
 
-        self._write('double Kc;                      ' + self.line('equilibrium constant'))
-        self._write('double k_f;                     ' + self.line('forward reaction rate'))
-        self._write('double k_r;                     ' + self.line('reverse reaction rate'))
-        self._write('double phi_f;                   '
+        self._write('amrex::Real Kc;                      ' + self.line('equilibrium constant'))
+        self._write('amrex::Real k_f;                     ' + self.line('forward reaction rate'))
+        self._write('amrex::Real k_r;                     ' + self.line('reverse reaction rate'))
+        self._write('amrex::Real phi_f;                   '
                     + self.line('forward phase space factor'))
-        self._write('double phi_r;                   '
+        self._write('amrex::Real phi_r;                   '
                     + self.line('reverse phase space factor'))
-        self._write('double alpha;                   ' + self.line('enhancement'))
+        self._write('amrex::Real alpha;                   ' + self.line('enhancement'))
 
 
-        self._write('double redP;                    ' + self.line('reduced pressure'))
-        self._write('double logPred;                 ' + self.line('log of above'))
-        self._write('double F;                       '
+        self._write('amrex::Real redP;                    ' + self.line('reduced pressure'))
+        self._write('amrex::Real logPred;                 ' + self.line('log of above'))
+        self._write('amrex::Real F;                       '
                     + self.line('fallof rate enhancement'))
         self._write()
-        self._write('double F_troe;                  ' + self.line('TROE intermediate'))
-        self._write('double logFcent;                ' + self.line('TROE intermediate'))
-        self._write('double troe;                    ' + self.line('TROE intermediate'))
-        self._write('double troe_c;                  ' + self.line('TROE intermediate'))
-        self._write('double troe_n;                  ' + self.line('TROE intermediate'))
+        self._write('amrex::Real F_troe;                  ' + self.line('TROE intermediate'))
+        self._write('amrex::Real logFcent;                ' + self.line('TROE intermediate'))
+        self._write('amrex::Real troe;                    ' + self.line('TROE intermediate'))
+        self._write('amrex::Real troe_c;                  ' + self.line('TROE intermediate'))
+        self._write('amrex::Real troe_n;                  ' + self.line('TROE intermediate'))
         self._write()
 
         self._write(
-            'double tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; '
+            'amrex::Real tc[] = { log(T), T, T*T, T*T*T, T*T*T*T }; '
             + self.line('temperature cache'))
 
         self._write()
-        self._write('double invT = 1.0 / tc[1];')
+        self._write('amrex::Real invT = 1.0 / tc[1];')
 
         # compute the reference concentration
         self._write()
         self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-        self._write('double refC = %g / %g / T;' % (atm.value, R.value))
+        self._write('amrex::Real refC = %g / %g / T;' % (atm.value, R.value))
 
         # compute the mixture concentration
         self._write()
@@ -9051,13 +9051,13 @@ class CPickler(CMill):
         self._write()
         self._write()
         self._write(self.line('compute the equilibrium constants for each reaction'))
-        self._write('void equilibriumConstants(double *  kc, double *  g_RT, double T)')
+        self._write('void equilibriumConstants(amrex::Real *  kc, amrex::Real *  g_RT, amrex::Real T)')
         self._write('{')
         self._indent()
 
         # compute the reference concentration
         self._write(self.line('reference concentration: P_atm / (RT) in inverse mol/m^3'))
-        self._write('double refC = %g / %g / T;' % (atm.value, R.value))
+        self._write('amrex::Real refC = %g / %g / T;' % (atm.value, R.value))
 
         # compute the equilibrium constants
         for reaction in mechanism.reaction():
@@ -9505,7 +9505,7 @@ class CPickler(CMill):
 
     def _generateThermoRoutine_GPU_H(self, name):
 
-        self._write('AMREX_GPU_HOST_DEVICE void %s(double * species, double *  tc);' % name)
+        self._write('AMREX_GPU_HOST_DEVICE void %s(amrex::Real * species, amrex::Real *  tc);' % name)
 
         return
 
@@ -9513,7 +9513,7 @@ class CPickler(CMill):
 
         lowT, highT, midpoints = speciesInfo
         
-        self._write('AMREX_GPU_HOST_DEVICE void %s(double * species, double *  tc)' % name)
+        self._write('AMREX_GPU_HOST_DEVICE void %s(amrex::Real * species, amrex::Real *  tc)' % name)
         self._write('{')
 
         self._indent()
@@ -9521,11 +9521,11 @@ class CPickler(CMill):
         # declarations
         self._write()
         self._write(self.line('temperature'))
-        self._write('double T = tc[1];')
+        self._write('amrex::Real T = tc[1];')
         if needsInvT != 0:
-           self._write('double invT = 1 / T;')
+           self._write('amrex::Real invT = 1 / T;')
         if needsInvT == 2:
-           self._write('double invT2 = invT*invT;')
+           self._write('amrex::Real invT2 = invT*invT;')
 
         # temperature check
         # self._write()
@@ -9578,7 +9578,7 @@ class CPickler(CMill):
 
         lowT, highT, midpoints = speciesInfo
         
-        self._write('void %s(double *  species, double *  tc)' % name)
+        self._write('void %s(amrex::Real *  species, amrex::Real *  tc)' % name)
         self._write('{')
 
         self._indent()
@@ -9586,11 +9586,11 @@ class CPickler(CMill):
         # declarations
         self._write()
         self._write(self.line('temperature'))
-        self._write('double T = tc[1];')
+        self._write('amrex::Real T = tc[1];')
         if needsInvT != 0:
-           self._write('double invT = 1 / T;')
+           self._write('amrex::Real invT = 1 / T;')
         if needsInvT == 2:
-           self._write('double invT2 = invT*invT;')
+           self._write('amrex::Real invT2 = invT*invT;')
 
         # temperature check
         # self._write()
@@ -9677,7 +9677,7 @@ class CPickler(CMill):
             self._write('#define egtransetPATM egtransetpatm_')
             self._write('#endif')
 
-        self._write('void egtransetPATM(double* PATM) {')
+        self._write('void egtransetPATM(amrex::Real* PATM) {')
         self._indent()
         self._write('*PATM =   0.1013250000000000E+07;}')
         self._outdent()
@@ -9700,7 +9700,7 @@ class CPickler(CMill):
             self._write('#define egtransetWT egtransetwt_')
             self._write('#endif')
 
-        self._write('void %s(double* %s ) {' % ("egtransetWT", "WT"))
+        self._write('void %s(amrex::Real* %s ) {' % ("egtransetWT", "WT"))
         self._indent()
 
         for species in self.species:
@@ -9899,7 +9899,7 @@ class CPickler(CMill):
             self._write('#endif')
 
         #visco coefs
-        self._write('void egtransetCOFETA(double* COFETA) {')
+        self._write('void egtransetCOFETA(amrex::Real* COFETA) {')
         self._indent()
 
         for spec in self.species:
@@ -9923,7 +9923,7 @@ class CPickler(CMill):
             self._write('#endif')
 
         #visco coefs
-        self._write('void egtransetCOFLAM(double* COFLAM) {')
+        self._write('void egtransetCOFLAM(amrex::Real* COFLAM) {')
 
         self._indent()
 
@@ -10019,7 +10019,7 @@ class CPickler(CMill):
             self._write('#endif')
 
         #visco coefs
-        self._write('void egtransetCOFTD(double* COFTD) {')
+        self._write('void egtransetCOFTD(amrex::Real* COFTD) {')
         self._indent()
 
         for i in range(len(coftd)):
@@ -10123,7 +10123,7 @@ class CPickler(CMill):
             self._write('#endif')
 
         #coefs
-        self._write('void egtransetCOFD(double* COFD) {')
+        self._write('void egtransetCOFD(amrex::Real* COFD) {')
 
         self._indent()
 
@@ -10694,7 +10694,7 @@ class CPickler(CMill):
             self._write('#define %s %s' % (nametab[0], nametab[3]))
             self._write('#endif')
 
-        self._write('void %s(double* %s ) {' % (nametab[0], nametab[4]))
+        self._write('void %s(amrex::Real* %s ) {' % (nametab[0], nametab[4]))
         self._indent()
 
         for species in mechanism.species():
@@ -11083,24 +11083,24 @@ class CPickler(CMill):
     def _T_given_ey(self, mechanism):
         self._write()
         self._write(self.line(' get temperature given internal energy in mass units and mass fracs'))
-        self._write('AMREX_GPU_HOST_DEVICE void GET_T_GIVEN_EY(double *  e, double *  y, double *  t, int * ierr)')
+        self._write('AMREX_GPU_HOST_DEVICE void GET_T_GIVEN_EY(amrex::Real *  e, amrex::Real *  y, amrex::Real *  t, int * ierr)')
         self._write('{')
         self._write('#ifdef CONVERGENCE')
         self._indent()
         self._write('const int maxiter = 5000;')
-        self._write('const double tol  = 1.e-12;')
+        self._write('const amrex::Real tol  = 1.e-12;')
         self._outdent()
         self._write('#else')
         self._indent()
         self._write('const int maxiter = 200;')
-        self._write('const double tol  = 1.e-6;')
+        self._write('const amrex::Real tol  = 1.e-6;')
         self._outdent()
         self._write('#endif')
         self._indent()
-        self._write('double ein  = *e;')
-        self._write('double tmin = 90;'+self.line('max lower bound for thermo def'))
-        self._write('double tmax = 4000;'+self.line('min upper bound for thermo def'))
-        self._write('double e1,emin,emax,cv,t1,dt;')
+        self._write('amrex::Real ein  = *e;')
+        self._write('amrex::Real tmin = 90;'+self.line('max lower bound for thermo def'))
+        self._write('amrex::Real tmax = 4000;'+self.line('min upper bound for thermo def'))
+        self._write('amrex::Real e1,emin,emax,cv,t1,dt;')
         self._write('int i;'+self.line(' loop counter'))
         self._write('CKUBMS(&tmin, y, &emin);')
         self._write('CKUBMS(&tmax, y, &emax);')
@@ -11149,24 +11149,24 @@ class CPickler(CMill):
 
     def _T_given_hy(self, mechanism):
         self._write(self.line(' get temperature given enthalpy in mass units and mass fracs'))
-        self._write('AMREX_GPU_HOST_DEVICE void GET_T_GIVEN_HY(double *  h, double *  y, double *  t, int * ierr)')
+        self._write('AMREX_GPU_HOST_DEVICE void GET_T_GIVEN_HY(amrex::Real *  h, amrex::Real *  y, amrex::Real *  t, int * ierr)')
         self._write('{')
         self._write('#ifdef CONVERGENCE')
         self._indent()
         self._write('const int maxiter = 5000;')
-        self._write('const double tol  = 1.e-12;')
+        self._write('const amrex::Real tol  = 1.e-12;')
         self._outdent()
         self._write('#else')
         self._indent()
         self._write('const int maxiter = 200;')
-        self._write('const double tol  = 1.e-6;')
+        self._write('const amrex::Real tol  = 1.e-6;')
         self._outdent()
         self._write('#endif')
         self._indent()
-        self._write('double hin  = *h;')
-        self._write('double tmin = 90;'+self.line('max lower bound for thermo def'))
-        self._write('double tmax = 4000;'+self.line('min upper bound for thermo def'))
-        self._write('double h1,hmin,hmax,cp,t1,dt;')
+        self._write('amrex::Real hin  = *h;')
+        self._write('amrex::Real tmin = 90;'+self.line('max lower bound for thermo def'))
+        self._write('amrex::Real tmax = 4000;'+self.line('min upper bound for thermo def'))
+        self._write('amrex::Real h1,hmin,hmax,cp,t1,dt;')
         self._write('int i;'+self.line(' loop counter'))
         self._write('CKHBMS(&tmin, y, &hmin);')
         self._write('CKHBMS(&tmax, y, &hmax);')
@@ -11215,7 +11215,7 @@ class CPickler(CMill):
     def _emptygjs(self, mechanism):
         self._write()
         self._write(self.line(' Replace this routine with the one generated by the Gauss Jordan solver of DW'))
-        self._write('AMREX_GPU_HOST_DEVICE void sgjsolve(double* A, double* x, double* b) {')
+        self._write('AMREX_GPU_HOST_DEVICE void sgjsolve(amrex::Real* A, amrex::Real* x, amrex::Real* b) {')
         self._indent()
         self._write('amrex::Abort("sgjsolve not implemented, choose a different solver ");')
         self._outdent()
@@ -11223,7 +11223,7 @@ class CPickler(CMill):
 
         self._write()
         self._write(self.line(' Replace this routine with the one generated by the Gauss Jordan solver of DW'))
-        self._write('AMREX_GPU_HOST_DEVICE void sgjsolve_simplified(double* A, double* x, double* b) {')
+        self._write('AMREX_GPU_HOST_DEVICE void sgjsolve_simplified(amrex::Real* A, amrex::Real* x, amrex::Real* b) {')
         self._indent()
         self._write('amrex::Abort("sgjsolve_simplified not implemented, choose a different solver ");')
         self._outdent()
