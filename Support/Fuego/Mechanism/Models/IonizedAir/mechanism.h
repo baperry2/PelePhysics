@@ -1823,6 +1823,31 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void CKWXR(amrex::Real *  rho, amrex::R
     }
 }
 
+AMREX_GPU_HOST_DEVICE
+AMREX_FORCE_INLINE
+void CKCHRG(int * kcharge)
+{
+    kcharge[0] = 0; /*O2 */
+    kcharge[1] = 0; /*N2 */
+    kcharge[2] = -1; /*E */
+    kcharge[3] = -1; /*On */
+    kcharge[4] = -1; /*O2n */
+}
+
+AMREX_GPU_HOST_DEVICE
+AMREX_FORCE_INLINE
+void CKCHRGMASS(amrex::Real * zk)
+{
+    amrex::Real imw[5];
+    get_imw(imw);
+
+    int kchrg[5];
+    CKCHRG(kchrg);
+
+    for (int id = 0; id < 5; ++id) {
+        zk[id] = 6.022e23 * 1.60217662e-19 * kchrg[id] * imw[id];
+    }
+}
 
 /*compute d(Cp/R)/dT and d(Cv/R)/dT at the given temperature */
 /*tc contains precomputed powers of T, tc[0] = log(T) */

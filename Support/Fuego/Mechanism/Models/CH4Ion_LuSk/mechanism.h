@@ -12765,6 +12765,66 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void CKWXR(amrex::Real *  rho, amrex::R
     }
 }
 
+AMREX_GPU_HOST_DEVICE
+AMREX_FORCE_INLINE
+void CKCHRG(int * kcharge)
+{
+    kcharge[0] = 0; /* H2 */
+    kcharge[1] = 0; /* H */
+    kcharge[2] = 0; /* O */
+    kcharge[3] = 0; /* O2 */
+    kcharge[4] = 0; /* OH */
+    kcharge[5] = 0; /* H2O */
+    kcharge[6] = 0; /* HO2 */
+    kcharge[7] = 0; /* H2O2 */
+    kcharge[8] = 0; /* C */
+    kcharge[9] = 0; /* CH */
+    kcharge[10] = 0; /* CH2 */
+    kcharge[11] = 0; /* CH2(S) */
+    kcharge[12] = 0; /* CH3 */
+    kcharge[13] = 0; /* CH4 */
+    kcharge[14] = 0; /* CO */
+    kcharge[15] = 0; /* CO2 */
+    kcharge[16] = 0; /* HCO */
+    kcharge[17] = 0; /* CH2O */
+    kcharge[18] = 0; /* CH2OH */
+    kcharge[19] = 0; /* CH3O */
+    kcharge[20] = 0; /* CH3OH */
+    kcharge[21] = 0; /* C2H2 */
+    kcharge[22] = 0; /* C2H3 */
+    kcharge[23] = 0; /* C2H4 */
+    kcharge[24] = 0; /* C2H5 */
+    kcharge[25] = 0; /* C2H6 */
+    kcharge[26] = 0; /* HCCO */
+    kcharge[27] = 0; /* CH2CO */
+    kcharge[28] = 0; /* CH2CHO */
+    kcharge[29] = 0; /* N2 */
+    kcharge[30] = 1; /* H3Op */
+    kcharge[31] = 1; /* HCOp */
+    kcharge[32] = 1; /* C2H3Op */
+    kcharge[33] = 1; /* CH5Op */
+    kcharge[34] = -1; /* OHn */
+    kcharge[35] = -1; /* On */
+    kcharge[36] = -1; /* O2n */
+    kcharge[37] = -1; /* CO3n */
+    kcharge[38] = -1; /* HCO3n */
+    kcharge[39] = -1; /* E */
+}
+
+AMREX_GPU_HOST_DEVICE
+AMREX_FORCE_INLINE
+void CKCHRGMASS(amrex::Real * zk)
+{
+    amrex::Real imw[40];
+    get_imw(imw);
+
+    int kchrg[40];
+    CKCHRG(kchrg);
+
+    for (int id = 0; id < 40; ++id) {
+        zk[id] = 6.022e23 * 1.60217662e-19 * kchrg[id] * imw[id];
+    }
+}
 
 /*compute d(Cp/R)/dT and d(Cv/R)/dT at the given temperature */
 /*tc contains precomputed powers of T, tc[0] = log(T) */
