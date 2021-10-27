@@ -21,6 +21,7 @@
 
 #define NUM_ELEMENTS 3
 #define NUM_SPECIES 5
+#define NUM_IONS 3
 #define NUM_REACTIONS 0
 
 #define NUM_FIT 4

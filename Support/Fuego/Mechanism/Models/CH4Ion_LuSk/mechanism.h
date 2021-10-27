@@ -58,6 +58,7 @@
 
 #define NUM_ELEMENTS 5
 #define NUM_SPECIES 40
+#define NUM_IONS 10
 #define NUM_REACTIONS 246
 
 #define NUM_FIT 4
