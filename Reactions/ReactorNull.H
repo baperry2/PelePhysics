@@ -18,6 +18,8 @@ public:
 
   void close() override {}
 
+  void print_final_stats(void* /*mem*/) override {}
+
   int react(
     const amrex::Box& box,
     amrex::Array4<amrex::Real> const& rY_in,
@@ -84,8 +86,6 @@ public:
       box, ncells, m_reactor_type, rhoY, temperature, rhoE, frcEExt, FC_in,
       y_vect, vect_energy, FCunt, dt);
   }
-
-  void SetTypValsODE(const std::vector<amrex::Real>& ExtTypVals) override;
 
 private:
   utils::FlattenOps<Ordering> flatten_ops;

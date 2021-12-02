@@ -110,8 +110,6 @@ ReactorArkode::init(int reactor_type, int /*ncells*/)
   } else {
     amrex::Print() << "ARK Step:" << std::endl;
   }
-  amrex::Print() << "  Setting tolerances rtol = " << relTol
-                 << " atol = " << absTol << std::endl;
   amrex::Print() << "  Using " << method_string << " method" << std::endl;
   amrex::Print() << "  Using the " << controller_string << " controller"
                  << std::endl;
@@ -160,11 +158,23 @@ ReactorArkode::react(
   if (utils::check_flag((void*)y, "N_VNewWithMemHelp_Hip", 0))
     return (1);
   SUNHipExecPolicy* stream_exec_policy =
-    new SUNHipThreadDirectExecPolicy(512, stream);
+    new SUNHipThreadDirectExecPolicy(256, stream);
   SUNHipExecPolicy* reduce_exec_policy =
-    new SUNHipBlockReduceExecPolicy(512, 0, stream);
+    new SUNHipBlockReduceExecPolicy(256, 0, stream);
   N_VSetKernelExecPolicy_Hip(y, stream_exec_policy, reduce_exec_policy);
   realtype* yvec_d = N_VGetDeviceArrayPointer_Hip(y);
+#elif defined(AMREX_USE_DPCPP)
+  N_Vector y = N_VNewWithMemHelp_Sycl(
+    neq_tot, false, *amrex::sundials::The_SUNMemory_Helper(),
+    &amrex::Gpu::Device::streamQueue());
+  if (utils::check_flag((void*)y, "N_VNewWithMemHelp_Sycl", 0))
+    return (1);
+  SUNSyclExecPolicy* stream_exec_policy =
+    new SUNSyclThreadDirectExecPolicy(256);
+  SUNSyclExecPolicy* reduce_exec_policy =
+    new SUNSyclBlockReduceExecPolicy(256, 0);
+  N_VSetKernelExecPolicy_Sycl(y, stream_exec_policy, reduce_exec_policy);
+  realtype* yvec_d = N_VGetDeviceArrayPointer_Sycl(y);
 #else
   N_Vector y = N_VNew_Serial(neq_tot);
   if (utils::check_flag((void*)y, "N_VNew_Serial", 0)) {
@@ -173,7 +183,9 @@ ReactorArkode::react(
   realtype* yvec_d = N_VGetArrayPointer(y);
 #endif
 
-  const int verbose = 1;
+  amrex::ParmParse pp("ode");
+  int verbose = 0;
+  pp.query("verbose", verbose);
   const auto captured_reactor_type = m_reactor_type;
   ARKODEUserData* user_data = new ARKODEUserData{};
   amrex::Gpu::DeviceVector<amrex::Real> v_rhoe_init(ncells, 0);
@@ -198,15 +210,18 @@ ReactorArkode::react(
   if (use_erkstep == 0) {
     arkode_mem = ARKStepCreate(cF_RHS, nullptr, time, y);
     ARKStepSetUserData(arkode_mem, static_cast<void*>(user_data));
-    ARKStepSStolerances(arkode_mem, relTol, absTol);
-    ARKStepResStolerance(arkode_mem, absTol);
+    set_sundials_solver_tols(
+      arkode_mem, user_data->ncells, user_data->verbose, relTol, absTol,
+      "arkstep");
     ARKStepSetTableNum(arkode_mem, -1, rk_method);
     ARKStepSetAdaptivityMethod(arkode_mem, rk_controller, 1, 0, nullptr);
     ARKStepEvolve(arkode_mem, time_out, y, &time_init, ARK_NORMAL);
   } else {
     arkode_mem = ERKStepCreate(cF_RHS, time, y);
     ERKStepSetUserData(arkode_mem, static_cast<void*>(user_data));
-    ERKStepSStolerances(arkode_mem, relTol, absTol);
+    set_sundials_solver_tols(
+      arkode_mem, user_data->ncells, user_data->verbose, relTol, absTol,
+      "erkstep");
     ERKStepSetTableNum(arkode_mem, rk_method);
     ERKStepSetAdaptivityMethod(arkode_mem, rk_controller, 1, 0, nullptr);
     ERKStepEvolve(arkode_mem, time_out, y, &time_init, ARK_NORMAL);
@@ -222,6 +237,10 @@ ReactorArkode::react(
     ARKStepGetNumRhsEvals(arkode_mem, &nfe, &nfi);
   } else {
     ERKStepGetNumRhsEvals(arkode_mem, &nfe);
+  }
+
+  if (user_data->verbose > 1) {
+    print_final_stats(arkode_mem);
   }
 
   amrex::Gpu::DeviceVector<long int> v_nfe(ncells, nfe);
@@ -287,6 +306,19 @@ ReactorArkode::react(
     new SUNHipBlockReduceExecPolicy(256, 0, stream);
   N_VSetKernelExecPolicy_Hip(y, stream_exec_policy, reduce_exec_policy);
   realtype* yvec_d = N_VGetDeviceArrayPointer_Hip(y);
+#elif defined(AMREX_USE_DPCPP)
+  N_Vector y = N_VNewWithMemHelp_Sycl(
+    neq_tot, /*use_managed_mem=*/false,
+    *amrex::sundials::The_SUNMemory_Helper(),
+    &amrex::Gpu::Device::streamQueue());
+  if (utils::check_flag((void*)y, "N_VNewWithMemHelp_Sycl", 0))
+    return (1);
+  SUNSyclExecPolicy* stream_exec_policy =
+    new SUNSyclThreadDirectExecPolicy(256);
+  SUNSyclExecPolicy* reduce_exec_policy =
+    new SUNSyclBlockReduceExecPolicy(256, 0);
+  N_VSetKernelExecPolicy_Sycl(y, stream_exec_policy, reduce_exec_policy);
+  realtype* yvec_d = N_VGetDeviceArrayPointer_Sycl(y);
 #else
   N_Vector y = N_VNew_Serial(neq_tot);
   if (utils::check_flag((void*)y, "N_VNew_Serial", 0)) {
@@ -295,7 +327,9 @@ ReactorArkode::react(
   realtype* yvec_d = N_VGetArrayPointer(y);
 #endif
 
-  const int verbose = 1;
+  amrex::ParmParse pp("ode");
+  int verbose = 0;
+  pp.query("verbose", verbose);
   const auto captured_reactor_type = m_reactor_type;
   ARKODEUserData* user_data = new ARKODEUserData{};
   amrex::Gpu::DeviceVector<amrex::Real> v_rhoe_init(ncells, 0);
@@ -333,13 +367,16 @@ ReactorArkode::react(
   if (use_erkstep == 0) {
     arkode_mem = ARKStepCreate(cF_RHS, nullptr, time, y);
     ARKStepSetUserData(arkode_mem, static_cast<void*>(user_data));
-    ARKStepSStolerances(arkode_mem, relTol, absTol);
-    ARKStepResStolerance(arkode_mem, absTol);
+    set_sundials_solver_tols(
+      arkode_mem, user_data->ncells, user_data->verbose, relTol, absTol,
+      "arkstep");
     ARKStepEvolve(arkode_mem, time_out, y, &time_init, ARK_NORMAL);
   } else {
     arkode_mem = ERKStepCreate(cF_RHS, time, y);
     ERKStepSetUserData(arkode_mem, static_cast<void*>(user_data));
-    ERKStepSStolerances(arkode_mem, relTol, absTol);
+    set_sundials_solver_tols(
+      arkode_mem, user_data->ncells, user_data->verbose, relTol, absTol,
+      "erkstep");
     ERKStepEvolve(arkode_mem, time_out, y, &time_init, ARK_NORMAL);
   }
 #ifdef MOD_REACTOR
@@ -362,6 +399,10 @@ ReactorArkode::react(
     ARKStepGetNumRhsEvals(arkode_mem, &nfe, &nfi);
   } else {
     ERKStepGetNumRhsEvals(arkode_mem, &nfe);
+  }
+
+  if (user_data->verbose > 1) {
+    print_final_stats(arkode_mem);
   }
 
   N_VDestroy(y);
@@ -387,6 +428,9 @@ ReactorArkode::cF_RHS(
 #elif defined(AMREX_USE_HIP)
   realtype* yvec_d = N_VGetDeviceArrayPointer_Hip(y_in);
   realtype* ydot_d = N_VGetDeviceArrayPointer_Hip(ydot_in);
+#elif defined(AMREX_USE_DPCPP)
+  realtype* yvec_d = N_VGetDeviceArrayPointer_Sycl(y_in);
+  realtype* ydot_d = N_VGetDeviceArrayPointer_Sycl(ydot_in);
 #else
   realtype* yvec_d = N_VGetArrayPointer(y_in);
   realtype* ydot_d = N_VGetArrayPointer(ydot_in);
@@ -413,9 +457,46 @@ ReactorArkode::cF_RHS(
 }
 
 void
-ReactorArkode::SetTypValsODE(const std::vector<amrex::Real>& /*ExtTypVals*/)
+ReactorArkode::print_final_stats(void* arkode_mem)
 {
-  amrex::Print() << "WARNING: ignoring TypVals for this reactor." << std::endl;
+  long int nst, nst_a, nfe, nfi;
+  long lenrw, leniw;
+  int flag;
+
+  if (use_erkstep) {
+    flag = ERKStepGetWorkSpace(arkode_mem, &lenrw, &leniw);
+    utils::check_flag(&flag, "ERKStepGetWorkSpace", 1);
+    flag = ERKStepGetNumSteps(arkode_mem, &nst);
+    utils::check_flag(&flag, "ERKStepGetNumSteps", 1);
+    flag = ERKStepGetNumStepAttempts(arkode_mem, &nst_a);
+    utils::check_flag(&flag, "ERKStepGetNumStepAttempts", 1);
+    flag = ERKStepGetNumRhsEvals(arkode_mem, &nfe);
+    utils::check_flag(&flag, "ERKStepGetNumRhsEvals", 1);
+
+  } else {
+    flag = ARKStepGetWorkSpace(arkode_mem, &lenrw, &leniw);
+    utils::check_flag(&flag, "ARKStepGetWorkSpace", 1);
+    flag = ARKStepGetNumSteps(arkode_mem, &nst);
+    utils::check_flag(&flag, "ARKStepGetNumSteps", 1);
+    flag = ARKStepGetNumStepAttempts(arkode_mem, &nst_a);
+    utils::check_flag(&flag, "ARKStepGetNumStepAttempts", 1);
+    flag = ARKStepGetNumRhsEvals(arkode_mem, &nfe, &nfi);
+    utils::check_flag(&flag, "ARKStepGetNumRhsEvals", 1);
+  }
+
+#ifdef AMREX_USE_OMP
+  amrex::Print() << "\nFinal Statistics: "
+                 << "(thread:" << omp_get_thread_num() << ", ";
+  amrex::Print() << "arkodeMem:" << arkode_mem << ")\n";
+#else
+  amrex::Print() << "\nFinal Statistics:\n";
+#endif
+
+  amrex::Print() << "   Internal solver steps = " << nst
+                 << " (attempted = " << nst_a << ")\n";
+  amrex::Print() << "   Total RHS evals:  Fe = " << nfe << "\n";
+  amrex::Print() << "lenrw      = " << lenrw << "    leniw         = " << leniw
+                 << "\n";
 }
 } // namespace reactions
 } // namespace physics

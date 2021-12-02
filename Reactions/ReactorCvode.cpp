@@ -55,7 +55,8 @@ ReactorCvode::init(int reactor_type, int ncells)
   }
 
   // Setup tolerances
-  setCvodeTols(cvode_mem, udata_g);
+  set_sundials_solver_tols(
+    cvode_mem, udata_g->ncells, udata_g->verbose, relTol, absTol, "cvode");
 
   // Linear solver data
   if (
@@ -425,6 +426,10 @@ ReactorCvode::checkCvodeOptions() const
     amrex::Abort(
       "\n--> precond_type sparse simplified_AJacobian not available with "
       "HIP \n");
+#elif defined(AMREX_USE_DPCPP)
+    amrex::Abort(
+      "\n--> precond_type sparse simplified_AJacobian not available with "
+      "DPCPP \n");
 #endif
 
 #else
@@ -472,6 +477,9 @@ ReactorCvode::checkCvodeOptions() const
       }
 #elif defined(AMREX_USE_HIP)
       amrex::Abort("\n--> Analytical Jacobian not available with HIP. Change "
+                   "solve_type.\n");
+#elif defined(AMREX_USE_DPCPP)
+      amrex::Abort("\n--> Analytical Jacobian not available with DPCPP. Change "
                    "solve_type.\n");
 #endif
     }
@@ -1056,74 +1064,6 @@ ReactorCvode::allocUserData(
 #endif
 }
 
-void
-ReactorCvode::setCvodeTols(void* a_cvode_mem, CVODEUserData* a_udata)
-{
-  int omp_thread = 0;
-#ifdef AMREX_USE_OMP
-  omp_thread = omp_get_thread_num();
-#endif
-
-  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-    a_udata != nullptr, "Reactor object is not initialized !!");
-
-  int ncells = a_udata->ncells;
-  int verbose = a_udata->verbose;
-  int neq_tot = (NUM_SPECIES + 1) * ncells;
-
-#if defined(AMREX_USE_CUDA)
-  N_Vector atol = N_VNewWithMemHelp_Cuda(
-    neq_tot, /*use_managed_mem=*/false,
-    *amrex::sundials::The_SUNMemory_Helper());
-  amrex::Real* ratol = N_VGetHostArrayPointer_Cuda(atol);
-#elif defined(AMREX_USE_HIP)
-  N_Vector atol = N_VNewWithMemHelp_Hip(
-    neq_tot, /*use_managed_mem=*/false,
-    *amrex::sundials::The_SUNMemory_Helper());
-  amrex::Real* ratol = N_VGetHostArrayPointer_Hip(atol);
-#else
-  N_Vector atol = N_VNew_Serial(neq_tot);
-  amrex::Real* ratol = N_VGetArrayPointer(atol);
-#endif
-
-  if (typVals[0] > 0.0) {
-    if ((verbose > 0) && (omp_thread == 0)) {
-      amrex::Print() << " Setting CVODE tolerances with TypVals rtol = "
-                     << relTol << " atolfact = " << absTol
-                     << " in PelePhysics \n";
-    }
-    for (int i = 0; i < ncells; i++) {
-      int offset = i * (NUM_SPECIES + 1);
-      for (int k = 0; k < NUM_SPECIES + 1; k++) {
-        ratol[offset + k] = typVals[k] * absTol;
-      }
-    }
-  } else {
-    if ((verbose > 0) && (omp_thread == 0)) {
-      amrex::Print() << " Setting CVODE tolerances rtol = " << relTol
-                     << " atol = " << absTol << " in PelePhysics \n";
-    }
-    for (int i = 0; i < neq_tot; i++) {
-      ratol[i] = absTol;
-    }
-  }
-
-#if defined(AMREX_USE_CUDA)
-  N_VCopyToDevice_Cuda(atol);
-#elif defined(AMREX_USE_HIP)
-  N_VCopyToDevice_Hip(atol);
-#endif
-
-  // Call CVodeSVtolerances to specify the scalar relative tolerance
-  // and vector absolute tolerances
-  int flag = CVodeSVtolerances(a_cvode_mem, relTol, atol);
-  if (utils::check_flag(&flag, "CVodeSVtolerances", 1)) {
-    amrex::Abort("Problem in setCvodeTols");
-  }
-
-  N_VDestroy(atol);
-}
-
 int
 ReactorCvode::react(
   const amrex::Box& box,
@@ -1181,6 +1121,18 @@ ReactorCvode::react(
     new SUNHipBlockReduceExecPolicy(256, 0, stream);
   N_VSetKernelExecPolicy_Hip(y, stream_exec_policy, reduce_exec_policy);
   amrex::Real* yvec_d = N_VGetDeviceArrayPointer_Hip(y);
+#elif defined(AMREX_USE_DPCPP)
+  N_Vector y = N_VNewWithMemHelp_Sycl(
+    neq_tot, false, *amrex::sundials::The_SUNMemory_Helper(),
+    &amrex::Gpu::Device::streamQueue());
+  if (utils::check_flag((void*)y, "N_VNewWithMemHelp_Sycl", 0))
+    return (1);
+  SUNSyclExecPolicy* stream_exec_policy =
+    new SUNSyclThreadDirectExecPolicy(256);
+  SUNSyclExecPolicy* reduce_exec_policy =
+    new SUNSyclBlockReduceExecPolicy(256, 0);
+  N_VSetKernelExecPolicy_Sycl(y, stream_exec_policy, reduce_exec_policy);
+  amrex::Real* yvec_d = N_VGetDeviceArrayPointer_Sycl(y);
 #endif
 
   amrex::Gpu::streamSynchronize();
@@ -1211,7 +1163,8 @@ ReactorCvode::react(
     return (1);
 
   // Setup tolerances with typical values
-  setCvodeTols(cvode_mem, user_data);
+  set_sundials_solver_tols(
+    cvode_mem, user_data->ncells, user_data->verbose, relTol, absTol, "cvode");
 
   // Linear solver data
   SUNLinearSolver LS = NULL;
@@ -1328,7 +1281,7 @@ ReactorCvode::react(
     user_data->rhoe_init, d_nfe, dt_react);
 
   if (user_data->verbose > 1) {
-    cvode::printFinalStats(cvode_mem);
+    print_final_stats(cvode_mem);
   }
 
   // Clean up
@@ -1352,7 +1305,8 @@ ReactorCvode::react(
 #endif
 
   // Update TypicalValues
-  setCvodeTols(cvode_mem, udata_g);
+  set_sundials_solver_tols(
+    cvode_mem, udata_g->ncells, udata_g->verbose, relTol, absTol, "cvode");
 
   // Perform integration one cell at a time
   const int icell = 0;
@@ -1378,7 +1332,7 @@ ReactorCvode::react(
 
         if ((udata_g->verbose > 1) && (omp_thread == 0)) {
           amrex::Print() << "Additional verbose info --\n";
-          cvode::printFinalStats(cvode_mem);
+          print_final_stats(cvode_mem);
           amrex::Print() << "\n -------------------------------------\n";
         }
 
@@ -1470,7 +1424,6 @@ ReactorCvode::react(
     new SUNCudaBlockReduceExecPolicy(256, 0, stream);
   N_VSetKernelExecPolicy_Cuda(y, stream_exec_policy, reduce_exec_policy);
   amrex::Real* yvec_d = N_VGetDeviceArrayPointer_Cuda(y);
-
 #elif defined(AMREX_USE_HIP)
   y = N_VNewWithMemHelp_Hip(
     neq_tot, /*use_managed_mem=*/false,
@@ -1483,6 +1436,19 @@ ReactorCvode::react(
     new SUNHipBlockReduceExecPolicy(256, 0, stream);
   N_VSetKernelExecPolicy_Hip(y, stream_exec_policy, reduce_exec_policy);
   amrex::Real* yvec_d = N_VGetDeviceArrayPointer_Hip(y);
+#elif defined(AMREX_USE_DPCPP)
+  y = N_VNewWithMemHelp_Sycl(
+    neq_tot, /*use_managed_mem=*/false,
+    *amrex::sundials::The_SUNMemory_Helper(),
+    &amrex::Gpu::Device::streamQueue());
+  if (utils::check_flag((void*)y, "N_VNewWithMemHelp_Sycl", 0))
+    return (1);
+  SUNSyclExecPolicy* stream_exec_policy =
+    new SUNSyclThreadDirectExecPolicy(256);
+  SUNSyclExecPolicy* reduce_exec_policy =
+    new SUNSyclBlockReduceExecPolicy(256, 0);
+  N_VSetKernelExecPolicy_Sycl(y, stream_exec_policy, reduce_exec_policy);
+  amrex::Real* yvec_d = N_VGetDeviceArrayPointer_Sycl(y);
 #endif
 
   // Fill data
@@ -1514,7 +1480,8 @@ ReactorCvode::react(
     return (1);
 
   // Setup tolerances with typical values
-  setCvodeTols(cvode_mem, user_data);
+  set_sundials_solver_tols(
+    cvode_mem, user_data->ncells, user_data->verbose, relTol, absTol, "cvode");
 
   // Linear solver data
   if (user_data->solve_type == cvode::sparseDirect) {
@@ -1633,7 +1600,7 @@ ReactorCvode::react(
   long int nfe;
   flag = CVodeGetNumRhsEvals(cvode_mem, &nfe);
   if (user_data->verbose > 1) {
-    cvode::printFinalStats(cvode_mem);
+    print_final_stats(cvode_mem);
   }
 
   // Clean up
@@ -1679,7 +1646,8 @@ ReactorCvode::react(
   BL_PROFILE_VAR_STOP(AroundCVODE);
 
   // Update TypicalValues
-  setCvodeTols(cvode_mem, udata_g);
+  set_sundials_solver_tols(
+    cvode_mem, udata_g->ncells, udata_g->verbose, relTol, absTol, "cvode");
 
 #ifdef MOD_REACTOR
   dt_react =
@@ -1696,7 +1664,7 @@ ReactorCvode::react(
 
   if ((udata_g->verbose > 1) && (omp_thread == 0)) {
     amrex::Print() << "Additional verbose info --\n";
-    cvode::printFinalStats(cvode_mem);
+    print_final_stats(cvode_mem);
     amrex::Print() << "\n -------------------------------------\n";
   }
 
@@ -1721,6 +1689,9 @@ ReactorCvode::cF_RHS(
 #elif defined(AMREX_USE_HIP)
   amrex::Real* yvec_d = N_VGetDeviceArrayPointer_Hip(y_in);
   amrex::Real* ydot_d = N_VGetDeviceArrayPointer_Hip(ydot_in);
+#elif defined(AMREX_USE_DPCPP)
+  amrex::Real* yvec_d = N_VGetDeviceArrayPointer_Sycl(y_in);
+  amrex::Real* ydot_d = N_VGetDeviceArrayPointer_Sycl(ydot_in);
 #else
   amrex::Real* yvec_d = N_VGetArrayPointer(y_in);
   amrex::Real* ydot_d = N_VGetArrayPointer(ydot_in);
@@ -1742,32 +1713,6 @@ ReactorCvode::cF_RHS(
   });
   amrex::Gpu::Device::streamSynchronize();
   return 0;
-}
-
-void
-ReactorCvode::SetTypValsODE(const std::vector<amrex::Real>& ExtTypVals)
-{
-  int size_ETV = ExtTypVals.size();
-  amrex::Vector<std::string> kname;
-  pele::physics::eos::speciesNames<pele::physics::PhysicsType::eos_type>(kname);
-  int omp_thread = 0;
-
-#ifdef _OPENMP
-  omp_thread = omp_get_thread_num();
-#endif
-
-  for (int i = 0; i < size_ETV - 1; i++) {
-    typVals[i] = ExtTypVals[i];
-  }
-  typVals[size_ETV - 1] = ExtTypVals[size_ETV - 1];
-
-  if (omp_thread == 0) {
-    amrex::Print() << "Set the typVals in PelePhysics: \n  ";
-    for (int i = 0; i < size_ETV - 1; i++) {
-      amrex::Print() << kname[i] << ":" << typVals[i] << "  ";
-    }
-    amrex::Print() << "Temp:" << typVals[size_ETV - 1] << " \n";
-  }
 }
 
 void
@@ -1894,6 +1839,71 @@ ReactorCvode::close()
   N_VDestroy(y);
   freeUserData(udata_g);
 #endif
+}
+
+void
+ReactorCvode::print_final_stats(void* cvodemem)
+{
+  long lenrw, leniw;
+  long lenrwLS, leniwLS;
+  long int nst, nfe, nsetups, nni, ncfn, netf;
+  long int nli, npe, nps, ncfl, nfeLS;
+  int flag;
+
+  flag = CVodeGetWorkSpace(cvodemem, &lenrw, &leniw);
+  utils::check_flag(&flag, "CVodeGetWorkSpace", 1);
+  flag = CVodeGetNumSteps(cvodemem, &nst);
+  utils::check_flag(&flag, "CVodeGetNumSteps", 1);
+  flag = CVodeGetNumRhsEvals(cvodemem, &nfe);
+  utils::check_flag(&flag, "CVodeGetNumRhsEvals", 1);
+  flag = CVodeGetNumLinSolvSetups(cvodemem, &nsetups);
+  utils::check_flag(&flag, "CVodeGetNumLinSolvSetups", 1);
+  flag = CVodeGetNumErrTestFails(cvodemem, &netf);
+  utils::check_flag(&flag, "CVodeGetNumErrTestFails", 1);
+  flag = CVodeGetNumNonlinSolvIters(cvodemem, &nni);
+  utils::check_flag(&flag, "CVodeGetNumNonlinSolvIters", 1);
+  flag = CVodeGetNumNonlinSolvConvFails(cvodemem, &ncfn);
+  utils::check_flag(&flag, "CVodeGetNumNonlinSolvConvFails", 1);
+
+  flag = CVodeGetLinWorkSpace(cvodemem, &lenrwLS, &leniwLS);
+  utils::check_flag(&flag, "CVodeGetLinWorkSpace", 1);
+  flag = CVodeGetNumLinIters(cvodemem, &nli);
+  utils::check_flag(&flag, "CVodeGetNumLinIters", 1);
+  // flag = CVodeGetNumJacEvals(cvodemem, &nje);
+  // utils::check_flag(&flag, "CVodeGetNumJacEvals", 1);
+  flag = CVodeGetNumLinRhsEvals(cvodemem, &nfeLS);
+  utils::check_flag(&flag, "CVodeGetNumLinRhsEvals", 1);
+
+  flag = CVodeGetNumPrecEvals(cvodemem, &npe);
+  utils::check_flag(&flag, "CVodeGetNumPrecEvals", 1);
+  flag = CVodeGetNumPrecSolves(cvodemem, &nps);
+  utils::check_flag(&flag, "CVodeGetNumPrecSolves", 1);
+
+  flag = CVodeGetNumLinConvFails(cvodemem, &ncfl);
+  utils::check_flag(&flag, "CVodeGetNumLinConvFails", 1);
+
+#ifdef AMREX_USE_OMP
+  amrex::Print() << "\nFinal Statistics: "
+                 << "(thread:" << omp_get_thread_num() << ", ";
+  amrex::Print() << "cvode_mem:" << cvodemem << ")\n";
+#else
+  amrex::Print() << "\nFinal Statistics:\n";
+#endif
+  amrex::Print() << "lenrw      = " << lenrw << "    leniw         = " << leniw
+                 << "\n";
+  amrex::Print() << "lenrwLS    = " << lenrwLS
+                 << "    leniwLS       = " << leniwLS << "\n";
+  amrex::Print() << "nSteps     = " << nst << "\n";
+  amrex::Print() << "nRHSeval   = " << nfe << "    nLinRHSeval   = " << nfeLS
+                 << "\n";
+  amrex::Print() << "nnLinIt    = " << nni << "    nLinIt        = " << nli
+                 << "\n";
+  amrex::Print() << "nLinsetups = " << nsetups << "    nErrtf        = " << netf
+                 << "\n";
+  amrex::Print() << "nPreceval  = " << npe << "    nPrecsolve    = " << nps
+                 << "\n";
+  amrex::Print() << "nConvfail  = " << ncfn << "    nLinConvfail  = " << ncfl
+                 << "\n\n";
 }
 
 } // namespace reactions
