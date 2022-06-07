@@ -50,6 +50,15 @@ endif
 ifeq ($(Eos_Model),$(filter $(Eos_Model),Manifold))
    DEFINES += -DUSE_MANIFOLD_EOS
 endif
+
+Manifold_Model ?=
+ifeq ($(Manifold_Model), $(filter $(Manifold_Model),Table))
+		DEFINES += -DUSE_MANIFOLD_TABLE
+endif
+ifeq ($(Manifold_Model), $(filter $(Manifold_Model),NeuralNet))
+		DEFINES += -DUSE_MANIFOLD_NN
+endif
+
 INCLUDE_LOCATIONS += $(EOS_HOME)
 VPATH_LOCATIONS   += $(EOS_HOME)
 ifeq ($(Eos_Model), Fuego)
