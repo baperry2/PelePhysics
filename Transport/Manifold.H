@@ -28,10 +28,17 @@ struct ManifoldTransport
     amrex::Real& lam,
     TransParm<EosType, transport_type> const* tparm)
   {
-    pele::physics::TabFunc tabfunc(tparm->tf_data);
-    
+    std::unique_ptr<pele::physics::ManifoldFunc> manfunc;
+    #ifdef USE_MANIFOLD_TABLE
+        manfunc.reset(new pele::physics::TabFunc(tparm->tf_data));
+    #elif defined(USE_MANIFOLD_NN)
+        amrex::Error("Manifold model using neural network is not yet implemented.");
+    #else
+        amrex::Error("Invalid option for manifold model.");
+    #endif
+
     if (wtr_get_mu) {
-      tabfunc.get_from_table(tparm->idx_mu, Yloc, mu);
+      manfunc->get_value(tparm->idx_mu, Yloc, mu);
     }
 
     if (wtr_get_lam) {
@@ -46,9 +53,9 @@ struct ManifoldTransport
 
     if (wtr_get_Ddiag) {
       amrex::Real Dtemp{0.0};
-      tabfunc.get_from_table(tparm->idx_rhoD, Yloc, Dtemp);
+      manfunc->get_value(tparm->idx_rhoD, Yloc, Dtemp);
       for (int i = 0; i < NUM_SPECIES - 1; ++i) {
-        Ddiag[i] = Dtemp; 
+        Ddiag[i] = Dtemp;
       }
       Ddiag[NUM_SPECIES-1] = 0.0; // Placeholder for density
     }
