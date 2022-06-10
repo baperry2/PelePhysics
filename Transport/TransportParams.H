@@ -76,7 +76,7 @@ struct InitTransParm<EOSType, SutherlandTransport>
 template <typename EOSType>
 struct TransParm<EOSType, ManifoldTransport>
 {
-  TabFuncParams::TabFuncData* tf_data;
+  ManFuncParams::ManFuncData* manf_data;
   int idx_rhoD{0};
   int idx_mu{0};
 };
@@ -86,14 +86,14 @@ struct InitTransParm<EOSType, ManifoldTransport>
 {
   void operator()(TransParm<EOSType, ManifoldTransport>* tparm)
   {
-    amrex::Abort("For manifold transport tabulated data must be provided to transport parameters");
+    amrex::Abort("For manifold transport tabulated or neural network data must be provided to transport parameters");
   }
   
-  void operator()(TransParm<EOSType, ManifoldTransport>* tparm, TabFuncParams::TabFuncData* tf_data_in)
+  void operator()(TransParm<EOSType, ManifoldTransport>* tparm, ManFuncParams::ManFuncData* manf_data_in)
   {
-    tparm->tf_data = tf_data_in;
-    tparm->idx_rhoD = get_var_index("DIFF", tparm->tf_data);
-    tparm->idx_mu = get_var_index("VISC", tparm->tf_data);
+    tparm->manf_data = manf_data_in;
+    tparm->idx_rhoD = get_var_index("DIFF", tparm->manf_data);
+    tparm->idx_mu = get_var_index("VISC", tparm->manf_data);
   }
 };
 
@@ -345,9 +345,9 @@ public:
     }
   }
 
-  void allocate(TabFuncParams::TabFuncData* tf_data)
+  void allocate(ManFuncParams::ManFuncData* manf_data)
   {
-    InitTransParm<EosType, TransportType>()(&m_h_trans_parm, tf_data);
+    InitTransParm<EosType, TransportType>()(&m_h_trans_parm, manf_data);
     if (!m_device_allocated) {
       m_d_trans_parm =
         (TransParm<EosType, TransportType>*)amrex::The_Device_Arena()->alloc(

@@ -30,7 +30,9 @@ struct ManifoldTransport
   {
     std::unique_ptr<pele::physics::ManifoldFunc> manfunc;
     #ifdef USE_MANIFOLD_TABLE
-        manfunc.reset(new pele::physics::TabFunc(tparm->tf_data));
+        TabFuncParams::TabFuncData* tf_data =
+            static_cast<TabFuncParams::TabFuncData*>(tparm->manf_data);
+        manfunc.reset(new pele::physics::TabFunc(tf_data));
     #elif defined(USE_MANIFOLD_NN)
         amrex::Error("Manifold model using neural network is not yet implemented.");
     #else
