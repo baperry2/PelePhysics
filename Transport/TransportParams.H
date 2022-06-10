@@ -92,8 +92,8 @@ struct InitTransParm<EOSType, ManifoldTransport>
   void operator()(TransParm<EOSType, ManifoldTransport>* tparm, TabFuncParams::TabFuncData* tf_data_in)
   {
     tparm->tf_data = tf_data_in;
-    tparm->idx_rhoD = pele::physics::eos::get_var_index("DIFF", tf_data_in->varnames, tf_data_in->Nvar, tf_data_in->len_str);
-    tparm->idx_mu = pele::physics::eos::get_var_index("VISC", tf_data_in->varnames, tf_data_in->Nvar, tf_data_in->len_str);
+    tparm->idx_rhoD = get_var_index("DIFF", tparm->tf_data);
+    tparm->idx_mu = get_var_index("VISC", tparm->tf_data);
   }
 };
 
