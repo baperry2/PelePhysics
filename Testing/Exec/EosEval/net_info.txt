@@ -1,0 +1,13 @@
+# Name of the neural network model
+model_name = 1d_strained_flame
+# Number of input dimensions
+ndim = 2
+# Number of output dimensions
+nvar = 19
+# Number of manifold parameters
+nmanpar = 2
+# Names of input variables
+dimnames = xi0 xi1
+# Names of output variables
+varnames = CO2 H2 N2 CO O2 H2O POSF10325 OH CH2O HO2 RR_H2O RR_H2 RR_CO2 RR_CO RR_POSF10325 RR_OH \
+           RR_O2 T RHO

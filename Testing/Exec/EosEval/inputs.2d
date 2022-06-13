@@ -1,7 +1,11 @@
 niter = 1
 size = 256
-do_plt = 0
+do_plt = 1
 
 table.filename = peletable_3dim_14grid
 eos.nominal_pressure_cgs = 1013250.0
 table.v = 1
+
+nn.nn_filename = net.pt
+nn.info_filename = net_info.txt
+nn.v = 1

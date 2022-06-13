@@ -19,12 +19,19 @@ main(int argc, char* argv[])
   static pele::physics::eos::EosParams<
          pele::physics::PhysicsType::eos_type>
          eos_parms;
-  static pele::physics::TabFuncParams tabfunc_data;
   amrex::Print() << " Initialization of EOS (CPP)... \n";
 #ifdef USE_MANIFOLD_EOS
+#ifdef USE_MANIFOLD_TABLE
+  static pele::physics::TabFuncParams tabfunc_data;
   amrex::Print() << " Initialization of Table (CPP)... \n";
   tabfunc_data.initialize();
-  eos_parms.allocate(tabfunc_data.device_tabfunc_data());
+  eos_parms.allocate(tabfunc_data.device_manfunc_data());
+#else
+  static pele::physics::NNFuncParams nnfunc_data;
+  amrex::Print() << " Initialization of Neural Net Func. (CPP)... \n";
+  nnfunc_data.initialize();
+  eos_parms.allocate(nnfunc_data.device_manfunc_data());
+#endif
 #else
   eos_parms.allocate();
 #endif
@@ -216,7 +223,11 @@ main(int argc, char* argv[])
 
   eos_parms.deallocate();
 #ifdef USE_MANIFOLD_EOS
+#ifdef USE_MANIFOLD_TABLE
   tabfunc_data.deallocate();
+#else
+  nnfunc_data.deallocate();
+#endif
 #endif
   amrex::Finalize();
 

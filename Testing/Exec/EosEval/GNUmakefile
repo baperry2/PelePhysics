@@ -6,11 +6,11 @@ VERBOSE    = FALSE
 DEBUG      = FALSE
 
 # Compiler
-COMP       = gnu
+COMP       = llvm
 FCOMP      = gfortran
 USE_MPI    = TRUE
 USE_OMP    = FALSE
-USE_CUDA   = TRUE
+USE_CUDA   = FALSE
 USE_HIP    = FALSE
 
 # PelePhysics
@@ -42,6 +42,7 @@ else
   Eos_Model       = Manifold
   Chemistry_Model = Manifold3d
   Transport_Model = Manifold
+  Manifold_Model  = NeuralNet
 endif
 
 Bpack   := ./Make.package
