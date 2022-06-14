@@ -21,17 +21,33 @@ main(int argc, char* argv[])
          eos_parms;
   amrex::Print() << " Initialization of EOS (CPP)... \n";
 #ifdef USE_MANIFOLD_EOS
-#ifdef USE_MANIFOLD_TABLE
-  static pele::physics::TabFuncParams tabfunc_data;
-  amrex::Print() << " Initialization of Table (CPP)... \n";
-  tabfunc_data.initialize();
-  eos_parms.allocate(tabfunc_data.device_manfunc_data());
+  static std::unique_ptr<pele::physics::ManFuncParams> manfunc_par;
+  
+  amrex::ParmParse pp("manifold");
+  std::string manifold_model;
+  pp.get("model", manifold_model);
+  if(manifold_model == "Table")
+  {
+    manfunc_par.reset(new pele::physics::TabFuncParams());
+    amrex::Print() << " Initialization of Table (CPP)... \n";
+    manfunc_par->initialize();
+    eos_parms.allocate(manfunc_par->device_manfunc_data());
+  }
+  else if(manifold_model == "NeuralNet")
+  {
+#ifdef USE_LIBTORCH
+    manfunc_par.reset(new pele::physics::NNFuncParams());
+    amrex::Print() << " Initialization of Neural Net Func. (CPP)... \n";
+    manfunc_par->initialize();
+    eos_parms.allocate(manfunc_par->device_manfunc_data());
 #else
-  static pele::physics::NNFuncParams nnfunc_data;
-  amrex::Print() << " Initialization of Neural Net Func. (CPP)... \n";
-  nnfunc_data.initialize();
-  eos_parms.allocate(nnfunc_data.device_manfunc_data());
+    amrex::Error("Must set USE_LIBTORCH = TRUE to run with neural net manifold model.");
 #endif
+  }
+  else
+  {
+    amrex::Error("Invalid manifold model!");
+  }
 #else
   eos_parms.allocate();
 #endif
@@ -223,11 +239,7 @@ main(int argc, char* argv[])
 
   eos_parms.deallocate();
 #ifdef USE_MANIFOLD_EOS
-#ifdef USE_MANIFOLD_TABLE
-  tabfunc_data.deallocate();
-#else
-  nnfunc_data.deallocate();
-#endif
+  manfunc_par->deallocate();
 #endif
   amrex::Finalize();
 

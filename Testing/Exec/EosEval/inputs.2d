@@ -2,10 +2,11 @@ niter = 1
 size = 32
 do_plt = 1
 
-table.filename = peletable_3dim_14grid
-eos.nominal_pressure_cgs = 1013250.0
-table.v = 1
+manifold.model = NeuralNet
+# manifold.model = Table
+manifold.filename = net.pt
+# manifold.filename = peletable_2dim_50grid
+manifold.info_filename = net_info.txt
+manifold.v = 1
 
-nn.nn_filename = net.pt
-nn.info_filename = net_info.txt
-nn.v = 1
+eos.nominal_pressure_cgs = 1013250.0

@@ -12,6 +12,7 @@ USE_MPI    = TRUE
 USE_OMP    = FALSE
 USE_CUDA   = FALSE
 USE_HIP    = FALSE
+USE_LIBTORCH = TRUE
 
 # PelePhysics
 FUEGO_GAS  = FALSE
@@ -42,7 +43,6 @@ else
   Eos_Model       = Manifold
   Chemistry_Model = Manifold2d
   Transport_Model = Manifold
-  Manifold_Model  = NeuralNet
 endif
 
 Bpack   := ./Make.package

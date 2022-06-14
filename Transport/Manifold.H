@@ -29,15 +29,22 @@ struct ManifoldTransport
     TransParm<EosType, transport_type> const* tparm)
   {
     std::unique_ptr<pele::physics::ManifoldFunc> manfunc;
-    #ifdef USE_MANIFOLD_TABLE
-        TabFuncParams::TabFuncData* tf_data =
-            static_cast<TabFuncParams::TabFuncData*>(tparm->manf_data);
-        manfunc.reset(new pele::physics::TabFunc(tf_data));
-    #elif defined(USE_MANIFOLD_NN)
-        amrex::Error("Manifold model using neural network is not yet implemented.");
-    #else
-        amrex::Error("Invalid option for manifold model.");
-    #endif
+    if(tparm->manf_data->manmodel == ManifoldModel::TABLE)
+    {
+      TabFuncParams::TabFuncData* tf_data =
+          static_cast<TabFuncParams::TabFuncData*>(tparm->manf_data);
+      manfunc.reset(new pele::physics::TabFunc(tf_data));
+    }
+    else
+    {
+#ifdef USE_LIBTORCH
+      NNFuncParams::NNFuncData* nnf_data =
+          static_cast<NNFuncParams::NNFuncData*>(tparm->manf_data);
+      manfunc.reset(new pele::physics::NNFunc(nnf_data));
+#else
+      amrex::Error("Must set USE_LIBTORCH = TRUE to run with neural net manifold model.");
+#endif
+    }
 
     if (wtr_get_mu) {
       manfunc->get_value(tparm->idx_mu, Yloc, mu);
