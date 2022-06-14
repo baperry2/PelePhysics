@@ -3,11 +3,16 @@ model_name = 1d_strained_flame
 # Number of input dimensions
 ndim = 2
 # Number of output dimensions
-nvar = 19
+nvar = 20
 # Number of manifold parameters
 nmanpar = 2
 # Names of input variables
 dimnames = xi0 xi1
 # Names of output variables
-varnames = CO2 H2 N2 CO O2 H2O POSF10325 OH CH2O HO2 RR_H2O RR_H2 RR_CO2 RR_CO RR_POSF10325 RR_OH \
-           RR_O2 T RHO
+varnames = CO2 H2 N2 CO O2 H2O POSF10325 OH SRC_CO2 SRC_H2 SRC_N2 SRC_CO SRC_O2 SRC_H2O \
+           SRC_POSF10325 SRC_OH CH2O H2O T RHO
+# Definitions of input variables
+def_xi0 = -3.25761e-05*CO2 0.014807583*H2 -2.1668544e-05*N2 0.35140568*CO -0.7689043*O2 \
+           0.5308616*H2O -0.09779423*POSF10325 0.4936515*OH
+def_xi1 = -0.7751109*CO2 0.5786068*H2 -0.070751876*N2 0.5610647*CO 6.564064e-05*O2 \
+           -0.00012359003*H2O 0.00014836839*POSF10325 -0.25919574*OH

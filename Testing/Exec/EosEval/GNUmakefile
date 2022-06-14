@@ -6,7 +6,7 @@ VERBOSE    = FALSE
 DEBUG      = FALSE
 
 # Compiler
-COMP       = llvm
+COMP       = gnu
 FCOMP      = gfortran
 USE_MPI    = TRUE
 USE_OMP    = FALSE
@@ -40,7 +40,7 @@ ifeq ($(FUEGO_GAS), TRUE)
   Transport_Model = Constant
 else
   Eos_Model       = Manifold
-  Chemistry_Model = Manifold3d
+  Chemistry_Model = Manifold2d
   Transport_Model = Manifold
   Manifold_Model  = NeuralNet
 endif
