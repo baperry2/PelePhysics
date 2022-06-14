@@ -1,5 +1,5 @@
 niter = 1
-size = 256
+size = 32
 do_plt = 1
 
 table.filename = peletable_3dim_14grid
