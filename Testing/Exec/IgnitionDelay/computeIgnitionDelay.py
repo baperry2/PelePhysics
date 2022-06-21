@@ -100,5 +100,5 @@ if __name__=="__main__":
         logMessage = f"T = {temp:.3g} K , P = {press/101325.0:.3g} atm, Phi = {phi:.3g},  tIgn = {ignitionDelayPP:.3g} +/- {dt/ndt:.3g} s"
         print(logMessage)
         writeResult('log',temp,press,phi,ignitionDelayPP,dt/ndt) 
-        print("Equivalence ratio calculation assumed you are using Ndodecane")
+        print("Equivalence ratio calculation assumed you are using methane")
         print("Change GPU_misc.H if you are not")

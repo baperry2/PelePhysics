@@ -1,9 +1,11 @@
 ncells = 1 1 1
 max_grid_size  = 1
-fuel_name = NC12H26
+# fuel_name = NC12H26
+fuel_name = CH4
 reactFormat = Array4
 #reactFormat = 1dArray
 chem_integrator = "ReactorCvode"
+#chem_integrator = "ReactorRK64"
 
 ode.dt  = 2
 ode.ndt = 2000
@@ -28,13 +30,23 @@ cvode.max_order = 4
 ode.implicit_solve = 1
 ode.use_erkstep    = 0
 
-amrex.fpe_trap_invalid = 1
-amrex.fpe_trap_zero = 1
-amrex.fpe_trap_overflow = 1
+# amrex.fpe_trap_invalid = 1
+# amrex.fpe_trap_zero = 1
+# amrex.fpe_trap_overflow = 1
 
 
 # 1013250.0 * patm
-hr.press = 5066250.0
-hr.t0 = 600
-hr.equiv_ratio = 7.928571428571429
+#hr.press = 5066250.0
+hr.press = 1013250.0
+#hr.t0 = 600
+hr.t0 = 1400
+#hr.equiv_ratio = 7.928571428571429
+hr.equiv_ratio = 1.0
 hr.outputFolderHR = ./ 
+
+# Manifold settings
+manifold.model = Table
+manifold.filename = autoignition.ctb
+manifold.v = 1
+
+eos.nominal_pressure_cgs = 1013250.0

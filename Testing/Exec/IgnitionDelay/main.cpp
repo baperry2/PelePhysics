@@ -34,10 +34,46 @@ GotoNextLine(std::istream& is)
   is.ignore(bl_ignore_max, '\n');
 }
 
+void initManFuncPar(std::unique_ptr<pele::physics::ManFuncParams>& manfunc_par)
+{
+  amrex::ParmParse pp("manifold");
+  std::string manifold_model;
+  pp.get("model", manifold_model);
+  if(manifold_model == "Table")
+  {
+    manfunc_par.reset(new pele::physics::TabFuncParams());
+    amrex::Print() << " Initialization of Table (CPP)... \n";
+    manfunc_par->initialize();
+  }
+  else if(manifold_model == "NeuralNet")
+  {
+#ifdef USE_LIBTORCH
+    manfunc_par.reset(new pele::physics::NNFuncParams());
+    amrex::Print() << " Initialization of Neural Net Func. (CPP)... \n";
+    manfunc_par->initialize();
+#else
+    amrex::Error("Must set USE_LIBTORCH = TRUE to run with neural net manifold model.");
+#endif
+  }
+  else
+  {
+    amrex::Error("Invalid manifold model!");
+  }
+}
+
 int
 main(int argc, char* argv[])
 {
   amrex::Initialize(argc, argv);
+  
+  static pele::physics::eos::EosParams<pele::physics::PhysicsType::eos_type> eos_params;
+#ifdef USE_MANIFOLD_EOS
+  static std::unique_ptr<pele::physics::ManFuncParams> manfunc_par;
+  initManFuncPar(manfunc_par);
+  eos_params.allocate(manfunc_par->device_manfunc_data());
+#else
+  eos_params.allocate();
+#endif
 
 #ifdef AMREX_USE_GPU
   amrex::sundials::Initialize();
@@ -69,21 +105,57 @@ main(int argc, char* argv[])
       use_typ_vals, ncells, max_grid_size, t0, equiv_ratio, press,
       outputFolderHR);
 
-    // Assign Fuel ID
+    // Assign Fuel, O2, N2 ID if needed
+#ifdef USE_MANIFOLD_EOS
+    ManFuncData& manf_data = manfunc_par->host_manfunc_data();
+    int fuel_idx, o2_idx, n2_idx;
+    fuel_idx = o2_idx = n2_idx = -1;
+#ifdef USE_LIBTORCH
+    if(manf_data.manmodel == pele::physics::ManifoldModel::NEURAL_NET)
+    {
+      NNFuncData& data = static_cast<NNFuncData&>(manf_data);
+      for(int i = 0; i < data.Ncomb; i++)
+      {
+        // Assumes that the same sequence of variable names is used for each manifold parameter
+        std::string name = std::string(&(data.varnames)[data.comb_idx[i]*data.len_str], data.len_str);
+        if(amrex::trim(name) == amrex::trim(fuel_name))
+        {
+          fuel_idx = i;
+        }
+        else if(amrex::trim(name) == "O2")
+        {
+          o2_idx = i;
+        }
+        else if(amrex::trim(name) == "N2")
+        {
+          n2_idx = i;
+        }
+      }
+    }
+#endif
+#else
     int fuel_idx;
     getFuelID(fuel_name, fuel_idx);
+    int o2_idx = O2_ID;
+    int n2_idx = N2_ID;
+#endif
 
     // Initialize transport
     pele::physics::transport::TransportParams<
       pele::physics::PhysicsType::transport_type>
       trans_parms;
+#ifdef USE_MANIFOLD_EOS
+    trans_parms.allocate(manfunc_par->device_manfunc_data());
+#else
     trans_parms.allocate();
+#endif
 
     // Initialize reactor object inside OMP region, including tolerances
     BL_PROFILE_VAR("main::reactor_info()", reactInfo);
     std::unique_ptr<pele::physics::reactions::ReactorBase> reactor =
       pele::physics::reactions::ReactorBase::create(chem_integrator);
     reactor->init(ode_iE, ode_ncells);
+    reactor->set_eos_parm(eos_params.device_eos_parm());
     BL_PROFILE_VAR_STOP(reactInfo);
 
     // Initialize Geometry
@@ -105,7 +177,7 @@ main(int argc, char* argv[])
     initializeData(
       num_grow, mf, rY_source_ext, mfE, rY_source_energy_ext, t0, equiv_ratio,
       press, fctCount, dummyMask, finest_level, geoms, grids, dmaps, fuel_idx,
-      ode_iE);
+      o2_idx, n2_idx, ode_iE, eos_params);
 
     // ~~~~ Reac
     amrex::Print() << " \n STARTING THE ADVANCE \n";

@@ -11,9 +11,11 @@ USE_MPI    = FALSE
 USE_OMP    = FALSE
 USE_CUDA   = FALSE
 USE_HIP    = FALSE
+USE_LIBTORCH = FALSE
 
 # PelePhysics
 FUEGO_GAS  = TRUE
+USE_MANIFOLD = FALSE
 TINY_PROFILE = FALSE
 
 # define the location of the PELE_PHYSICS top directory
@@ -34,12 +36,16 @@ endif
 
 ifeq ($(FUEGO_GAS), TRUE)
   Eos_Model       = Fuego
-  Chemistry_Model = dodecane_lu
+  Chemistry_Model = drm19
   Transport_Model = Simple
+else ifeq ($(USE_MANIFOLD), TRUE)
+  Eos_Model       = Manifold
+  Chemistry_Model = Manifold2d
+  Transport_Model = Manifold
 else
-  Eos_Model       = GammaLaw
-  Chemistry_Model = Null
-  Transport_Model = Constant
+	Eos_Model       = GammaLaw
+	Chemistry_Model = Null
+	Transport_Model = Constant
 endif
 
 Bpack   := ./Make.package

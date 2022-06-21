@@ -124,8 +124,11 @@ getFuelID(std::string& fuel_name, int& fuel_idx)
 
   /* Mixture info */
   fuel_idx = -1;
-  if (fuel_name == "H2") {
+  if(false) {
+#ifdef H2_ID
+  } else if (fuel_name == "H2") {
     fuel_idx = H2_ID;
+#endif
 #ifdef CH4_ID
   } else if (fuel_name == "CH4") {
     fuel_idx = CH4_ID;
@@ -213,7 +216,11 @@ initializeData(
   amrex::Vector<amrex::BoxArray>& grids,
   amrex::Vector<amrex::DistributionMapping>& dmaps,
   int& fuel_idx,
-  int& ode_iE)
+  int& o2_idx,
+  int& n2_idx,
+  int& ode_iE,
+  pele::physics::eos::EosParams<
+      pele::physics::PhysicsType::eos_type>& eos_params)
 {
   BL_PROFILE_VAR("main::initialize_data()", InitData);
   // -----------------------------------------------------------------------------
@@ -250,11 +257,12 @@ initializeData(
       amrex::Array4<amrex::Real> const& E_a = mfE[lev].array(mfi);
       amrex::Array4<amrex::Real> const& rE_a =
         rY_source_energy_ext[lev].array(mfi);
+      auto const* deosparm = eos_params.device_eos_parm();
       amrex::ParallelFor(
         box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
           initialize_data(
-            i, j, k, fuel_idx, ode_iE, rY_a, rYs_a, E_a, rE_a, t0, equiv_ratio,
-            p, geomdata);
+            i, j, k, fuel_idx, o2_idx, n2_idx, ode_iE, rY_a, rYs_a, E_a, rE_a, t0,
+            equiv_ratio, p, geomdata, deosparm);
         });
     }
   }
