@@ -2,10 +2,10 @@ niter = 1
 size = 32
 do_plt = 1
 
-manifold.model = NeuralNet
-# manifold.model = Table
-manifold.filename = net.pt
-# manifold.filename = peletable_2dim_50grid
+# manifold.model = NeuralNet
+manifold.model = Table
+# manifold.filename = net.pt
+manifold.filename = peletable_2dim_50grid
 manifold.info_filename = net_info.txt
 manifold.v = 1
 
