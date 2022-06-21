@@ -118,15 +118,15 @@ main(int argc, char* argv[])
       {
         // Assumes that the same sequence of variable names is used for each manifold parameter
         std::string name = std::string(&(data.varnames)[data.comb_idx[i]*data.len_str], data.len_str);
-        if(amrex::trim(name) == amrex::trim(fuel_name))
+        if(amrex::trim(name) == ("Y-" + amrex::trim(fuel_name)))
         {
           fuel_idx = i;
         }
-        else if(amrex::trim(name) == "O2")
+        else if(amrex::trim(name) == "Y-O2")
         {
           o2_idx = i;
         }
-        else if(amrex::trim(name) == "N2")
+        else if(amrex::trim(name) == "Y-N2")
         {
           n2_idx = i;
         }
