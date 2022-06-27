@@ -98,7 +98,8 @@ initialize_data(
       
       Y[i] = nnf_data->comb_coeff[defn_start + o2_id]*yo2
            + nnf_data->comb_coeff[defn_start + n2_id]*yn2
-           + nnf_data->comb_coeff[defn_start + fuel_id]*yfuel;
+           + nnf_data->comb_coeff[defn_start + fuel_id]*yfuel
+           + nnf_data->man_bias[i];
     }
 #endif
   }
