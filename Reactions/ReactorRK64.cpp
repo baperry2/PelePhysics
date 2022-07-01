@@ -134,6 +134,8 @@ ReactorRK64::react(
           rkp.betaerr_rk64 * pow((captured_abstol / max_err), rkp.exp2_rk64);
         dt_rk = amrex::max<amrex::Real>(dt_rk_min, dt_rk * change_factor);
       }
+      // Don't overstep the integration time
+      dt_rk = amrex::min<amrex::Real>(dt_rk, time_out - current_time);
     }
     d_nsteps[icell] = nsteps;
     // copy data back
@@ -295,6 +297,8 @@ ReactorRK64::react(
           rkp.betaerr_rk64 * pow((captured_abstol / max_err), rkp.exp2_rk64);
         dt_rk = amrex::max<amrex::Real>(dt_rk_min, dt_rk * change_factor);
       }
+      // Don't overstep the integration time
+      dt_rk = amrex::min<amrex::Real>(dt_rk, time_out - current_time);
     }
 
     // copy data back
