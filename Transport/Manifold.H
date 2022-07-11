@@ -37,13 +37,9 @@ struct ManifoldTransport
     }
     else
     {
-#ifdef USE_LIBTORCH
       NNFuncParams::NNFuncData* nnf_data =
           static_cast<NNFuncParams::NNFuncData*>(tparm->manf_data);
       manfunc.reset(new pele::physics::NNFunc(nnf_data));
-#else
-      amrex::Error("Must set USE_LIBTORCH = TRUE to run with neural net manifold model.");
-#endif
     }
 
     if (wtr_get_mu) {
