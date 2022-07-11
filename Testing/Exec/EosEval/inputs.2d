@@ -4,9 +4,11 @@ do_plt = 1
 
 # manifold.model = NeuralNet
 manifold.model = Table
+# manifold.filename = net.pnn
 # manifold.filename = net.pt
 manifold.filename = peletable_2dim_50grid
-manifold.info_filename = net_info.txt
+# manifold.info_filename = net_info.txt
+# manifold.cmlm_net = true
 manifold.v = 1
 
 eos.nominal_pressure_cgs = 1013250.0

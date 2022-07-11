@@ -9,9 +9,7 @@
 
 #ifdef USE_MANIFOLD_EOS
 typedef pele::physics::ManFuncParams::ManFuncData ManFuncData;
-#ifdef USE_LIBTORCH
 typedef pele::physics::NNFuncParams::NNFuncData NNFuncData;
-#endif
 #endif
 
 AMREX_GPU_HOST_DEVICE
@@ -90,7 +88,6 @@ initialize_data(
   }
   else
   {
-#ifdef USE_LIBTORCH
     NNFuncData* nnf_data = static_cast<NNFuncData*>(eosparm->manf_data);
     for(int i = 0; i < NUM_SPECIES-1; i++)
     {
@@ -101,7 +98,6 @@ initialize_data(
            + nnf_data->comb_coeff[defn_start + fuel_id]*yfuel
            + nnf_data->man_bias[i];
     }
-#endif
   }
   Y[NUM_SPECIES-1] = 1.0;
 #else

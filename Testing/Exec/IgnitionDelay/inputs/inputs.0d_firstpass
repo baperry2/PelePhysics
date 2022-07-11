@@ -4,10 +4,10 @@ max_grid_size  = 1
 fuel_name = CH4
 reactFormat = Array4
 #reactFormat = 1dArray
-chem_integrator = "ReactorCvode"
-#chem_integrator = "ReactorRK64"
+#chem_integrator = "ReactorCvode"
+chem_integrator = "ReactorRK64"
 
-ode.dt  = 2
+ode.dt  = 0.02
 ode.ndt = 2000
 ode.ode_ncells = 1
 ode.reactor_type  = 2 # 1=full e, 2=full h
@@ -45,8 +45,13 @@ hr.equiv_ratio = 1.0
 hr.outputFolderHR = ./ 
 
 # Manifold settings
+# manifold.model = NeuralNet
 manifold.model = Table
+# manifold.filename = cmlm_net.pnn
+# manifold.filename = cmlm_net.pt
 manifold.filename = autoignition.ctb
+# manifold.info_filename = cmlm_net_info.txt
+# manifold.cmlm_net = 1
 manifold.v = 1
 
 eos.nominal_pressure_cgs = 1013250.0

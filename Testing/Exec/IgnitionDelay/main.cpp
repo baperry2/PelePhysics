@@ -47,13 +47,9 @@ void initManFuncPar(std::unique_ptr<pele::physics::ManFuncParams>& manfunc_par)
   }
   else if(manifold_model == "NeuralNet")
   {
-#ifdef USE_LIBTORCH
     manfunc_par.reset(new pele::physics::NNFuncParams());
     amrex::Print() << " Initialization of Neural Net Func. (CPP)... \n";
     manfunc_par->initialize();
-#else
-    amrex::Error("Must set USE_LIBTORCH = TRUE to run with neural net manifold model.");
-#endif
   }
   else
   {
@@ -110,7 +106,6 @@ main(int argc, char* argv[])
     ManFuncData& manf_data = manfunc_par->host_manfunc_data();
     int fuel_idx, o2_idx, n2_idx;
     fuel_idx = o2_idx = n2_idx = -1;
-#ifdef USE_LIBTORCH
     if(manf_data.manmodel == pele::physics::ManifoldModel::NEURAL_NET)
     {
       NNFuncData& data = static_cast<NNFuncData&>(manf_data);
@@ -132,7 +127,6 @@ main(int argc, char* argv[])
         }
       }
     }
-#endif
 #else
     int fuel_idx;
     getFuelID(fuel_name, fuel_idx);
