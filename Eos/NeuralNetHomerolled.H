@@ -5,13 +5,13 @@
 
 namespace pele {
 namespace physics {
-  
+
 class NNFuncParams: public ManFuncParams
 {
 public:
 
   NNFuncParams() {}
-  
+
   ~NNFuncParams() {}
 
   virtual void initialize()
@@ -27,7 +27,7 @@ public:
     {
       amrex::Abort("Home-rolled neural net file should have .pnn extension.");
     }
-    
+
     bool cmlm_net = false;
     pp.query("cmlm_net", cmlm_net);
 
@@ -40,7 +40,7 @@ public:
     m_h_nnf_data.nn_filename[m_h_nnf_data.len_str] = '\0';
 
     pack_model(nnmodel);
-    
+
     read_metadata(info_filename);
 
     pp.query("v", m_verbose);
@@ -52,19 +52,19 @@ public:
 
     allocate();
   }
-  
+
   void pack_model(NNModel& nnmodel)
   {
     // Get sizes of buffers
     int nreals, nints;
     nnmodel.buffer_sizes_for_packing(nreals, nints);
-    
+
     // Allocate memory for buffers so that they can be copied efficiently to the GPU
     m_h_nnf_data.nnrdata = static_cast<amrex::Real*>(
         amrex::The_Pinned_Arena()->alloc(nreals*sizeof(amrex::Real)));
     m_h_nnf_data.nnidata = static_cast<int*>(
         amrex::The_Pinned_Arena()->alloc(nints*sizeof(int)));
-        
+
     // Pack model
     nnmodel.pack(m_h_nnf_data.nnrdata, m_h_nnf_data.nnidata);
   }
@@ -406,7 +406,7 @@ public:
     const amrex::Real* outdata = nnmodel(indata);
     for(int i = 0; i < nvar; i++)
     {
-      out[i] = (ivar[i] > 0) ? outdata[ivar[i]] : 0.0;  
+      out[i] = (ivar[i] >= 0) ? outdata[ivar[i]] : 0.0;
     }
   }
 
@@ -418,13 +418,13 @@ public:
     constexpr amrex::Real eps = 1e-5;
     const amrex::Real outval0 = nnmodel(indata)[ivar];
     amrex::Real diff;
-    
+
     amrex::Real indata_copy[nnf_data->Ndim];
     for(int i = 0; i < nnf_data->Ndim; i++)
     {
       indata_copy[i] = indata[i];
     }
-    
+
     for(int i = 0; i < nnf_data->Ndim; i++)
     {
       diff = (indata[i] != 0.0) ? eps*indata[i] : eps;
@@ -439,7 +439,7 @@ public:
   virtual void calculate_Wdot(const int paramidx, const amrex::Real indata[], amrex::Real& out)
   {
     const amrex::Real* outdata = nnmodel(indata);
-    
+
     amrex::Real rr = 0.0;
 
     for(int j = 0; j < nnf_data->Ncomb; j++)
@@ -467,7 +467,7 @@ private:
   NNModel nnmodel;
 
 }; // class NNFunc
-  
+
 } // namespace physics
 } // namespace pele
 

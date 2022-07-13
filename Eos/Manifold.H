@@ -125,16 +125,22 @@ struct Manifold
   AMREX_FORCE_INLINE
   void HY2T(const amrex::Real /*H*/, const amrex::Real Y[], amrex::Real& T)
   {
-    manfunc->get_value(eosparm->idx_T, Y, T);
-    // amrex::Error("HY2T is not yet implemented for Manifold EOS");
+    if (eosparm->compute_temperature) {
+      manfunc->get_value(eosparm->idx_T, Y, T);
+    } else {
+      T = 1.0;
+    }
   }
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
   void RHY2T(const amrex::Real /*R*/, const amrex::Real /*H*/, const amrex::Real Y[], amrex::Real& T)
   {
-    manfunc->get_value(eosparm->idx_T, Y, T);
-    // amrex::Error("RHY2T is not yet implemented for Manifold EOS");
+    if (eosparm->compute_temperature) {
+      manfunc->get_value(eosparm->idx_T, Y, T);
+    } else {
+      T = 1.0;
+    }
   }
 
   AMREX_GPU_HOST_DEVICE
@@ -202,11 +208,12 @@ struct Manifold
     // Get value of Rho consistent with other state variables
     amrex::Real rho_from_table;
     manfunc->get_value(eosparm->idx_density, Y, rho_from_table);
+    if (eosparm->use_log_density) {
+      rho_from_table = exp(rho_from_table);
+    }
 
     // Return pressure is nominal pressure scaled due to density mismatch
     P = eosparm->Pnom_cgs * R/rho_from_table;
-
-    // amrex::Error("RTY2P is not yet implemented for Manifold EOS");
   }
 
   AMREX_GPU_HOST_DEVICE
@@ -214,14 +221,21 @@ struct Manifold
   void PYT2R(const amrex::Real /*P*/, const amrex::Real Y[], const amrex::Real /*T*/, amrex::Real& R)
   {
     manfunc->get_value(eosparm->idx_density, Y, R);
+    if (eosparm->use_log_density) {
+      R = exp(R);
+    }
   }
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  void Y2dRdY(const amrex::Real Y[], amrex::Real dRdY[])
+  void RY2dRdY(const amrex::Real R, const amrex::Real Y[], amrex::Real dRdY[])
   {
     manfunc->get_derivs(eosparm->idx_density, Y, dRdY);
-    // amrex::Error("Y2dRdY is not yet implemented for Manifold EOS");
+    if (eosparm->use_log_density) {
+      for (int is = 0; is < NUM_SPECIES-1; is++) {
+        dRdY[is] *= R;
+      }
+    }
   }
 
   AMREX_GPU_HOST_DEVICE
