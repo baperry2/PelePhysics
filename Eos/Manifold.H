@@ -247,13 +247,13 @@ struct Manifold
     {
       TabFuncParams::TabFuncData* tf_data =
           static_cast<TabFuncParams::TabFuncData*>(eosparm->manf_data);
-      manfunc.reset(new pele::physics::TabFunc(tf_data));
+      manfunc = new pele::physics::TabFunc(tf_data);
     }
     else
     {
       NNFuncParams::NNFuncData* nnf_data =
           static_cast<NNFuncParams::NNFuncData*>(eosparm->manf_data);
-      manfunc.reset(new pele::physics::NNFunc(nnf_data));
+      manfunc = new pele::physics::NNFunc(nnf_data);
     }
   }
 
@@ -263,9 +263,15 @@ struct Manifold
   {
     amrex::Error("Manifold EOS must be initialized with table data or neural network via EosParm");
   }
+  
+  AMREX_GPU_HOST_DEVICE
+  ~Manifold()
+  {
+      delete manfunc;
+  }
 
 private:
-  std::unique_ptr<pele::physics::ManifoldFunc> manfunc;
+  pele::physics::ManifoldFunc* manfunc;
   const EosParm<Manifold>* eosparm;
 };
 
