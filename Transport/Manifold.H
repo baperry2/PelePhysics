@@ -28,18 +28,18 @@ struct ManifoldTransport
     amrex::Real& lam,
     TransParm<EosType, transport_type> const* tparm)
   {
-    std::unique_ptr<pele::physics::ManifoldFunc> manfunc;
+    pele::physics::ManifoldFunc>* manfunc;
     if(tparm->manf_data->manmodel == ManifoldModel::TABLE)
     {
       TabFuncParams::TabFuncData* tf_data =
           static_cast<TabFuncParams::TabFuncData*>(tparm->manf_data);
-      manfunc.reset(new pele::physics::TabFunc(tf_data));
+      manfunc = new pele::physics::TabFunc(tf_data);
     }
     else
     {
       NNFuncParams::NNFuncData* nnf_data =
           static_cast<NNFuncParams::NNFuncData*>(tparm->manf_data);
-      manfunc.reset(new pele::physics::NNFunc(nnf_data));
+      manfunc = new pele::physics::NNFunc(nnf_data);
     }
 
     if (wtr_get_mu) {
@@ -64,6 +64,8 @@ struct ManifoldTransport
       }
       Ddiag[NUM_SPECIES-1] = 0.0; // Placeholder for density
     }
+    
+    delete manfunc;
   }
 
   AMREX_GPU_HOST_DEVICE
