@@ -28,7 +28,7 @@ struct ManifoldTransport
     amrex::Real& lam,
     TransParm<EosType, transport_type> const* tparm)
   {
-    pele::physics::ManifoldFunc>* manfunc;
+    pele::physics::ManifoldFunc* manfunc;
     if(tparm->manf_data->manmodel == ManifoldModel::TABLE)
     {
       TabFuncParams::TabFuncData* tf_data =
