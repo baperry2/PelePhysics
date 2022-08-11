@@ -430,6 +430,16 @@ public:
   
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
+  virtual void get_values(const int istart, const int iend, const amrex::Real indata[], amrex::Real out[])
+  {
+    // Ostensibly cannot use from_blob because the indata array is const
+    torch::Tensor intensor = torch::empty({1, nnf_data->Ndim}, TensorParams::tensoropt);
+    std::memcpy(intensor.data_ptr(), indata, sizeof(amrex::Real) * intensor.numel());
+    get_values(istart, iend, intensor, out);
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
   virtual void get_all_values(const amrex::Real indata[], amrex::Real out[])
   {
     // Ostensibly cannot use from_blob because the indata array is const
@@ -501,6 +511,18 @@ private:
 
     for (int i = 0; i < nvar; i++) {
       out[i] = (ivar[i] >= 0) ? acc[ivar[i]] : 0.0;
+    }
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  void get_values(const int istart, const int iend, const torch::Tensor& indata, amrex::Real out[])
+  {
+    torch::Tensor predvars = eval_model(indata);
+    auto acc = predvars.accessor<amrex::Real,1>();
+
+    for (int i = istart; i <= iend; i++) {
+      out[i] = acc[i];
     }
   }
   

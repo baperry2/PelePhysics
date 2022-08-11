@@ -31,7 +31,9 @@ public:
     bool cmlm_net = false;
     pp.query("cmlm_net", cmlm_net);
 
-    NNModel nnmodel(nn_filename, cmlm_net);
+    // Created on heap, must be deleted
+    std::unique_ptr<NNModelBase> nnmodel;
+    nnmodel.reset(NNModelFactory::from_filename(nn_filename, cmlm_net));
 
     std::string info_filename;
     pp.get("info_filename", info_filename);
@@ -47,17 +49,17 @@ public:
     if(m_verbose >= 1)
     {
       print();
-      nnmodel.print();
+      nnmodel->print();
     }
 
     allocate();
   }
 
-  void pack_model(NNModel& nnmodel)
+  void pack_model(std::unique_ptr<NNModelBase>& nnmodel)
   {
     // Get sizes of buffers
-    int nreals, nints;
-    nnmodel.buffer_sizes_for_packing(nreals, nints);
+    int nreals = nnmodel->nfparams();
+    int nints = nnmodel->niparams();
 
     // Allocate memory for buffers so that they can be copied efficiently to the GPU
     m_h_nnf_data.nnrdata = static_cast<amrex::Real*>(
@@ -66,7 +68,7 @@ public:
         amrex::The_Pinned_Arena()->alloc(nints*sizeof(int)));
 
     // Pack model
-    nnmodel.pack(m_h_nnf_data.nnrdata, m_h_nnf_data.nnidata);
+    nnmodel->pack(m_h_nnf_data.nnrdata, m_h_nnf_data.nnidata);
   }
 
   void read_metadata(std::string& info_filename)
@@ -383,16 +385,16 @@ public:
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
   NNFunc(NNFuncParams::NNFuncData* nnf_data_in)
-      : nnf_data{nnf_data_in}, nnmodel(nnf_data_in->nnrdata, nnf_data_in->nnidata)
+      : nnf_data{nnf_data_in} 
   {
-
+    nnmodel = NNModelFactory::from_buffers(nnf_data_in->nnrdata, nnf_data_in->nnidata);
   }
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
   virtual void get_value(const int ivar, const amrex::Real indata[], amrex::Real& out)
   {
-    out = nnmodel(indata)[ivar];
+    out = (*nnmodel)(indata, ivar)[0];
   }
 
   AMREX_GPU_HOST_DEVICE
@@ -400,7 +402,7 @@ public:
   virtual void get_values(const int nvar, const int ivar[], const amrex::Real indata[],
       amrex::Real out[])
   {
-    const amrex::Real* outdata = nnmodel(indata);
+    const amrex::Real* outdata = (*nnmodel)(indata);
     for(int i = 0; i < nvar; i++)
     {
       out[i] = (ivar[i] >= 0) ? outdata[ivar[i]] : 0.0;
@@ -409,13 +411,21 @@ public:
   
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void get_all_values(const amrex::Real indata[], amrex::Real out[])
+  virtual void get_values(const int istart, const int iend, const amrex::Real indata[],
+      amrex::Real out[])
   {
-    const amrex::Real* outdata = nnmodel(indata);
-    for(int i = 0; i < nnf_data->Nvar; i++)
+    const amrex::Real* outdata = (*nnmodel)(indata, istart, iend);
+    for(int i = 0; i <= (iend - istart); i++)
     {
       out[i] = outdata[i];
     }
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual void get_all_values(const amrex::Real indata[], amrex::Real out[])
+  {
+    (*nnmodel)(indata, out);
   }
 
   AMREX_GPU_HOST_DEVICE
@@ -424,7 +434,7 @@ public:
   {
     // Use first-order finite difference approach for now
     constexpr amrex::Real eps = 1e-5;
-    const amrex::Real outval0 = nnmodel(indata)[ivar];
+    const amrex::Real outval0 = (*nnmodel)(indata, ivar)[0];
     amrex::Real diff;
 
     amrex::Real indata_copy[NUM_SPECIES-1];
@@ -437,7 +447,7 @@ public:
     {
       diff = (indata[i] != 0.0) ? eps*indata[i] : eps;
       indata_copy[i] = indata[i] + diff;
-      derivs[i] = (nnmodel(indata_copy)[ivar] - outval0) / diff;
+      derivs[i] = ((*nnmodel)(indata_copy, ivar)[0] - outval0) / diff;
       indata_copy[i] = indata[i];
     }
   }
@@ -446,7 +456,7 @@ public:
   AMREX_FORCE_INLINE
   virtual void calculate_Wdot(const int paramidx, const amrex::Real indata[], amrex::Real& out)
   {
-    const amrex::Real* outdata = nnmodel(indata);
+    const amrex::Real* outdata = (*nnmodel)(indata);
 
     amrex::Real rr = 0.0;
 
@@ -472,7 +482,7 @@ private:
 
   // Variables
   NNFuncParams::NNFuncData* nnf_data;
-  NNModel nnmodel;
+  NNModelBase* nnmodel;
   amrex::Real* indata_copy;
 
 }; // class NNFunc

@@ -176,7 +176,11 @@ struct Manifold
   void RTY2WDOT(const amrex::Real /*R*/, const amrex::Real /*T*/, const amrex::Real Y[], amrex::Real WDOT[])
   {
     if (eosparm->has_mani_src) {
-      manfunc->get_values(NUM_SPECIES-1, eosparm->idx_Wdot, Y, WDOT);
+      if(eosparm->contig_Wdot) {
+        manfunc->get_values(eosparm->min_idx_Wdot, eosparm->max_idx_Wdot, Y, WDOT);
+      } else {
+        manfunc->get_values(NUM_SPECIES-1, eosparm->idx_Wdot, Y, WDOT);
+      }
     } else {
       for(int is = 0; is < NUM_SPECIES-1; is++) {
         manfunc->calculate_Wdot(is, Y, WDOT[is]);

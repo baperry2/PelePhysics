@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <memory>
 
 #include "NeuralNetLayerDef.H"
 
@@ -82,32 +83,99 @@ void read_fmt(const std::string& fmt, std::vector<char>& types,
   }
 }
 
-class NNModel
+struct InitParams
+{
+  int ssize;
+  int isize;
+  int fsize;
+  int inpsize;
+  int nnets;
+  bool cmlm_net = false;
+};
+
+class NNModelBase
 {
 public:
   
   AMREX_GPU_HOST_DEVICE
+  virtual ~NNModelBase() {}
+  
+  virtual void init_from_stream(std::ifstream& file, const InitParams& ipar) = 0;
+  
+  AMREX_GPU_HOST_DEVICE
+  virtual void init_from_buffers(amrex::Real* nnrd, int* nnid, const InitParams& ipar) = 0;
+  
+  // Evaluate net for given inputs and return pointer to output buffer
+  AMREX_GPU_HOST_DEVICE
+  virtual const amrex::Real* operator()(const amrex::Real* inputs) = 0;
+  
+  // Evaluate net and return pointer to the net output at the given index
+  // Does not guarantee that any other outputs were calculated
+  AMREX_GPU_HOST_DEVICE
+  virtual const amrex::Real* operator()(const amrex::Real* inputs, int idx) = 0;
+  
+  // Evaluate net and return pointer to the net output at istart
+  // Does not guarantee that outputs outside of the [istart, iend] range were calculated
+  AMREX_GPU_HOST_DEVICE
+  virtual const amrex::Real* operator()(const amrex::Real* inputs, int istart, int iend) = 0;
+  
+  // Evaluate net and store the results in outputs
+  AMREX_GPU_HOST_DEVICE
+  virtual void operator()(const amrex::Real* inputs, amrex::Real* outputs) = 0;
+  
+  virtual void print() = 0;
+  
+  AMREX_GPU_HOST_DEVICE
+  virtual int nin() = 0;
+  
+  AMREX_GPU_HOST_DEVICE
+  virtual int nout() = 0;
+  
+  AMREX_GPU_HOST_DEVICE
+  virtual int nfparams() = 0;
+  
+  AMREX_GPU_HOST_DEVICE
+  virtual int niparams(bool with_prefix=true) = 0;
+
+  virtual void pack(amrex::Real* nnrd, int* nnid, bool store_prefix=true) = 0;
+};
+
+class NNModel: public NNModelBase
+{
+public:
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
   NNModel() {}
   
-  NNModel(std::string& fname, bool cmlm_net=false) : cmlm_net{cmlm_net}
+  AMREX_GPU_HOST_DEVICE
+  ~NNModel()
   {
-    std::ifstream file(fname, std::ios::binary | std::ios::in);
-    std::vector<NNLayer*> layer_vec;
-    
-    if(!file.is_open())
+    for(int i = 0; i < num_layers; i++)
     {
-      throw std::runtime_error("Unable to open input file " + fname + " .");
+      delete layers[i];
     }
-    
-    file.seekg(0, std::ios::beg);
+    delete[] layers;
+    delete[] lsizes;
+    delete[] outvec0;
+    delete[] outvec1;
+  }
+  
+  virtual void init_from_stream(std::ifstream& file, const InitParams& ipar)
+  {
+    cmlm_net = ipar.cmlm_net;
+    inpsize = ipar.inpsize;
     
     int ssize, fsize, isize;
-    file.read(reinterpret_cast<char*>(&ssize), sizeof(int));
-    file.read(reinterpret_cast<char*>(&fsize), sizeof(int));
-    file.read(reinterpret_cast<char*>(&isize), sizeof(int));
-    file.read(reinterpret_cast<char*>(&inpsize), sizeof(int));
+    ssize = ipar.ssize;
+    fsize = ipar.fsize;
+    isize = ipar.isize;
     
-    while(file.peek() != EOF)
+    file.read(reinterpret_cast<char*>(&num_layers), sizeof(int));
+    
+    layers = new NNLayer*[num_layers];
+    
+    for(int i = 0; i < num_layers; i++)
     {
       char name_arr[ssize];
       char fmt_arr[ssize];
@@ -122,24 +190,16 @@ public:
       
       if(name == "Linear")
       {
-        layer_vec.push_back(new LinearNNLayer(types, sizes, file, fsize, isize));
+        layers[i] = new LinearNNLayer(types, sizes, file, fsize, isize);
       }
       else if(name == "LeakyReLU")
       {
-        layer_vec.push_back(new LeakyReluNNLayer(types, sizes, file, fsize, isize));
+        layers[i] = new LeakyReluNNLayer(types, sizes, file, fsize, isize);
       }
       else if(name == "BatchNorm1d")
       {
-        layer_vec.push_back(new BatchNorm1dNNLayer(types, sizes, file, fsize, isize));
+        layers[i] = new BatchNorm1dNNLayer(types, sizes, file, fsize, isize);
       }
-    }
-    
-    num_layers = layer_vec.size();
-    
-    layers = new NNLayer*[num_layers];
-    for(int i = 0; i < num_layers; i++)
-    {
-      layers[i] = layer_vec[i];
     }
     
     lsizes = new int[num_layers];
@@ -159,31 +219,35 @@ public:
     outvec0 = new amrex::Real[maxsize];
     outvec1 = new amrex::Real[maxsize];
     
-    file.close();
+    // Do not need to store Real parameters for net, just the layers
+    nreals = 0;
+    // We want to store number of nets, `cmlm_net`, `inpsize`, `nreals`, `nints`
+    // Edit `niparams` and `pack` functions if this changes
+    nints = 5;
     
-    AMREX_ALWAYS_ASSERT(num_layers > 0);
-    if(cmlm_net)
+    for(int i = 0; i < num_layers; i++)
     {
-      AMREX_ALWAYS_ASSERT(num_layers == 7);
+      nreals += layers[i]->nfparams();
+      nints  += layers[i]->niparams();
     }
   }
   
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  NNModel(amrex::Real* nnrd_in, int* nnid_in)
+  virtual void init_from_buffers(amrex::Real* nnrd, int* nnid, const InitParams& ipar)
   {    
-    cmlm_net = static_cast<bool>(nnid_in[0]);
+    cmlm_net = ipar.cmlm_net;
+    inpsize = ipar.inpsize;
+    
+    nreals = nnid[0];
+    nints = nnid[1];
+    nnid += 2;
     
     if(cmlm_net)
     {
       num_layers = 7;
       layers = new NNLayer*[num_layers];
       lsizes = new int[num_layers];
-      
-      amrex::Real* nnrd = nnrd_in;
-      int* nnid = nnid_in+1; // Already read cmlm_net flag
-      
-      inpsize = nnid[0]; nnid++;
       
       layers[0] = new LinearNNLayer(nnrd, nnid);
       nnrd += layers[0]->nfparams();
@@ -230,21 +294,8 @@ public:
   }
   
   AMREX_GPU_HOST_DEVICE
-  ~NNModel()
-  {
-    for(int i = 0; i < num_layers; i++)
-    {
-      delete layers[i];
-    }
-    delete[] layers;
-    delete[] lsizes;
-    delete[] outvec0;
-    delete[] outvec1;
-  }
-  
-  AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  const amrex::Real* operator()(const amrex::Real* inputs)
+  virtual const amrex::Real* operator()(const amrex::Real* inputs)
   {
     amrex::Real* invec = outvec0;
     amrex::Real* outvec = outvec1;
@@ -268,7 +319,57 @@ public:
     return outvec;
   }
   
-  void print()
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual const amrex::Real* operator()(const amrex::Real* inputs, int idx)
+  {
+    return (*this)(inputs) + idx;
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual const amrex::Real* operator()(const amrex::Real* inputs, int istart, int iend)
+  {
+    return (*this)(inputs) + istart;
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual void operator()(const amrex::Real* inputs, amrex::Real* outputs)
+  {
+    int ninp = inpsize;
+  
+    if(num_layers == 1)
+    {
+      (*layers[0])(inputs, outputs, ninp);
+    }
+    else
+    {
+      amrex::Real* invec = outvec0;
+      amrex::Real* outvec = outvec1;
+      amrex::Real* temp;
+      
+      (*layers[0])(inputs, outvec, ninp);
+      ninp = lsizes[0];
+      
+      for(int i = 1; i < num_layers-1; i++)
+      {
+        // Swap input and output buffers
+        temp = invec;
+        invec = outvec;
+        outvec = temp;
+        // Evaluate layer
+        (*layers[i])(invec, outvec, ninp);
+        ninp = lsizes[i];
+      }
+      
+      invec = outvec;
+      // Evaluate layer
+      (*layers[num_layers-1])(invec, outputs, ninp);
+    }
+  }
+  
+  virtual void print()
   {
     amrex::Print() << "Number of layers: " << num_layers << std::endl;
     amrex::Print() << "Input size: " << inpsize << std::endl;
@@ -283,57 +384,60 @@ public:
   
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  int nin()
+  virtual int nin()
   {
     return inpsize;
   }
   
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  int nout()
+  virtual int nout()
   {
     return lsizes[num_layers-1];
   }
   
-  void buffer_sizes_for_packing(int& nreals_in, int& nints_in)
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual int nfparams()
   {
-    // Do not need to store Real parameters for net, just the layers
-    int nreals = 0;
-    // We want to store the cmlm_net flag and the input size
-    int nints = 2;
-    
-    if(cmlm_net)
-    {      
-      for(int i = 0; i < num_layers; i++)
-      {
-        nreals += layers[i]->nfparams();
-        nints  += layers[i]->niparams();
-      }
-    }
-    
-    nreals_in = nreals;
-    nints_in = nints;
+    return nreals;
   }
   
-  void pack(amrex::Real* nnrd, int* nnid)
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual int niparams(bool with_prefix=true)
   {
-    int nreals = 0;
-    int nints = 0;
-    
+    if(with_prefix)
+    {
+      return nints;
+    }
+    // Prefix length is also used in constructor, `pack` method
+    return nints-3;
+  }
+  
+  virtual void pack(amrex::Real* nnrd, int* nnid, bool store_prefix=true)
+  {
     if(cmlm_net)
     {
-      // Store cmlm_net flag and input size
-      nnid[0] = static_cast<int>(cmlm_net);
-      nints++;
-      nnid[1] = inpsize;
-      nints++;
+      if(store_prefix)
+      {
+        // Store number of models, cmlm_net flag and input size
+        // Edit constructor and `niparams` if you change the prefix length
+        nnid[0] = 1;
+        nnid[1] = static_cast<int>(cmlm_net);
+        nnid[2] = inpsize;
+        nnid += 3;
+      }
+      nnid[0] = nreals;
+      nnid[1] = nints;
+      nnid += 2;
       
       // Pack the layers into the arrays
       for(int i = 0; i < num_layers; i++)
       {
-        layers[i]->pack(nnrd+nreals, nnid+nints);
-        nreals += layers[i]->nfparams();
-        nints += layers[i]->niparams();
+        layers[i]->pack(nnrd, nnid);
+        nnrd += layers[i]->nfparams();
+        nnid += layers[i]->niparams();
       }
     }
   }
@@ -347,8 +451,299 @@ private:
   amrex::Real* outvec0;
   amrex::Real* outvec1;
   bool cmlm_net;
+  int nreals;
+  int nints;
 };
 
+class NNArray: public NNModelBase
+{
+public:
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  NNArray() {}
+  
+  AMREX_GPU_HOST_DEVICE
+  ~NNArray()
+  {
+    for(int i = 0; i < num_models; i++)
+    {
+      delete models[i];
+    }
+    delete[] models;
+    delete[] out_idx;
+    delete[] idx_map;
+    delete[] outvec;
+  }
+  
+  virtual void init_from_stream(std::ifstream& file, const InitParams& ipar)
+  {
+    cmlm_net = ipar.cmlm_net;
+    inpsize = ipar.inpsize;
+    num_models = ipar.nnets;
+    
+    int outsize = 0;
+    models = new NNModel*[num_models];
+    out_idx = new int[num_models+1];
+    
+    for(int i = 0; i < num_models; i++)
+    {
+      models[i] = new NNModel();
+      models[i]->init_from_stream(file, ipar);
+      out_idx[i] = outsize;
+      outsize += models[i]->nout();
+    }
+    out_idx[num_models] = outsize;
+    
+    idx_map = new int[outsize];
+    for(int i = 0; i < num_models; i++)
+    {
+      for(int j = out_idx[i]; j < out_idx[i+1]; j++)
+      {
+        idx_map[j] = i;
+      }
+    }
+    
+    outvec = new amrex::Real[outsize];
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual void init_from_buffers(amrex::Real* nnrd, int* nnid, const InitParams& ipar)
+  {
+    num_models = ipar.nnets;  
+    cmlm_net = ipar.cmlm_net;
+    inpsize = ipar.inpsize;
+    
+    int outsize = 0;
+    models = new NNModel*[num_models];
+    out_idx = new int[num_models+1];
+    
+    for(int i = 0; i < num_models; i++)
+    {
+      models[i] = new NNModel();
+      models[i]->init_from_buffers(nnrd, nnid, ipar);
+      
+      nnrd += models[i]->nfparams();
+      nnid += models[i]->niparams(false);
+      
+      out_idx[i] = outsize;
+      outsize += models[i]->nout();
+    }
+    out_idx[num_models] = outsize;
+    
+    idx_map = new int[outsize];
+    for(int i = 0; i < num_models; i++)
+    {
+      for(int j = out_idx[i]; j < out_idx[i+1]; j++)
+      {
+        idx_map[j] = i;
+      }
+    }
+    
+    outvec = new amrex::Real[outsize];
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual const amrex::Real* operator()(const amrex::Real* inputs)
+  {
+    for(int i = 0; i < num_models; i++)
+    {
+      (*models[i])(inputs, outvec + out_idx[i]);
+    }
+    
+    return outvec;
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual const amrex::Real* operator()(const amrex::Real* inputs, int idx)
+  {
+    int loc_idx = idx - out_idx[idx_map[idx]];
+    const amrex::Real* out = (*models[idx_map[idx]])(inputs, loc_idx);
+    outvec[idx] = *out;
+    return outvec + idx;
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual const amrex::Real* operator()(const amrex::Real* inputs, int istart, int iend)
+  {
+    int mod_istart = idx_map[istart];
+    int mod_iend = idx_map[iend];
+    
+    for(int i = mod_istart; i <= mod_iend; i++)
+    {
+      (*models[i])(inputs, outvec + out_idx[i]);
+    }
+    
+    return outvec + istart;
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual void operator()(const amrex::Real* inputs, amrex::Real* outputs)
+  {
+    for(int i = 0; i < num_models; i++)
+    {
+      (*models[i])(inputs, outputs + out_idx[i]);
+    }
+  }
+  
+  virtual void print()
+  {
+    for(int i = 0; i < num_models; i++)
+    {
+      models[i]->print();
+      amrex::Print() << std::endl;
+    }
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual int nin()
+  {
+    return inpsize;
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual int nout()
+  {
+    return out_idx[num_models-1];
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual int nfparams()
+  {
+    int nreals = 0;
+    for(int i = 0; i < num_models; i++)
+    {
+      nreals += models[i]->nfparams();
+    }
+    return nreals;
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  virtual int niparams(bool with_prefix=true)
+  {
+    int nints = 0;
+    for(int i = 0; i < num_models; i++)
+    {
+      nints += models[i]->niparams(false);
+    }
+    
+    if(with_prefix)
+    {
+      return nints+3;
+    }
+    return nints;
+  }
+  
+  virtual void pack(amrex::Real* nnrd, int* nnid, bool store_prefix=true)
+  {
+    if(store_prefix)
+    {
+      // Store number of nets, cmlm_net flag and input size
+      nnid[0] = num_models;
+      nnid[1] = static_cast<int>(cmlm_net);
+      nnid[2] = inpsize;
+      nnid += 3;  
+    }
+    
+    for(int i = 0; i < num_models; i++)
+    {
+      // The `false`s are because we have already stored the prefix data
+      models[i]->pack(nnrd, nnid, false);
+      nnrd += models[i]->nfparams();
+      nnid += models[i]->niparams(false);
+    }
+  }
+
+private:
+  
+  NNModel** models;
+  int inpsize;
+  int num_models;
+  int* out_idx;
+  int* idx_map;
+  amrex::Real* outvec;
+  bool cmlm_net;
+};
+
+// Factory functions for creating and initializing new NNModelBase instance on the heap
+namespace NNModelFactory
+{
+  AMREX_FORCE_INLINE
+  NNModelBase* from_ifstream(std::ifstream& file, bool cmlm_net=false)
+  {
+    InitParams ipar;
+    file.read(reinterpret_cast<char*>(&ipar.ssize), sizeof(int));
+    file.read(reinterpret_cast<char*>(&ipar.fsize), sizeof(int));
+    file.read(reinterpret_cast<char*>(&ipar.isize), sizeof(int));
+    file.read(reinterpret_cast<char*>(&ipar.inpsize), sizeof(int));
+    file.read(reinterpret_cast<char*>(&ipar.nnets), sizeof(int));
+    ipar.cmlm_net = cmlm_net;
+    
+    AMREX_ALWAYS_ASSERT(ipar.nnets > 0);
+    
+    NNModelBase* mptr;
+    if(ipar.nnets == 1)
+    {
+      mptr = new NNModel();
+    }
+    else
+    {
+      mptr = new NNArray();
+    }
+    mptr->init_from_stream(file, ipar);
+    
+    return mptr;
+  }
+  
+  AMREX_FORCE_INLINE
+  NNModelBase* from_filename(std::string& fname, bool cmlm_net=false)
+  {
+    std::ifstream file(fname, std::ios::binary | std::ios::in);
+    
+    if(!file.is_open())
+    {
+      throw std::runtime_error("Unable to open input file " + fname + " .");
+    }
+    
+    file.seekg(0, std::ios::beg);
+    
+    NNModelBase* model = from_ifstream(file, cmlm_net);
+    file.close();
+    return model;
+  }
+  
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  NNModelBase* from_buffers(amrex::Real* nnrd, int* nnid)
+  {
+    InitParams ipar;
+    ipar.nnets = nnid[0];
+    ipar.cmlm_net = nnid[1];
+    ipar.inpsize = nnid[2];
+    
+    NNModelBase* mptr;
+    if(ipar.nnets == 1)
+    {
+      mptr = new NNModel();
+    }
+    else
+    {
+      mptr = new NNArray();
+    }
+    mptr->init_from_buffers(nnrd, nnid+3, ipar);
+    
+    return mptr;
+  }
+} // namespace NNModelFactory
 } // namespace physics
 } // namespace pele
 

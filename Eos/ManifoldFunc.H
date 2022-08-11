@@ -65,7 +65,12 @@ public:
   virtual void get_value(const int ivar, const amrex::Real indata[], amrex::Real& out) = 0;
 
   AMREX_GPU_HOST_DEVICE
-  virtual void get_values(const int nvar, const int ivar[], const amrex::Real indata[], amrex::Real out[]) = 0;
+  virtual void get_values(const int nvar, const int ivar[], const amrex::Real indata[],
+      amrex::Real out[]) = 0;
+  
+  AMREX_GPU_HOST_DEVICE
+  virtual void get_values(const int istart, const int iend, const amrex::Real indata[],
+      amrex::Real out[]) = 0;
   
   AMREX_GPU_HOST_DEVICE
   virtual void get_all_values(const amrex::Real indata[], amrex::Real out[]) = 0;

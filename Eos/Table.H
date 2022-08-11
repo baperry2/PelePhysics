@@ -230,6 +230,24 @@ namespace pele{
         }
       }
       
+      // Grab variables from inclusive index range
+      AMREX_GPU_HOST_DEVICE
+      AMREX_FORCE_INLINE
+      virtual void
+      get_values(const int istart, const int iend, const amrex::Real interpdata[], amrex::Real out[])
+      {
+        // Get alphas and indices
+        int indices[MAXD_TABLE];
+        amrex::Real alphas[MAXD_TABLE];
+        amrex::Real dxinv[MAXD_TABLE];
+        get_indices_alphas_dxinv(interpdata, indices, alphas, dxinv);
+
+        // interpolate down
+        for (int i = istart; i <= iend; ++i) {
+          out[i] = interpolate(indices, alphas, &tf_data->values[i * tf_data->varSpacing]);
+        }
+      }
+      
       AMREX_GPU_HOST_DEVICE
       AMREX_FORCE_INLINE
       virtual void get_all_values(const amrex::Real interpdata[], amrex::Real out[])

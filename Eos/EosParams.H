@@ -58,6 +58,9 @@ struct EosParm<Manifold>
   int idx_density{0};
   int idx_T{0};
   int idx_Wdot[NUM_SPECIES - 1] = {0};
+  int max_idx_Wdot = 0;
+  int min_idx_Wdot = 0;
+  bool contig_Wdot = false;
   bool has_mani_src = false;
 };
 
@@ -106,6 +109,11 @@ struct InitEosParm<Manifold>
     // For neural net, require a definition to be supplied for each manifold parameter
     if(eosparm->has_mani_src)
     {
+      int& max_idx_Wdot = eosparm->max_idx_Wdot;
+      int& min_idx_Wdot = eosparm->min_idx_Wdot;
+      max_idx_Wdot = 0;
+      min_idx_Wdot = manf_data_in->Nvar;
+      
       for (int idim = 0; idim < manf_data_in->Ndim; idim++)
       {
         std::string dimname = std::string(&manf_data_in->dimnames[idim*manf_data_in->len_str], manf_data_in->len_str);
@@ -124,6 +132,19 @@ struct InitEosParm<Manifold>
         	amrex::Print() << "Warning: No source term found for manifold parameter " << amrex::trim(dimname)
         		       << ", assuming SRC_" << amrex::trim(dimname) << " = 0" << std::endl;
         }
+        else
+        {
+          int idx_Wdot = eosparm->idx_Wdot[idim];
+          max_idx_Wdot = (idx_Wdot > max_idx_Wdot) ? idx_Wdot : max_idx_Wdot;
+          min_idx_Wdot = (idx_Wdot < min_idx_Wdot) ? idx_Wdot : min_idx_Wdot;
+        }
+      }
+      
+      eosparm->contig_Wdot = ((max_idx_Wdot - min_idx_Wdot) == (NUM_SPECIES-2));
+      for(int idim = 1; idim < manf_data_in->Ndim; idim++)
+      {
+        if(!eosparm->contig_Wdot) break;
+        eosparm->contig_Wdot = (eosparm->idx_Wdot[idim] - eosparm->idx_Wdot[idim-1]) == 1;
       }
     }
     else
