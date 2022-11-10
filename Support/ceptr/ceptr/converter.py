@@ -608,5 +608,13 @@ class Converter:
             fstream,
             "#define NUM_REACTIONS %d" % (len(self.mechanism.reactions())),
         )
+        # Light molecular weight species for use with soret diffusion
+        n_lite = 0
+        idx_light_specs = []
+        for sp in range(self.species_info.n_species):
+            if self.species_info.nonqssa_species[sp].weight < 5.0:
+                n_lite += 1            
+        cw.writer(fstream, "#define NUM_LITE_SPECIES %d" % (n_lite))
+
         cw.writer(fstream)
         cw.writer(fstream, "#define NUM_FIT 4")
