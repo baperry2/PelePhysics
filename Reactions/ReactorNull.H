@@ -1,11 +1,9 @@
-#ifndef _REACTORNULL_H_
-#define _REACTORNULL_H_
+#ifndef REACTORNULL_H
+#define REACTORNULL_H
 
 #include "ReactorBase.H"
 
-namespace pele {
-namespace physics {
-namespace reactions {
+namespace pele::physics::reactions {
 
 class ReactorNull : public ReactorBase::Register<ReactorNull>
 {
@@ -52,7 +50,7 @@ public:
     ) override;
 
   void flatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<const amrex::Real> const& rhoY,
     amrex::Array4<const amrex::Real> const& frcExt,
@@ -71,7 +69,7 @@ public:
   }
 
   void unflatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<amrex::Real> const& rhoY,
     amrex::Array4<amrex::Real> const& temperature,
@@ -93,7 +91,5 @@ private:
   int m_reactor_type{0};
   bool m_clean_init_massfrac{false};
 };
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions
 #endif

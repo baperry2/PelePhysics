@@ -1,12 +1,10 @@
-#ifndef _SIMPLETRANSPORT_H_
-#define _SIMPLETRANSPORT_H_
+#ifndef SIMPLETRANSPORT_H
+#define SIMPLETRANSPORT_H
 
 #include "TransportParams.H"
 #include "PhysicsConstants.H"
 
-namespace pele {
-namespace physics {
-namespace transport {
+namespace pele::physics::transport {
 
 template <typename EOSType>
 struct NonIdealChungCorrections
@@ -28,7 +26,7 @@ struct NonIdealChungCorrections<eos::SRK>
     const amrex::Real Temp,
     const amrex::Real* Xloc,
     const amrex::Real rholoc,
-    amrex::Real& wbar,
+    const amrex::Real wbar,
     amrex::Real& mu,
     amrex::Real& lam,
     TransParm<eos::SRK, SimpleTransport> const* trans_parm)
@@ -151,6 +149,7 @@ struct BinaryDiff
       amrex::Real term1 = 0.0;
       amrex::Real term2 = 0.0;
       for (int j = 0; j < NUM_SPECIES; ++j) {
+        // cppcheck-suppress knownConditionTrueFalse
         if (i != j) {
           const int four_idx_ij = 4 * (i + NUM_SPECIES * j);
           const amrex::Real dbintemp =
@@ -185,6 +184,7 @@ struct BinaryDiff<eos::SRK>
       amrex::Real term1 = 0.0;
       amrex::Real term2 = 0.0;
       for (int j = 0; j < NUM_SPECIES; ++j) {
+        // cppcheck-suppress knownConditionTrueFalse
         if (i != j) {
           const int idx_ij = i + NUM_SPECIES * j;
           amrex::Real dbintemp = tparm->fitdbin[4 * idx_ij] +
@@ -221,15 +221,14 @@ struct SimpleTransport
     amrex::Real* xiloc,
     TransParm<EosType, transport_type> const* tparm)
   {
-    amrex::Real cvk[NUM_SPECIES];
-    amrex::Real cvkint[NUM_SPECIES];
-    amrex::Real cvkrot[NUM_SPECIES];
-    amrex::Real FofT[NUM_SPECIES];
-    amrex::Real Fnorm[NUM_SPECIES];
-    amrex::Real epskoverT, epskoverTstd;
+    amrex::Real cvk[NUM_SPECIES] = {0.0};
+    amrex::Real cvkint[NUM_SPECIES] = {0.0};
+    amrex::Real cvkrot[NUM_SPECIES] = {0.0};
+    amrex::Real FofT[NUM_SPECIES] = {0.0};
+    amrex::Real Fnorm[NUM_SPECIES] = {0.0};
     amrex::Real pi3_2 = std::pow(M_PI, 1.5);
 
-    CKCVMS(&Tloc, cvk);
+    CKCVMS(Tloc, cvk);
 
     for (int i = 0; i < NUM_SPECIES; ++i) {
       if (tparm->nlin[i] == 0) {
@@ -245,8 +244,8 @@ struct SimpleTransport
     }
 
     for (int i = 0; i < NUM_SPECIES; ++i) {
-      epskoverTstd = tparm->eps[i] / 298.0;
-      epskoverT = tparm->eps[i] / Tloc;
+      amrex::Real epskoverTstd = tparm->eps[i] / 298.0;
+      amrex::Real epskoverT = tparm->eps[i] / Tloc;
       Fnorm[i] = 1.0 + 0.50 * pi3_2 * std::sqrt(epskoverTstd) +
                  (2.0 + .50 * M_PI * M_PI) * epskoverTstd +
                  pi3_2 * std::sqrt(epskoverTstd) * epskoverTstd;
@@ -277,27 +276,28 @@ struct SimpleTransport
     const bool wtr_get_mu,
     const bool wtr_get_lam,
     const bool wtr_get_Ddiag,
+    const bool wtr_get_chi,
     const amrex::Real Tloc,
     const amrex::Real rholoc,
     amrex::Real* Yloc,
     amrex::Real* Ddiag,
+    amrex::Real* chi_mix,
     amrex::Real& mu,
     amrex::Real& xi,
     amrex::Real& lam,
     TransParm<EosType, transport_type> const* tparm)
   {
     amrex::Real trace = 1.e-15;
-    amrex::Real Xloc[NUM_SPECIES];
-    amrex::Real muloc[NUM_SPECIES];
-    amrex::Real xiloc[NUM_SPECIES];
-    amrex::Real lamloc[NUM_SPECIES];
-    amrex::Real logT[NUM_FIT - 1];
+    amrex::Real Xloc[NUM_SPECIES] = {0.0};
+    amrex::Real muloc[NUM_SPECIES] = {0.0};
+    amrex::Real xiloc[NUM_SPECIES] = {0.0};
+    amrex::Real logT[NUM_FIT - 1] = {0.0};
 
     logT[0] = std::log(Tloc);
     logT[1] = logT[0] * logT[0];
     logT[2] = logT[0] * logT[1];
 
-    amrex::Real sum = 0.;
+    amrex::Real sum = 0.0;
 
     for (int i = 0; i < NUM_SPECIES; ++i) {
       sum += Yloc[i];
@@ -307,7 +307,7 @@ struct SimpleTransport
       Yloc[i] += trace * (sum / NUM_SPECIES - Yloc[i]);
     }
 
-    amrex::Real wbar = 0.;
+    amrex::Real wbar = 0.0;
     for (int i = 0; i < NUM_SPECIES; ++i) {
       wbar += Yloc[i] * tparm->iwt[i];
     }
@@ -329,7 +329,7 @@ struct SimpleTransport
         mu += Xloc[i] *
               (muloc[i] * muloc[i] * muloc[i] * muloc[i] * muloc[i] * muloc[i]);
       }
-      mu = std::cbrt(std::sqrt(mu)); // mu = (sum[ Xloc_i * muloc_i^6])^(1/6)
+      mu = std::cbrt(std::sqrt(mu));
 
       //  assumption that we only get bulk viscosity if we are already getting
       //  shear viscosity
@@ -338,16 +338,15 @@ struct SimpleTransport
         comp_pure_bulk(Tloc, muloc, xiloc, tparm);
         xi = 0.0;
         for (int i = 0; i < NUM_SPECIES; ++i) {
-          xi += Xloc[i] * (std::sqrt(std::sqrt(
-                            xiloc[i] * xiloc[i] *
-                            xiloc[i]))); // xi = sum[Xloc_i*xiloc_i^(3/4)];
+          xi +=
+            Xloc[i] * (std::sqrt(std::sqrt(xiloc[i] * xiloc[i] * xiloc[i])));
         }
-        xi = std::cbrt(
-          xi * xi * xi * xi); // xi = (sum[Xloc_i*xiloc_i^(3/4)])^(4/3)
+        xi = std::cbrt(xi * xi * xi * xi);
       }
     }
 
     if (wtr_get_lam) {
+      amrex::Real lamloc[NUM_SPECIES] = {0.0};
       for (int i = 0; i < NUM_SPECIES; ++i) {
         lamloc[i] = tparm->fitlam[4 * i] + tparm->fitlam[1 + 4 * i] * logT[0] +
                     tparm->fitlam[2 + 4 * i] * logT[1] +
@@ -355,12 +354,11 @@ struct SimpleTransport
         lamloc[i] = std::exp(lamloc[i]);
       }
 
-      lam = 0.;
+      lam = 0.0;
       for (int i = 0; i < NUM_SPECIES; ++i) {
-        lam += Xloc[i] * std::sqrt(std::sqrt(
-                           lamloc[i])); // lam = sum[Xloc_i * (lamloc_i)^(1/4)]
+        lam += Xloc[i] * std::sqrt(std::sqrt(lamloc[i]));
       }
-      lam = lam * lam * lam * lam; // lam = lam^4
+      lam = lam * lam * lam * lam;
     }
     // Add nonideal corrections if necessary
     NonIdealChungCorrections<EosType>()(
@@ -368,6 +366,24 @@ struct SimpleTransport
 
     if (wtr_get_Ddiag) {
       BinaryDiff<EosType>()(Xloc, Yloc, logT, rholoc, Tloc, Ddiag, tparm);
+    }
+
+    if (wtr_get_chi) {
+      for (int n = 0; n < tparm->numLite; ++n) {
+        const int i = tparm->liteSpec[n];
+        for (int j = 0; j < NUM_SPECIES; ++j) {
+          if (j != i) {
+            const int four_idx_nj = 4 * (j + NUM_SPECIES * n);
+            const amrex::Real chi =
+              tparm->fittdrat[four_idx_nj] +
+              Tloc * (tparm->fittdrat[1 + four_idx_nj] +
+                      Tloc * (tparm->fittdrat[2 + four_idx_nj] +
+                              Tloc * (tparm->fittdrat[3 + four_idx_nj])));
+            chi_mix[i] += Xloc[j] * chi;
+          }
+        }
+        chi_mix[i] *= Xloc[i];
+      }
     }
   }
 
@@ -378,6 +394,7 @@ struct SimpleTransport
     amrex::Array4<const amrex::Real> const& T_in,
     amrex::Array4<const amrex::Real> const& Rho_in,
     amrex::Array4<amrex::Real> const& D_out,
+    amrex::Array4<amrex::Real> const& chi_out,
     amrex::Array4<amrex::Real> const& mu_out,
     amrex::Array4<amrex::Real> const& xi_out,
     amrex::Array4<amrex::Real> const& lam_out,
@@ -390,6 +407,7 @@ struct SimpleTransport
     const bool wtr_get_mu = true;
     const bool wtr_get_lam = true;
     const bool wtr_get_Ddiag = true;
+    const bool wtr_get_chi = tparm->use_soret;
 
     for (int k = lo.z; k <= hi.z; ++k) {
       for (int j = lo.y; j <= hi.y; ++j) {
@@ -404,15 +422,18 @@ struct SimpleTransport
 
           amrex::Real muloc, xiloc, lamloc;
           amrex::Real Ddiag[NUM_SPECIES] = {0.0};
+          amrex::Real chi_mix[NUM_SPECIES] = {0.0};
           transport(
-            wtr_get_xi, wtr_get_mu, wtr_get_lam, wtr_get_Ddiag, T, rho, massloc,
-            Ddiag, muloc, xiloc, lamloc, tparm);
+            wtr_get_xi, wtr_get_mu, wtr_get_lam, wtr_get_Ddiag, wtr_get_chi, T,
+            rho, massloc, Ddiag, chi_mix, muloc, xiloc, lamloc, tparm);
 
           //   mu, xi and lambda are stored after D in the diffusion multifab
           for (int n = 0; n < NUM_SPECIES; ++n) {
             D_out(i, j, k, n) = Ddiag[n];
+            if (wtr_get_chi) {
+              chi_out(i, j, k, n) = chi_mix[n];
+            }
           }
-
           mu_out(i, j, k) = muloc;
           xi_out(i, j, k) = xiloc;
           lam_out(i, j, k) = lamloc;
@@ -421,11 +442,9 @@ struct SimpleTransport
     }
   }
   template <class... Args>
-  AMREX_GPU_HOST_DEVICE SimpleTransport(Args... /*unused*/)
+  AMREX_GPU_HOST_DEVICE explicit SimpleTransport(Args... /*unused*/)
   {
   }
 };
-} // namespace transport
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::transport
 #endif

@@ -1,8 +1,6 @@
 #include "ReactorArkode.H"
 
-namespace pele {
-namespace physics {
-namespace reactions {
+namespace pele::physics::reactions {
 
 int
 ReactorArkode::init(int reactor_type, int /*ncells*/)
@@ -148,7 +146,7 @@ ReactorArkode::react(
 {
   BL_PROFILE("Pele::ReactorArkode::react()");
 
-  const int ncells = box.numPts();
+  const int ncells = static_cast<int>(box.numPts());
   AMREX_ASSERT(ncells < std::numeric_limits<int>::max());
 
   const int neq = NUM_SPECIES + 1;
@@ -158,7 +156,6 @@ ReactorArkode::react(
   SUNProfiler sun_profiler = nullptr;
   SUNContext_GetProfiler(
     *amrex::sundials::The_Sundials_Context(), &sun_profiler);
-  // SUNProfiler_Reset(sun_profiler);
 #endif
 
   // Solution vector and execution policy
@@ -167,7 +164,7 @@ ReactorArkode::react(
   realtype* yvec_d = N_VGetDeviceArrayPointer(y);
 #else
   N_Vector y = N_VNew_Serial(neq_tot, *amrex::sundials::The_Sundials_Context());
-  if (utils::check_flag((void*)y, "N_VNew_Serial", 0) != 0) {
+  if (utils::check_flag(static_cast<void*>(y), "N_VNew_Serial", 0) != 0) {
     return (1);
   }
   realtype* yvec_d = N_VGetArrayPointer(y);
@@ -198,9 +195,9 @@ ReactorArkode::react(
     arkode_mem = ARKStepCreate(
       cF_RHS, nullptr, time, y, *amrex::sundials::The_Sundials_Context());
     ARKStepSetUserData(arkode_mem, static_cast<void*>(user_data));
-    set_sundials_solver_tols(
+    utils::set_sundials_solver_tols<Ordering>(
       *amrex::sundials::The_Sundials_Context(), arkode_mem, user_data->ncells,
-      relTol, absTol, "arkstep");
+      relTol, absTol, m_typ_vals, "arkstep", verbose);
     ARKStepSetTableNum(
       arkode_mem, ARKODE_DIRK_NONE, static_cast<ARKODE_ERKTableID>(rk_method));
     ARKStepSetAdaptivityMethod(arkode_mem, rk_controller, 1, 0, nullptr);
@@ -212,9 +209,9 @@ ReactorArkode::react(
     arkode_mem =
       ERKStepCreate(cF_RHS, time, y, *amrex::sundials::The_Sundials_Context());
     ERKStepSetUserData(arkode_mem, static_cast<void*>(user_data));
-    set_sundials_solver_tols(
+    utils::set_sundials_solver_tols<Ordering>(
       *amrex::sundials::The_Sundials_Context(), arkode_mem, user_data->ncells,
-      relTol, absTol, "erkstep");
+      relTol, absTol, m_typ_vals, "erkstep", verbose);
     ERKStepSetTableNum(arkode_mem, static_cast<ARKODE_ERKTableID>(rk_method));
     ERKStepSetAdaptivityMethod(arkode_mem, rk_controller, 1, 0, nullptr);
     BL_PROFILE_VAR(
@@ -290,7 +287,7 @@ ReactorArkode::react(
   realtype* yvec_d = N_VGetDeviceArrayPointer(y);
 #else
   N_Vector y = N_VNew_Serial(neq_tot, *amrex::sundials::The_Sundials_Context());
-  if (utils::check_flag((void*)y, "N_VNew_Serial", 0) != 0) {
+  if (utils::check_flag(static_cast<void*>(y), "N_VNew_Serial", 0) != 0) {
     return (1);
   }
   realtype* yvec_d = N_VGetArrayPointer(y);
@@ -334,9 +331,9 @@ ReactorArkode::react(
     arkode_mem = ARKStepCreate(
       cF_RHS, nullptr, time, y, *amrex::sundials::The_Sundials_Context());
     ARKStepSetUserData(arkode_mem, static_cast<void*>(user_data));
-    set_sundials_solver_tols(
+    utils::set_sundials_solver_tols<Ordering>(
       *amrex::sundials::The_Sundials_Context(), arkode_mem, user_data->ncells,
-      relTol, absTol, "arkstep");
+      relTol, absTol, m_typ_vals, "arkstep", verbose);
     BL_PROFILE_VAR(
       "Pele::ReactorArkode::react():ARKStepEvolve", AroundARKEvolve);
     ARKStepEvolve(arkode_mem, time_out, y, &time_init, ARK_NORMAL);
@@ -345,9 +342,9 @@ ReactorArkode::react(
     arkode_mem =
       ERKStepCreate(cF_RHS, time, y, *amrex::sundials::The_Sundials_Context());
     ERKStepSetUserData(arkode_mem, static_cast<void*>(user_data));
-    set_sundials_solver_tols(
+    utils::set_sundials_solver_tols<Ordering>(
       *amrex::sundials::The_Sundials_Context(), arkode_mem, user_data->ncells,
-      relTol, absTol, "erkstep");
+      relTol, absTol, m_typ_vals, "erkstep", verbose);
     BL_PROFILE_VAR(
       "Pele::ReactorArkode::react():ERKStepEvolve", AroundERKEvolve);
     ERKStepEvolve(arkode_mem, time_out, y, &time_init, ARK_NORMAL);
@@ -386,7 +383,7 @@ ReactorArkode::react(
     ERKStepFree(&arkode_mem);
   }
 
-  amrex::The_Arena()->free(user_data);
+  delete user_data;
 
   return static_cast<int>(nfe);
 }
@@ -467,6 +464,4 @@ ReactorArkode::print_final_stats(void* arkode_mem)
   amrex::Print() << "   Error test fails = " << netf << "\n";
   amrex::Print() << "   Total RHS evals  = " << nfe << "\n";
 }
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions

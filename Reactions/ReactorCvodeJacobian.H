@@ -1,5 +1,5 @@
-#ifndef _REACTORCVODEJACOBIAN_H_
-#define _REACTORCVODEJACOBIAN_H_
+#ifndef REACTORCVODEJACOBIAN_H
+#define REACTORCVODEJACOBIAN_H
 
 #include <AMReX_REAL.H>
 #include <nvector/nvector_serial.h>
@@ -14,7 +14,7 @@
 #include <nvector/nvector_hip.h>
 #endif
 
-#ifdef AMREX_USE_DPCPP
+#ifdef AMREX_USE_SYCL
 #include <nvector/nvector_sycl.h>
 #endif
 
@@ -31,10 +31,7 @@
 #endif
 #endif
 
-namespace pele {
-namespace physics {
-namespace reactions {
-namespace cvode {
+namespace pele::physics::reactions::cvode {
 int cJac(
   amrex::Real tn,
   N_Vector u,
@@ -68,8 +65,5 @@ int cJac_KLU(
   N_Vector tmp3);
 #endif
 #endif
-} // namespace cvode
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions::cvode
 #endif

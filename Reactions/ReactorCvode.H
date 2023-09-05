@@ -1,5 +1,5 @@
-#ifndef _REACTORCVODE_H_
-#define _REACTORCVODE_H_
+#ifndef REACTORCVODE_H
+#define REACTORCVODE_H
 
 #include "AMReX_Sundials.H"
 #include "ReactorBase.H"
@@ -8,21 +8,18 @@
 #include "ReactorCvodeJacobian.H"
 #include "ReactorCvodeCustomLinSolver.H"
 #include <cvode/cvode.h>
-#include <cvode/cvode_direct.h>
-#include <cvode/cvode_spils.h>
 #include <nvector/nvector_serial.h>
 #include <sunmatrix/sunmatrix_dense.h>
+#include <sunmatrix/sunmatrix_sparse.h>
 #include <sunlinsol/sunlinsol_dense.h>
 #include <sunlinsol/sunlinsol_spgmr.h>
-#include <sundials/sundials_types.h>
-#include <sundials/sundials_math.h>
-#include <sunmatrix/sunmatrix_sparse.h>
+#include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
 
 #ifdef AMREX_USE_HIP
 #include <nvector/nvector_hip.h>
 #endif
 
-#ifdef AMREX_USE_DPCPP
+#ifdef AMREX_USE_SYCL
 #include <nvector/nvector_sycl.h>
 #endif
 
@@ -47,9 +44,7 @@
 #include <sunlinsol/sunlinsol_cusolversp_batchqr.h>
 #endif
 
-namespace pele {
-namespace physics {
-namespace reactions {
+namespace pele::physics::reactions {
 
 class ReactorCvode : public ReactorBase::Register<ReactorCvode>
 {
@@ -62,7 +57,11 @@ public:
 
   void close() override;
 
-  void print_final_stats(void* cvodemem) override;
+  void print_final_stats(void* cvodemem, bool print_ls_stats);
+  void print_final_stats(void* cvodemem) override
+  {
+    print_final_stats(cvodemem, true);
+  }
 
   int react(
     const amrex::Box& box,
@@ -99,7 +98,7 @@ public:
   cF_RHS(amrex::Real t, N_Vector y_in, N_Vector ydot, void* user_data);
 
   void flatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<const amrex::Real> const& rhoY,
     amrex::Array4<const amrex::Real> const& frcExt,
@@ -118,7 +117,7 @@ public:
   }
 
   void unflatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<amrex::Real> const& rhoY,
     amrex::Array4<amrex::Real> const& temperature,
@@ -136,7 +135,24 @@ public:
   }
 
 private:
-  void checkCvodeOptions() const;
+  void checkCvodeOptions(
+    const std::string& a_solve_type_str,
+    const std::string& a_precond_type_str,
+    int& a_solve_type,
+    int& a_ajac,
+    int& a_precond_type) const;
+  int initCvode(
+    N_Vector& a_y,
+    SUNMatrix& a_A,
+    CVODEUserData* a_udata,
+    SUNNonlinearSolver& a_NLS,
+    SUNLinearSolver& a_LS,
+    void* a_cvode_mem,
+#ifdef AMREX_USE_GPU
+    amrex::gpuStream_t stream,
+#endif
+    const amrex::Real& a_time,
+    int ncells);
   void allocUserData(
     CVODEUserData* udata,
     int a_ncells
@@ -146,7 +162,7 @@ private:
     amrex::gpuStream_t stream
 #endif
   ) const;
-  void freeUserData(CVODEUserData* data_wk);
+  static void freeUserData(CVODEUserData* data_wk);
 
   amrex::Real relTol{1e-6};
   amrex::Real absTol{1e-10};
@@ -157,17 +173,14 @@ private:
 #else
   int atomic_reductions{1};
 #endif
+  int max_nls_iters{3};
+  int max_fp_accel{2};
+  int m_print_profiling{0};
+  int m_cvode_maxorder{2};
+  int m_solve_type{-1};
+  int m_analytical_jacobian{-1};
+  int m_precond_type{-1};
   bool m_clean_init_massfrac{false};
-
-#ifndef AMREX_USE_GPU
-  N_Vector y = nullptr;
-  SUNLinearSolver LS = nullptr;
-  SUNMatrix A = nullptr;
-  void* cvode_mem = nullptr;
-  CVODEUserData* udata_g = nullptr;
-#endif
 };
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions
 #endif

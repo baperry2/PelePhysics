@@ -35,37 +35,34 @@ def sort_reactions(mechanism):
     # troe
     for k, r in enumerate(reaction_info.rs_unsorted):
         if r not in reaction_info.rs:
-            if r.reaction_type == "falloff":
-                if r.rate.type == "Troe":
-                    reaction_info.idxmap[k] = i
-                    reaction_info.rs.append(r)
-                    i += 1
+            if r.reaction_type == "falloff-Troe":
+                reaction_info.idxmap[k] = i
+                reaction_info.rs.append(r)
+                i += 1
     reaction_info.index.append(i)
 
     # sri
     for k, r in enumerate(reaction_info.rs_unsorted):
         if r not in reaction_info.rs:
-            if r.reaction_type == "falloff":
-                if r.rate.type == "Sri":
-                    reaction_info.idxmap[k] = i
-                    reaction_info.rs.append(r)
-                    i += 1
+            if r.reaction_type == "falloff-Sri":
+                reaction_info.idxmap[k] = i
+                reaction_info.rs.append(r)
+                i += 1
     reaction_info.index.append(i)
 
     # lindemann
     for k, r in enumerate(reaction_info.rs_unsorted):
         if r not in reaction_info.rs:
-            if r.reaction_type == "falloff":
-                if r.rate.type == "Lindemann":
-                    reaction_info.idxmap[k] = i
-                    reaction_info.rs.append(r)
-                    i += 1
+            if r.reaction_type == "falloff-Lindemann":
+                reaction_info.idxmap[k] = i
+                reaction_info.rs.append(r)
+                i += 1
     reaction_info.index.append(i)
 
     # three-body
     for k, r in enumerate(reaction_info.rs_unsorted):
         if r not in reaction_info.rs:
-            if r.reaction_type == "three-body":
+            if r.third_body is not None:
                 reaction_info.idxmap[k] = i
                 reaction_info.rs.append(r)
                 i += 1
@@ -74,7 +71,7 @@ def sort_reactions(mechanism):
     # simplest case
     for k, r in enumerate(reaction_info.rs_unsorted):
         if r not in reaction_info.rs:
-            if r.reaction_type != "three-body":
+            if r.third_body is None:
                 reaction_info.idxmap[k] = i
                 reaction_info.rs.append(r)
                 i += 1
@@ -98,7 +95,8 @@ def rmap(fstream, mechanism, reaction_info):
     rmap = reaction_info.idxmap.keys()
     n_reactions = mechanism.n_reactions
     str_rmap = ",".join(str(x) for x in rmap)
-    cw.writer(fstream, "const int rmap[%d] = {%s};" % (n_reactions, str_rmap))
+    if n_reactions > 0:
+        cw.writer(fstream, f"const int rmap[{n_reactions}] = {{{str_rmap}}};")
 
 
 def get_rmap(fstream, mechanism):
@@ -106,11 +104,19 @@ def get_rmap(fstream, mechanism):
     n_reactions = mechanism.n_reactions
     cw.writer(fstream)
     cw.writer(fstream, cw.comment("Returns 0-based map of reaction order"))
-    cw.writer(fstream, "void GET_RMAP" + cc.sym + "(int * _rmap)")
+    cw.writer(fstream, "void GET_RMAP" + cc.sym)
+
+    if n_reactions > 0:
+        cw.writer(fstream, "(int * _rmap)")
+    else:
+        cw.writer(fstream, "(int * /*_rmap*/)")
+
     cw.writer(fstream, "{")
 
-    cw.writer(fstream, "for (int j=0; j<%d; ++j) {" % (n_reactions))
-    cw.writer(fstream, "_rmap[j] = rmap[j];")
-    cw.writer(fstream, "}")
+    if n_reactions > 0:
+        cw.writer(fstream, f"for (int j=0; j<{n_reactions}; ++j)")
+        cw.writer(fstream, "{")
+        cw.writer(fstream, "_rmap[j] = rmap[j];")
+        cw.writer(fstream, "}")
 
     cw.writer(fstream, "}")

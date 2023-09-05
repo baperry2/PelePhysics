@@ -1,5 +1,5 @@
-#ifndef _PELEPHYSICS_H_
-#define _PELEPHYSICS_H_
+#ifndef PELEPHYSICS_H
+#define PELEPHYSICS_H
 
 #include <type_traits>
 #include <iostream>
@@ -9,8 +9,7 @@
 #include "Transport.H"
 #include "Table.H"
 
-namespace pele {
-namespace physics {
+namespace pele::physics {
 
 template <typename T>
 struct is_eos_type
@@ -64,7 +63,6 @@ struct PelePhysics
 
 using PhysicsType = PelePhysics<EosType, TransportType>;
 
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics
 
 #endif

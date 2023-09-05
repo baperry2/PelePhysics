@@ -6,6 +6,7 @@ import subprocess as spr
 import numpy as np
 
 import ceptr.ck as cck
+import ceptr.formatter as cf
 import ceptr.gjs as cgjs
 import ceptr.jacobian as cj
 import ceptr.production as cp
@@ -13,6 +14,7 @@ import ceptr.qssa_converter as cqc
 import ceptr.reaction_info as cri
 import ceptr.sparsity as csp
 import ceptr.species_info as csi
+import ceptr.symbolic_math as csm
 import ceptr.thermo as cth
 import ceptr.transport as ctr
 import ceptr.writer as cw
@@ -21,8 +23,20 @@ import ceptr.writer as cw
 class Converter:
     """Convert Cantera mechanism to C++ files for Pele."""
 
-    def __init__(self, mechanism):
+    def __init__(
+        self,
+        mechanism,
+        jacobian=True,
+        qss_format_input=None,
+        qss_symbolic_jacobian=False,
+    ):
         self.mechanism = mechanism
+
+        self.jacobian = jacobian
+
+        # Symbolic computations
+        self.qss_symbolic_jacobian = qss_symbolic_jacobian
+
         self.mechpath = pathlib.Path(self.mechanism.source)
         self.rootname = "mechanism"
         self.hdrname = self.mechpath.parents[0] / f"{self.rootname}.H"
@@ -33,7 +47,6 @@ class Converter:
         # 0/ntroe/nsri/nlindem/nTB/nSimple/nWeird
         # 0/1    /2   /3      /4  /5      /6
         self.reaction_info = cri.sort_reactions(self.mechanism)
-
         # QSS  -- sort reactions/networks/check validity of QSSs
         if self.species_info.n_qssa_species > 0:
             print("QSSA information")
@@ -41,30 +54,25 @@ class Converter:
             cqc.set_qssa_reactions(
                 self.mechanism, self.species_info, self.reaction_info
             )
-            cqc.get_qssa_networks(
-                self.mechanism, self.species_info, self.reaction_info
-            )
+            cqc.get_qssa_networks(self.mechanism, self.species_info, self.reaction_info)
             # sets up QSS subnetwork
-            cqc.get_qssa_networks(
-                self.mechanism, self.species_info, self.reaction_info
-            )
+            cqc.get_qssa_networks(self.mechanism, self.species_info, self.reaction_info)
             # Perform tests to ensure QSSA species are good candidates
-            cqc.qssa_validation(
-                self.mechanism, self.species_info, self.reaction_info
-            )
+            cqc.qssa_validation(self.mechanism, self.species_info, self.reaction_info)
             # No quad coupling and fill SC network
-            cqc.qssa_coupling(
-                self.mechanism, self.species_info, self.reaction_info
-            )
+            cqc.qssa_coupling(self.mechanism, self.species_info, self.reaction_info)
             # Fill "need" dict (which species a species depends upon)
             print("QSSA initialization needs dictionary")
-            cqc.set_qssa_needs(
-                self.mechanism, self.species_info, self.reaction_info
-            )
+            cqc.set_qssa_needs(self.mechanism, self.species_info, self.reaction_info)
             # Fill "is_needed" dict (which species needs that particular species)
-            cqc.set_qssa_isneeded(
-                self.mechanism, self.species_info, self.reaction_info
-            )
+            cqc.set_qssa_isneeded(self.mechanism, self.species_info, self.reaction_info)
+        # Initialize symbolic variables
+        self.syms = csm.SymbolicMath(
+            self.species_info,
+            self.reaction_info,
+            self.mechanism,
+            qss_format_input,
+        )
 
     def set_species(self):
         """Set the species."""
@@ -98,11 +106,19 @@ class Converter:
                 for elem, coef in species.composition.items():
                     aw = self.mechanism.atomic_weight(elem)
                     weight += coef * aw
-                tempsp = csi.SpeciesDb(id, sorted_idx, species.name, weight)
+                tempsp = csi.SpeciesDb(
+                    id, sorted_idx, species.name, weight, species.charge
+                )
                 self.species_info.all_species.append(tempsp)
                 self.species_info.nonqssa_species.append(tempsp)
                 self.species_info.all_species_list.append(species.name)
+                self.species_info.all_species_formatted_list.append(
+                    cf.format_species(species.name)
+                )
                 self.species_info.nonqssa_species_list.append(species.name)
+                self.species_info.nonqssa_species_formatted_list.append(
+                    cf.format_species(species.name)
+                )
                 self.species_info.ordered_idx_map[species.name] = sorted_idx
                 self.species_info.mech_idx_map[species.name] = id
                 sorted_idx += 1
@@ -114,11 +130,19 @@ class Converter:
                 for elem, coef in species.composition.items():
                     aw = self.mechanism.atomic_weight(elem)
                     weight += coef * aw
-                tempsp = csi.SpeciesDb(id, sorted_idx, species.name, weight)
+                tempsp = csi.SpeciesDb(
+                    id, sorted_idx, species.name, weight, species.charge
+                )
                 self.species_info.all_species.append(tempsp)
                 self.species_info.qssa_species.append(tempsp)
                 self.species_info.all_species_list.append(species.name)
+                self.species_info.all_species_formatted_list.append(
+                    cf.format_species(species.name)
+                )
                 self.species_info.qssa_species_list.append(species.name)
+                self.species_info.qssa_species_formatted_list.append(
+                    cf.format_species(species.name)
+                )
                 self.species_info.ordered_idx_map[species.name] = sorted_idx
                 self.species_info.mech_idx_map[species.name] = id
                 sorted_idx += 1
@@ -141,8 +165,8 @@ class Converter:
             ],
             "d",
         )
-
-        print("Full species list with transported first and QSSA last:")
+        if self.species_info.n_qssa_species > 0:
+            print("Full species list with transported first and QSSA last:")
         for all_species in self.species_info.all_species:
             print(
                 all_species.name,
@@ -161,9 +185,7 @@ class Converter:
             cw.writer(cpp, self.mechanism_cpp_includes())
             cri.rmap(cpp, self.mechanism, self.reaction_info)
             cri.get_rmap(cpp, self.mechanism)
-            cck.ckinu(
-                cpp, self.mechanism, self.species_info, self.reaction_info
-            )
+            cck.ckinu(cpp, self.mechanism, self.species_info, self.reaction_info)
             cck.ckkfkr(cpp, self.mechanism, self.species_info)
             cp.progress_rate_fr(
                 cpp, self.mechanism, self.species_info, self.reaction_info
@@ -184,7 +206,7 @@ class Converter:
             cck.ckindx(hdr, self.mechanism, self.species_info)
             self.molecular_weights(hdr)
             cck.ckrp(hdr, self.mechanism, self.species_info)
-            cth.thermo(hdr, self.mechanism, self.species_info)
+            cth.thermo(hdr, self.mechanism, self.species_info, self.syms)
             # mean quantities -- do not take QSS into account, sumX and Y = 1 without them
             cck.ckcpbl(hdr, self.mechanism, self.species_info)
             cck.ckcpbs(hdr, self.mechanism, self.species_info)
@@ -238,7 +260,11 @@ class Converter:
             # cck.ckams(hdr, self.mechanism, self.species_info)
             cck.cksms(hdr, self.mechanism, self.species_info)
 
+            self.species_info.create_dicts()
             if self.species_info.n_qssa_species > 0:
+                helper_names_to_print = []
+                intermediate_names_to_print = []
+
                 print("QSSA groups")
                 # Figure out dependencies
                 cqc.get_qssa_groups(
@@ -249,46 +275,168 @@ class Converter:
                 cqc.sort_qssa_computation(
                     self.mechanism, self.species_info, self.reaction_info
                 )
+                # Invert QSSA print coeff and QSSA evaluation to see expressions
+                #  in terms of qr and qf
+                print("QSSA print coeff")
+                cqc.qssa_coeff_functions(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    self.syms,
+                )
                 print("QSSA evaluation")
                 # Actually gauss-pivot the matrix to get algebraic expr
                 cqc.sort_qssa_solution_elements(
-                    self.mechanism, self.species_info, self.reaction_info
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    self.syms,
                 )
                 print("QSSA printing")
                 cqc.qssa_component_functions(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    self.syms,
+                    helper_names_to_print,
+                    intermediate_names_to_print,
+                )
+
+                # self.species_info.create_dicts()
+                self.species_info.identify_qss_dependencies(self.syms)
+                self.species_info.identify_nonqss_dependencies(self.syms)
+                self.species_info.make_scqss_dataframe()
+                self.species_info.make_sc_dataframe()
+
+                print(self.species_info.scqss_df)
+                print(self.species_info.sc_df)
+
+                # prod rate related
+                cp.production_rate(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    self.syms,
+                )
+                cp.production_rate_light(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                )
+
+                # if self.species_info.n_qssa_species > 0:
+                self.species_info.identify_wdot_dependencies(self.syms)
+                self.species_info.make_wdot_dataframe()
+                print(self.species_info.wdot_df)
+
+                # Evaluate the dscqss_dscqss values for later
+                self.syms.compute_dscqss_dscqss(species_info=self.species_info)
+
+                # Evaluate the dscqss_dsc values for later
+                self.syms.compute_dscqss_dsc(species_info=self.species_info)
+
+                # # Evaluate the dwdot_dscqss values for later
+                self.syms.compute_dwdot_dscqss(species_info=self.species_info)
+
+                # # Evaluate the dwdot_dsc values for later
+                self.syms.compute_dwdot_dsc(species_info=self.species_info)
+
+                cck.ckwc(hdr, self.mechanism, self.species_info)
+                cck.ckwyp(hdr, self.mechanism, self.species_info)
+                cck.ckwxp(hdr, self.mechanism, self.species_info)
+                cck.ckwyr(hdr, self.mechanism, self.species_info)
+                cck.ckwxr(hdr, self.mechanism, self.species_info)
+                cck.ckchrg(hdr, self)
+                cck.ckchrgmass(hdr, self.species_info)
+                cth.dthermodtemp(hdr, self.mechanism, self.species_info)
+
+                # Approx analytical jacobian
+                cj.ajac(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    jacobian=self.jacobian,
+                    precond=True,
+                    syms=self.syms,
+                )
+                cj.dproduction_rate(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    precond=True,
+                )
+                # Analytical jacobian on GPU -- not used on CPU, define in mechanism.cpp
+                if self.qss_symbolic_jacobian:
+                    cj.ajac_symbolic(
+                        hdr,
+                        self.mechanism,
+                        self.species_info,
+                        self.reaction_info,
+                        jacobian=self.jacobian,
+                        syms=self.syms,
+                    )
+                else:
+                    cj.ajac(
+                        hdr,
+                        self.mechanism,
+                        self.species_info,
+                        self.reaction_info,
+                        jacobian=self.jacobian,
+                    )
+                cj.dproduction_rate(
                     hdr, self.mechanism, self.species_info, self.reaction_info
                 )
 
-            # prod rate related
-            cp.production_rate(
-                hdr, self.mechanism, self.species_info, self.reaction_info
-            )
-            cck.ckwc(hdr, self.mechanism, self.species_info)
-            cck.ckwyp(hdr, self.mechanism, self.species_info)
-            cck.ckwxp(hdr, self.mechanism, self.species_info)
-            cck.ckwyr(hdr, self.mechanism, self.species_info)
-            cck.ckwxr(hdr, self.mechanism, self.species_info)
-            cth.dthermodtemp(hdr, self.mechanism, self.species_info)
-            # Approx analytical jacobian
-            cj.ajac(
-                hdr,
-                self.mechanism,
-                self.species_info,
-                self.reaction_info,
-                precond=True,
-            )
-            cj.dproduction_rate(
-                hdr,
-                self.mechanism,
-                self.species_info,
-                self.reaction_info,
-                precond=True,
-            )
-            # # Analytical jacobian on GPU -- not used on CPU, define in mechanism.cpp
-            cj.ajac(hdr, self.mechanism, self.species_info, self.reaction_info)
-            cj.dproduction_rate(
-                hdr, self.mechanism, self.species_info, self.reaction_info
-            )
+            else:
+                cp.production_rate(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    self.syms,
+                )
+                cck.ckwc(hdr, self.mechanism, self.species_info)
+                cck.ckwyp(hdr, self.mechanism, self.species_info)
+                cck.ckwxp(hdr, self.mechanism, self.species_info)
+                cck.ckwyr(hdr, self.mechanism, self.species_info)
+                cck.ckwxr(hdr, self.mechanism, self.species_info)
+                cck.ckchrg(hdr, self)
+                cck.ckchrgmass(hdr, self.species_info)
+                cth.dthermodtemp(hdr, self.mechanism, self.species_info)
+                # Approx analytical jacobian
+                cj.ajac(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    jacobian=self.jacobian,
+                    precond=True,
+                )
+                cj.dproduction_rate(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    precond=True,
+                )
+                # Analytical jacobian on GPU -- not used on CPU, define in mechanism.cpp
+                cj.ajac(
+                    hdr,
+                    self.mechanism,
+                    self.species_info,
+                    self.reaction_info,
+                    jacobian=self.jacobian,
+                )
+                cj.dproduction_rate(
+                    hdr, self.mechanism, self.species_info, self.reaction_info
+                )
+
             # Transport
             cw.writer(hdr)
             ctr.transport(hdr, self.mechanism, self.species_info)
@@ -305,13 +453,11 @@ class Converter:
     def formatter(self):
         """Format with clang-format."""
         clexec = "clang-format"
-        try:
-            shutil.which(clexec)
-        except shutil.Error:
-            print("Clang-format not found")
-
-        spr.run([clexec, "-i", self.hdrname])
-        spr.run([clexec, "-i", self.cppname])
+        if shutil.which(clexec) is not None:
+            spr.run([clexec, "-i", self.hdrname])
+            spr.run([clexec, "-i", self.cppname])
+        else:
+            print("Clang-format not found. C++ files will be hard to parse by a human.")
 
     def atomic_weight(self, fstream):
         """Write the atomic weight."""
@@ -322,31 +468,92 @@ class Converter:
         for elem in self.mechanism.element_names:
             idx = self.mechanism.element_index(elem)
             aw = self.mechanism.atomic_weight(elem)
-            cw.writer(
-                fstream, "awt[%d] = %f; " % (idx, aw) + cw.comment("%s" % elem)
-            )
+            cw.writer(fstream, f"awt[{idx}] = {aw:f}; " + cw.comment(f"{elem}"))
         cw.writer(fstream, "}")
 
     def molecular_weights(self, fstream):
         """Write the molecular weights."""
         cw.writer(fstream)
         cw.writer(fstream, cw.comment(" inverse molecular weights "))
+        cw.writer(
+            fstream,
+            "AMREX_GPU_CONSTANT const amrex::Real "
+            f"global_imw[{self.species_info.n_species}]={{",
+        )
+        for i in range(0, self.species_info.n_species):
+            species = self.species_info.nonqssa_species[i]
+            text = f"{1.0 / species.weight:.16f},"
+            cw.writer(fstream, text + cw.comment(f"{species.name}"))
+        cw.writer(fstream, "};")
+        cw.writer(
+            fstream,
+            f"const amrex::Real h_global_imw[{self.species_info.n_species}]={{",
+        )
+        for i in range(0, self.species_info.n_species):
+            species = self.species_info.nonqssa_species[i]
+            text = f"{1.0 / species.weight:.16f},"
+            cw.writer(fstream, text + cw.comment(f"{species.name}"))
+        cw.writer(fstream, "};")
+        cw.writer(fstream)
+
+        cw.writer(fstream, cw.comment(" molecular weights "))
+        cw.writer(
+            fstream,
+            "AMREX_GPU_CONSTANT const amrex::Real "
+            f"global_mw[{self.species_info.n_species}]={{",
+        )
+        for i in range(0, self.species_info.n_species):
+            species = self.species_info.nonqssa_species[i]
+            text = f"{species.weight:f},"
+            cw.writer(fstream, text + cw.comment(f"{species.name}"))
+        cw.writer(fstream, "};")
+        cw.writer(
+            fstream,
+            f"const amrex::Real h_global_mw[{self.species_info.n_species}]={{",
+        )
+        for i in range(0, self.species_info.n_species):
+            species = self.species_info.nonqssa_species[i]
+            text = f"{species.weight:f},"
+            cw.writer(fstream, text + cw.comment(f"{species.name}"))
+        cw.writer(fstream, "};")
+
+        cw.writer(fstream)
+        cw.writer(fstream, cw.comment(" inverse molecular weights "))
         cw.writer(fstream, "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE")
         cw.writer(fstream, "void get_imw(amrex::Real *imw_new){")
         for i in range(0, self.species_info.n_species):
             species = self.species_info.nonqssa_species[i]
-            text = "imw_new[%d] = 1.0/%f;" % (i, species.weight)
-            cw.writer(fstream, text + cw.comment("%s" % species.name))
+            text = f"imw_new[{i}] = {1.0 / species.weight:.16f};"
+            cw.writer(fstream, text + cw.comment(f"{species.name}"))
         cw.writer(fstream, "}")
         cw.writer(fstream)
+        cw.writer(fstream, cw.comment(" inverse molecular weight "))
+        cw.writer(fstream, "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE")
+        cw.writer(fstream, "amrex::Real imw(const int n){")
+        cw.writer(fstream, "#if AMREX_DEVICE_COMPILE")
+        cw.writer(fstream, "return global_imw[n];")
+        cw.writer(fstream, "#else")
+        cw.writer(fstream, "return h_global_imw[n];")
+        cw.writer(fstream, "#endif")
+        cw.writer(fstream, "}")
 
         cw.writer(fstream, cw.comment(" molecular weights "))
         cw.writer(fstream, "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE")
         cw.writer(fstream, "void get_mw(amrex::Real *mw_new){")
         for i in range(0, self.species_info.n_species):
             species = self.species_info.nonqssa_species[i]
-            text = "mw_new[%d] = %f;" % (i, species.weight)
-            cw.writer(fstream, text + cw.comment("%s" % species.name))
+            text = f"mw_new[{i}] = {species.weight:f};"
+            cw.writer(fstream, text + cw.comment(f"{species.name}"))
+        cw.writer(fstream, "}")
+        cw.writer(fstream)
+        cw.writer(fstream, cw.comment(" molecular weight "))
+        cw.writer(fstream, "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE")
+        cw.writer(fstream, "amrex::Real mw(const int n){")
+        cw.writer(fstream, "#if AMREX_DEVICE_COMPILE")
+        cw.writer(fstream, "return global_mw[n];")
+        cw.writer(fstream, "#else")
+        cw.writer(fstream, "return h_global_mw[n];")
+        cw.writer(fstream, "#endif")
         cw.writer(fstream, "}")
 
     def mechanism_cpp_declarations(self, fstream):
@@ -363,20 +570,14 @@ class Converter:
         cw.writer(fstream, cw.comment(" MISC "))
         cw.writer(fstream, "void CKAWT(amrex::Real *  awt);")
         cw.writer(fstream, "void CKNCF(int * ncf);")
-        cw.writer(
-            fstream, "void CKSYME_STR(amrex::Vector<std::string>& ename);"
-        )
-        cw.writer(
-            fstream, "void CKSYMS_STR(amrex::Vector<std::string>& kname);"
-        )
+        cw.writer(fstream, "void CKSYME_STR(amrex::Vector<std::string>& ename);")
+        cw.writer(fstream, "void CKSYMS_STR(amrex::Vector<std::string>& kname);")
         cw.writer(fstream, "void GET_RMAP(int * _rmap);")
-        cw.writer(
-            fstream, "void CKINU(int * i, int * nspec, int * ki, int * nu);"
-        )
+        cw.writer(fstream, "void CKINU(const int i, int &nspec, int * ki, int * nu);")
         cw.writer(
             fstream,
-            "void CKKFKR(amrex::Real *  P, amrex::Real *  T,"
-            + "amrex::Real *  x, amrex::Real *  q_f, amrex::Real *  q_r);",
+            "void CKKFKR(const amrex::Real P, const amrex::Real T,"
+            + "const amrex::Real * x, amrex::Real *  q_f, amrex::Real *  q_r);",
         )
         cw.writer(
             fstream,
@@ -390,23 +591,21 @@ class Converter:
         )
         cw.writer(
             fstream,
-            "void SPARSITY_INFO_SYST(int * nJdata, const int * consP, int"
-            " NCELLS);",
+            "void SPARSITY_INFO_SYST(int * nJdata, const int * consP, int NCELLS);",
         )
         cw.writer(
             fstream,
-            "void SPARSITY_INFO_SYST_SIMPLIFIED(int * nJdata, const int *"
-            " consP);",
+            "void SPARSITY_INFO_SYST_SIMPLIFIED(int * nJdata, const int * consP);",
         )
         cw.writer(
             fstream,
-            "void SPARSITY_PREPROC_CSC(int * rowVals, int * colPtrs, const int"
-            " * consP, int NCELLS);",
+            "void SPARSITY_PREPROC_CSC(int * rowVals, int * colPtrs, const"
+            " int * consP, int NCELLS);",
         )
         cw.writer(
             fstream,
-            "void SPARSITY_PREPROC_CSR(int * colVals, int * rowPtrs, const int"
-            " * consP, int NCELLS, int base);",
+            "void SPARSITY_PREPROC_CSR(int * colVals, int * rowPtrs, const"
+            " int * consP, int NCELLS, int base);",
         )
         cw.writer(
             fstream,
@@ -415,13 +614,13 @@ class Converter:
         )
         cw.writer(
             fstream,
-            "void SPARSITY_PREPROC_SYST_SIMPLIFIED_CSC(int * rowVals, int *"
-            " colPtrs, int * indx, const int * consP);",
+            "void SPARSITY_PREPROC_SYST_SIMPLIFIED_CSC(int * rowVals, int"
+            " * colPtrs, int * indx, const int * consP);",
         )
         cw.writer(
             fstream,
-            "void SPARSITY_PREPROC_SYST_SIMPLIFIED_CSR(int * colVals, int *"
-            " rowPtr, const int * consP, int base);",
+            "void SPARSITY_PREPROC_SYST_SIMPLIFIED_CSR(int * colVals, int"
+            " * rowPtr, const int * consP, int base);",
         )
 
     def mechanism_header_includes(self, fstream):
@@ -433,37 +632,27 @@ class Converter:
         cw.writer(fstream, "/* Elements")
         nb_elem = 0
         for elem in self.mechanism.element_names:
-            cw.writer(
-                fstream, "%d  %s" % (self.mechanism.element_index(elem), elem)
-            )
+            cw.writer(fstream, f"{self.mechanism.element_index(elem)}  {elem}")
             nb_elem += 1
         cw.writer(fstream, "*/")
         cw.writer(fstream)
         cw.writer(fstream, cw.comment("Species"))
+        nb_ions = 0
         for species in self.species_info.nonqssa_species_list:
-            s = species.strip()
-            # Ionic species
-            if s[-1] == "-":
-                s = s[:-1] + "n"
-            if s[-1] == "+":
-                s = s[:-1] + "p"
-            # Excited species
-            s = s.replace("*", "D")
-            # Remove other characters not allowed in preprocessor defines
-            s = s.replace("-", "").replace("(", "").replace(")", "")
+            s = cf.format_species(species)
             cw.writer(
                 fstream,
-                "#define %s_ID %d"
-                % (s, self.species_info.ordered_idx_map[species]),
+                f"#define {s}_ID {self.species_info.ordered_idx_map[species]}",
             )
+            if s[-1] == "n" or s[-1] == "p" or s == "E":
+                nb_ions += 1
         cw.writer(fstream)
-        cw.writer(fstream, "#define NUM_ELEMENTS %d" % (nb_elem))
-        cw.writer(
-            fstream, "#define NUM_SPECIES %d" % (self.species_info.n_species)
-        )
+        cw.writer(fstream, f"#define NUM_ELEMENTS {nb_elem}")
+        cw.writer(fstream, f"#define NUM_SPECIES {self.species_info.n_species}")
+        cw.writer(fstream, f"#define NUM_IONS {nb_ions}")
         cw.writer(
             fstream,
-            "#define NUM_REACTIONS %d" % (len(self.mechanism.reactions())),
+            f"#define NUM_REACTIONS {len(self.mechanism.reactions())}",
         )
         cw.writer(fstream)
         cw.writer(fstream, "#define NUM_FIT 4")

@@ -22,7 +22,7 @@ main(int argc, char* argv[])
   amrex::Print() << " Initialization of EOS (CPP)... \n";
 #ifdef USE_MANIFOLD_EOS
   static std::unique_ptr<pele::physics::ManFuncParams> manfunc_par;
-  
+
   amrex::ParmParse pp("manifold");
   std::string manifold_model;
   pp.get("model", manifold_model);
@@ -50,18 +50,28 @@ main(int argc, char* argv[])
 
   {
     amrex::ParmParse pp;
-    int size = 128;
-    pp.query("size",size);
-    int niter = 100;
-    pp.query("niter",niter);
+
+    // Inputs
     int do_plt = 0;
     pp.query("do_plt",do_plt);
+
+    std::string pltfile("plt");
+    pp.query("plot_file", pltfile);
+
+    int verbose = 0;
+    pp.query("verbose",verbose);
+
+    int grid_size = 128;
+    pp.query("grid_size", grid_size);
+
+    int max_size = 32; // for defing BoxArray
+    pp.query("max_size", max_size);
 
     // Define geometry
     amrex::Array<int, AMREX_SPACEDIM> npts{AMREX_D_DECL(1, 1, 1)};
 
     for (int i = 0; i < AMREX_SPACEDIM; ++i) {
-      npts[i] = size;
+      npts[i] = grid_size;
     }
 
     amrex::Box domain(
@@ -78,14 +88,8 @@ main(int argc, char* argv[])
     amrex::Geometry geom(domain, real_box, coord, is_periodic);
 
     // Define BoxArray
-    int max_size = 32;
-    pp.query("max_size", max_size);
     amrex::BoxArray ba(domain);
     ba.maxSize(max_size);
-
-    amrex::ParmParse ppa("amr");
-    std::string pltfile("plt");
-    ppa.query("plot_file", pltfile);
 
     amrex::DistributionMapping dm{ba};
     int num_grow = 0;
@@ -97,15 +101,14 @@ main(int argc, char* argv[])
     amrex::MultiFab energy(ba, dm, 1, num_grow);
 
     const auto geomdata = geom.data();
-
-    std::cout << "Initialize Data" << std::endl;
+    if (verbose > 0) {amrex::Print() << "Initializing Data...";}
     {
-      BL_PROFILE("PelePhysics::InitializeData()");
-#ifdef _OPENMP
+      BL_PROFILE("Pele::init()");
+#ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
-         ++mfi) {
+      for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
+           ++mfi) {
 
       const amrex::Box& bx = mfi.tilebox();
       auto const& Y_a = mass_frac.array(mfi);
@@ -118,105 +121,87 @@ main(int argc, char* argv[])
              geomdata, leosparm] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 	      initialize_data(i, j, k, Y_a, T_a, rho_a, e_a, geomdata, leosparm);
         });
-    }
+      }
     }
 
-    amrex::MultiFab VarPlt(ba, dm, 4, num_grow);
     amrex::MultiFab cp(ba, dm, 1, num_grow);
     amrex::MultiFab wdot(ba, dm, NUM_SPECIES, num_grow);
     amrex::MultiFab Tout(ba, dm, 1, num_grow);
     Tout.setVal(250.0);
 
-    std::cout << "Get Cp" << std::endl;
+    if (verbose > 0) {amrex::Print() << "Computing Wdot..." << std::endl;}
     {
-      BL_PROFILE("PelePhysics::GetCp()");
-      for (int iter = 0; iter < niter; iter++) {
-#ifdef _OPENMP
+      BL_PROFILE("Pele::getWdot()");
+#ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-	for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
-	     ++mfi) {
-	  const amrex::Box& box = mfi.tilebox();
-	  auto const& Y_a = mass_frac.const_array(mfi);
-	  auto const& T_a = temperature.const_array(mfi);
-	  auto const& cp_a = cp.array(mfi);
-	  auto const* leosparm = eos_parms.device_eos_parm();
-	  amrex::ParallelFor(
-			     box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-				    get_cp(i, j, k, Y_a, T_a, cp_a, leosparm);
-				  });
-	}
+      for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
+           ++mfi) {
+
+        const amrex::Box& box = mfi.tilebox();
+
+        auto const& Y_a = mass_frac.const_array(mfi);
+        auto const& wdot_a = wdot.array(mfi);
+        auto const& T_a = Tout.const_array(mfi);
+        auto const& rho_a = density.const_array(mfi);
+        auto const* leosparm = eos_parms.device_eos_parm();
+        amrex::ParallelFor(
+          box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            get_wdot(i, j, k, Y_a, T_a, rho_a, wdot_a, leosparm);
+          });
       }
     }
 
-    std::cout << "Get T1" << std::endl;
+    if (verbose > 0) {amrex::Print() << "Computing Cp..." << std::endl;}
     {
-      BL_PROFILE("PelePhysics::GetT1()");
-      for (int iter = 0; iter < niter; iter++) {
-#ifdef _OPENMP
+      BL_PROFILE("Pele::getCp()");
+#ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-	for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
-	     ++mfi) {
-	  const amrex::Box& box = mfi.tilebox();
-	  auto const& Y_a = mass_frac.const_array(mfi);
-	  auto const& e_a = energy.const_array(mfi);
-	  auto const& T_a = Tout.array(mfi);
-	  auto const* leosparm = eos_parms.device_eos_parm();
-	  amrex::ParallelFor(
-			     box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-				    get_T_from_EY(i, j, k, Y_a, T_a, e_a, leosparm);
-				  });
-	}
+      for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
+           ++mfi) {
+
+        const amrex::Box& box = mfi.tilebox();
+
+        auto const& Y_a = mass_frac.const_array(mfi);
+        auto const& cp_a = cp.array(mfi);
+        auto const& T_a = Tout.const_array(mfi);
+        auto const& rho_a = density.const_array(mfi);
+        auto const* leosparm = eos_parms.device_eos_parm();
+        amrex::ParallelFor(
+          box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            get_cp(i, j, k, Y_a, T_a, rho_a, cp_a, leosparm);
+          });
       }
     }
 
-    std::cout << "Get Wdot" << std::endl;
+    if (verbose > 0) {amrex::Print() << "Computing Temperature..." << std::endl;}
     {
-      BL_PROFILE("PelePhysics::GetWdot()");
-      for (int iter = 0; iter < niter; iter++) {
-#ifdef _OPENMP
+      BL_PROFILE("Pele::getT()");
+#ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-	for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
-	     ++mfi) {
-	  const amrex::Box& box = mfi.tilebox();
-	  auto const& Y_a = mass_frac.const_array(mfi);
-	  auto const& T_a = temperature.const_array(mfi);
-	  auto const& rho_a = density.const_array(mfi);
-	  auto const& wdot_a = wdot.array(mfi);
-	  auto const* leosparm = eos_parms.device_eos_parm();
-	  amrex::ParallelFor(
-			     box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-				    get_wdot(i, j, k, Y_a, rho_a, T_a, wdot_a, leosparm);
-				  });
-	}
-      }
-    }
+      for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
+           ++mfi) {
 
-    std::cout << "Get T" << std::endl;
-    {
-      BL_PROFILE("PelePhysics::GetT()");
-      for (int iter = 0; iter < niter; iter++) {
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-	for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
-	     ++mfi) {
-	  const amrex::Box& box = mfi.tilebox();
-	  auto const& Y_a = mass_frac.const_array(mfi);
-	  auto const& e_a = energy.const_array(mfi);
-	  auto const& T_a = Tout.array(mfi);
-	  auto const* leosparm = eos_parms.device_eos_parm();
-	  amrex::ParallelFor(
-			     box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-				    get_T_from_EY(i, j, k, Y_a, T_a, e_a, leosparm);
-				  });
-	}
+        const amrex::Box& box = mfi.tilebox();
+
+        auto const& Y_a = mass_frac.const_array(mfi);
+        auto const& e_a = energy.const_array(mfi);
+        auto const& T_a = Tout.array(mfi);
+        auto const& rho_a = density.array(mfi);
+        auto const* leosparm = eos_parms.device_eos_parm();
+        amrex::ParallelFor(
+          box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            get_T_from_EY(i, j, k, Y_a, T_a, rho_a, e_a, leosparm);
+          });
       }
     }
 
     if (do_plt) {
+      BL_PROFILE("Pele::plot()");
+      if (verbose > 0) {amrex::Print() << "Plotting Data..." << std::endl;}
+      amrex::MultiFab VarPlt(ba, dm, 4, num_grow);
       amrex::MultiFab::Copy(VarPlt, Tout, 0, 0, 1, num_grow);
       amrex::MultiFab::Copy(VarPlt, temperature, 0, 1, 1, num_grow);
       amrex::MultiFab::Copy(VarPlt, cp, 0, 2, 1, num_grow);
@@ -232,6 +217,7 @@ main(int argc, char* argv[])
       amrex::WriteSingleLevelPlotfile(outfile, VarPlt, plt_VarsName, geom, 0.0, 0);
     }
   }
+  amrex::Print() << "Done." << std::endl;
 
   eos_parms.deallocate();
 #ifdef USE_MANIFOLD_EOS

@@ -1,8 +1,7 @@
-#ifndef _TRANSPORTTYPES_H_
-#define _TRANSPORTTYPES_H_
+#ifndef TRANSPORTTYPES_H
+#define TRANSPORTTYPES_H
 
-namespace pele {
-namespace physics {
+namespace pele::physics {
 namespace transport {
 struct ConstTransport;
 struct SimpleTransport;
@@ -20,6 +19,5 @@ using TransportType = transport::ManifoldTransport;
 #else
 static_assert(false, "Invalid Transport specified");
 #endif
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics
 #endif

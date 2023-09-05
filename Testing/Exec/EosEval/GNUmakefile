@@ -12,15 +12,18 @@ USE_MPI    = TRUE
 USE_OMP    = FALSE
 USE_CUDA   = FALSE
 USE_HIP    = FALSE
-USE_LIBTORCH = TRUE
+USE_LIBTORCH = FALSE
 
 # PelePhysics
-FUEGO_GAS  = FALSE
-USE_MANIFOLD = FALSE
+FUEGO_GAS  = TRUE
+USE_MANIFOLD = TRUE
 TINY_PROFILE = TRUE
 
 # define the location of the PELE_PHYSICS top directory
 PELE_PHYSICS_HOME    ?= ../../..
+# TODO FIXME DELETE HACK HACK
+AMREX_HOME = /Users/bperry/Software/amrex
+SUNDIALS_HOME = /Users/bperry/Software/sundials
 
 # this flag activates the subcycling mode in the D/Cvode routines
 DEFINES  += -DMOD_REACTOR
@@ -42,12 +45,13 @@ ifeq ($(FUEGO_GAS), TRUE)
   Transport_Model = Constant
 else ifeq ($(USE_MANIFOLD), TRUE)
   Eos_Model       = Manifold
-  Chemistry_Model = Manifold2d
+  Chemistry_Model = Null
   Transport_Model = Manifold
+  Manifold_Dim    = 2
 else
-	Eos_Model       = GammaLaw
-	Chemistry_Model = Null
-	Transport_Model = Constant
+  Eos_Model       = GammaLaw
+  Chemistry_Model = Null
+  Transport_Model = Constant
 endif
 
 Bpack   := ./Make.package

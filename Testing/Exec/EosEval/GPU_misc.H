@@ -1,5 +1,5 @@
-#ifndef GPU_MISC_H_
-#define GPU_MISC_H_
+#ifndef GPU_MISC_H
+#define GPU_MISC_H
 
 #include <AMReX_FArrayBox.H>
 #include <AMReX_Gpu.H>
@@ -10,7 +10,7 @@
 AMREX_GPU_HOST_DEVICE
 AMREX_FORCE_INLINE
 void
-initialize_data(int i, int j, int k,  
+initialize_data(int i, int j, int k,
 		amrex::Array4<amrex::Real> const& mf,
 		amrex::Array4<amrex::Real> const& temp,
 		amrex::Array4<amrex::Real> const& rho,
@@ -23,17 +23,15 @@ initialize_data(int i, int j, int k,
    const amrex::Real* phi = geomdata.ProbHi();
    const amrex::Real* dx  = geomdata.CellSize();
 
-   amrex::Real dTemp = 50.0;
-   amrex::Real dRho = 0.005;
-   amrex::Real denergy = 100.0;
-   amrex::Real y = plo[1] + (j+0.5)*dx[1];
-   amrex::Real x = plo[0] + (i+0.5)*dx[0];
-   amrex::Real pi = 3.1415926535897932;
-   amrex::GpuArray<amrex::Real,3> L;
-   amrex::GpuArray<amrex::Real,3> P;
-   amrex::GpuArray<amrex::Real,NUM_SPECIES> Y_lo;
-   amrex::GpuArray<amrex::Real,NUM_SPECIES> Y_hi;
-   amrex::GpuArray<amrex::Real,NUM_SPECIES> ei;
+  amrex::Real denergy = 1000000.0;
+  amrex::Real y = plo[1] + (j + 0.5) * dx[1];
+  amrex::Real x = plo[0] + (i + 0.5) * dx[0];
+  amrex::Real pi = 3.1415926535897932;
+  amrex::GpuArray<amrex::Real, 3> L;
+  amrex::GpuArray<amrex::Real, 3> P;
+  amrex::GpuArray<amrex::Real, NUM_SPECIES> Y_lo;
+  amrex::GpuArray<amrex::Real, NUM_SPECIES> Y_hi;
+  amrex::GpuArray<amrex::Real, NUM_SPECIES> ei;
 
    const amrex::Real in[3] = {0.055, 0.0000001, 0.15};
    amrex::Real out = 0.0;
@@ -57,47 +55,45 @@ initialize_data(int i, int j, int k,
    }
    Y_lo[0] = 1.0;
 #endif
-
-   // T, Yk, rho
-#if ( AMREX_SPACEDIM == 1 )
-   temp(i,j,k) = 500.0;
-   rho(i,j,k) = 0.01;
+  for (int n = 0; n < NUM_SPECIES; n++) {
+    mf(i, j, k, n) = Y_lo[n] + (Y_hi[n] - Y_lo[n]) * (x - plo[0]) / L[0];
+  }
+  // corr Yk
+  amrex::Real dummy = 0.0;
+  for (int n = 0; n < NUM_SPECIES - 1; n++) {
+    dummy = dummy + mf(i, j, k, n);
+  }
+  mf(i, j, k, NUM_SPECIES - 1) = 1.0 - dummy;
+  // compute real E + perturb it for future tests
+  auto eos = pele::physics::PhysicsType::eos(eosparm);
+  amrex::GpuArray<amrex::Real, NUM_SPECIES> mf_pt;
+  for (int n = 0; n < NUM_SPECIES; n++) {
+    mf_pt[n] = mf(i, j, k, n);
+  }
+  eos.RTY2E(rho(i, j, k), temp(i, j, k), mf_pt.arr, energy(i, j, k));
+#if (AMREX_SPACEDIM == 1)
+  energy(i, j, k) = energy(i, j, k);
 #else
-   temp(i,j,k) = 500.0 + dTemp * std::sin(2.0*pi*(y-plo[1])/P[1]);
-   rho(i,j,k) = 0.01 + dRho * std::sin(2.0*pi*(y-plo[1])/P[1]);
+  energy(i, j, k) += denergy * std::sin(2.0 * pi * (y - plo[1]) / P[1]);
 #endif
    for (int n = 0; n < NUM_SPECIES; n++) {
      mf(i,j,k,n) = Y_lo[n] + (Y_hi[n]-Y_lo[n]) * (x-plo[0]) / L[0];
    }
-#ifdef USE_MANIFOLD_EOS
-   mf(i,j,k,NUM_SPECIES-1) = 1.0;
-#else
-   // corr Yk
-   amrex::Real dummy = 0.0;
-   for (int n = 0; n < NUM_SPECIES-1; n++) {
-     dummy = dummy + mf(i,j,k,n);
-   }
-   mf(i,j,k,NUM_SPECIES-1) = 1.0 - dummy;
-#endif
-   // compute real E + perturb it for future tests
-   auto eos = pele::physics::PhysicsType::eos(eosparm);
-
-   amrex::GpuArray<amrex::Real,NUM_SPECIES> specs;
-   for (int n = 0; n < NUM_SPECIES; n++) {
-     specs[n] = mf(i,j,k,n);
-   }
-   eos.TY2H(temp(i,j,k), specs.arr, energy(i,j,k));
 }
 
 AMREX_GPU_HOST_DEVICE
 AMREX_FORCE_INLINE
 void
-get_cp(int i, int j, int k,  
-       amrex::Array4<const amrex::Real> const& mf,
-       amrex::Array4<const amrex::Real> const& temp,
-       amrex::Array4<amrex::Real> const& cp,
-       const pele::physics::eos::EosParm<
-       pele::physics::PhysicsType::eos_type> * eosparm ) noexcept
+get_cp(
+  int i,
+  int j,
+  int k,
+  amrex::Array4<const amrex::Real> const& mf,
+  amrex::Array4<const amrex::Real> const& temp,
+  amrex::Array4<const amrex::Real> const& rho,
+  amrex::Array4<amrex::Real> const& cp,
+  const pele::physics::eos::EosParm<
+  pele::physics::PhysicsType::eos_type> * eosparm ) noexcept
 {
 
   amrex::GpuArray<amrex::Real, NUM_SPECIES> mf_pt;
@@ -105,18 +101,18 @@ get_cp(int i, int j, int k,
     mf_pt[n] = mf(i, j, k, n);
   }
 
-        auto eos = pele::physics::PhysicsType::eos(eosparm);
-        eos.TY2Cp(temp(i,j,k), mf_pt.arr, cp(i,j,k));
+  auto eos = pele::physics::PhysicsType::eos(eosparm);
+  eos.RTY2Cp(rho(i, j, k), temp(i, j, k), mf_pt.arr, cp(i, j, k));
 }
 
 AMREX_GPU_HOST_DEVICE
 AMREX_FORCE_INLINE
 void
 get_wdot(int i, int j, int k,
-	amrex::Array4<const amrex::Real> const& mf,
+	 amrex::Array4<const amrex::Real> const& mf,
 	 amrex::Array4<const amrex::Real> const& rho,
-	amrex::Array4<const amrex::Real> const& temp,
-	amrex::Array4<amrex::Real> const& wdot,
+	 amrex::Array4<const amrex::Real> const& temp,
+	 amrex::Array4<amrex::Real> const& wdot,
 	 const pele::physics::eos::EosParm<
 	 pele::physics::PhysicsType::eos_type> * eosparm ) noexcept
 {
@@ -137,9 +133,10 @@ get_wdot(int i, int j, int k,
 AMREX_GPU_HOST_DEVICE
 AMREX_FORCE_INLINE
 void
-get_T_from_EY(int i, int j, int k,  
+get_T_from_EY(int i, int j, int k,
 	      amrex::Array4<const amrex::Real> const& mf,
 	      amrex::Array4<amrex::Real> const& temp,
+              amrex::Array4<const amrex::Real> const& rho,
 	      amrex::Array4<const amrex::Real> const& energy,
 	      const pele::physics::eos::EosParm<
 	      pele::physics::PhysicsType::eos_type> * eosparm ) noexcept
@@ -151,7 +148,7 @@ get_T_from_EY(int i, int j, int k,
   }
 
         auto eos = pele::physics::PhysicsType::eos(eosparm);
-	eos.HY2T(energy(i,j,k), mf_pt.arr, temp(i,j,k));
+	eos.REY2T(rho(i,j,k), energy(i,j,k), mf_pt.arr, temp(i,j,k));
 }
 
 #endif

@@ -37,24 +37,20 @@ doReact_ode_iE1(
 
   // transport needs
   auto const* ltransparm = trans_parms.device_trans_parm();
-  amrex::FArrayBox rho_fab(box, 1);
-  amrex::Elixir rho_fab_eli = rho_fab.elixir();
+  amrex::FArrayBox rho_fab(box, 1, amrex::The_Async_Arena());
   auto const& rho_a = rho_fab.array();
-  amrex::FArrayBox Y_fab(box, NUM_SPECIES);
-  amrex::Elixir Y_fab_eli = Y_fab.elixir();
+  amrex::FArrayBox Y_fab(box, NUM_SPECIES, amrex::The_Async_Arena());
   auto const& Y_a = Y_fab.array();
-  amrex::FArrayBox D_fab(box, NUM_SPECIES);
-  amrex::Elixir D_fab_eli = D_fab.elixir();
+  amrex::FArrayBox D_fab(box, NUM_SPECIES, amrex::The_Async_Arena());
   auto const& D_a = D_fab.array();
-  amrex::FArrayBox mu_fab(box, 1);
-  amrex::Elixir mu_fab_eli = mu_fab.elixir();
+  amrex::FArrayBox mu_fab(box, 1, amrex::The_Async_Arena());
   auto const& mu_a = mu_fab.array();
-  amrex::FArrayBox xi_fab(box, 1);
-  amrex::Elixir xi_fab_eli = xi_fab.elixir();
+  amrex::FArrayBox xi_fab(box, 1, amrex::The_Async_Arena());
   auto const& xi_a = xi_fab.array();
-  amrex::FArrayBox lam_fab(box, 1);
-  amrex::Elixir lam_fab_eli = lam_fab.elixir();
+  amrex::FArrayBox lam_fab(box, 1, amrex::The_Async_Arena());
   auto const& lam_a = lam_fab.array();
+  amrex::FArrayBox chi_fab(box, NUM_SPECIES, amrex::The_Async_Arena());
+  auto const& chi_a = chi_fab.array();
   // Transport
   amrex::ParallelFor(box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
     rho_a(i, j, k) = 0.0;
@@ -68,7 +64,7 @@ doReact_ode_iE1(
   amrex::launch(box, [=] AMREX_GPU_DEVICE(amrex::Box const& tbx) {
     auto trans = pele::physics::PhysicsType::transport();
     trans.get_transport_coeffs(
-      tbx, Y_a, T, rho_a, D_a, mu_a, xi_a, lam_a, ltransparm);
+      tbx, Y_a, T, rho_a, D_a, chi_a, mu_a, xi_a, lam_a, ltransparm);
   });
 
   /* Solve */
@@ -101,7 +97,7 @@ doReact_ode_iE1(
     amrex::launch(box, [=] AMREX_GPU_DEVICE(amrex::Box const& tbx) {
       auto trans = pele::physics::PhysicsType::transport();
       trans.get_transport_coeffs(
-        tbx, Y_a, T, rho_a, D_a, mu_a, xi_a, lam_a, ltransparm);
+        tbx, Y_a, T, rho_a, D_a, chi_a, mu_a, xi_a, lam_a, ltransparm);
     });
 
     dt_incr = dt_lev / ndt;

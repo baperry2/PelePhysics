@@ -1,16 +1,15 @@
-#ifndef _REACTORBASE_H_
-#define _REACTORBASE_H_
+#ifndef REACTORBASE_H
+#define REACTORBASE_H
 
 #include <AMReX_ParmParse.H>
+#include <AMReX_Gpu.H>
 #include <sundials/sundials_context.h>
 #include "Factory.H"
 #include "PelePhysics.H"
 #include "mechanism.H"
 #include "ReactorUtils.H"
 
-namespace pele {
-namespace physics {
-namespace reactions {
+namespace pele::physics::reactions {
 
 class ReactorBase : public Factory<ReactorBase>
 {
@@ -55,7 +54,7 @@ public:
     ) = 0;
 
   virtual void flatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<const amrex::Real> const& rhoY,
     amrex::Array4<const amrex::Real> const& frcExt,
@@ -68,7 +67,7 @@ public:
     amrex::Real* src_vect_energy) = 0;
 
   virtual void unflatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<amrex::Real> const& rhoY,
     amrex::Array4<amrex::Real> const& temperature,
@@ -82,14 +81,6 @@ public:
 
   void set_typ_vals_ode(const std::vector<amrex::Real>& ExtTypVals);
 
-  void set_sundials_solver_tols(
-    sundials::Context& sunctx,
-    void* sundials_mem,
-    const int ncells,
-    const amrex::Real relTol,
-    const amrex::Real absTol,
-    const std::string solvername);
-
   void set_eos_parm(const pele::physics::eos::EosParm<
 		    pele::physics::PhysicsType::eos_type> * eosparm);
 
@@ -97,11 +88,9 @@ public:
 
 protected:
   int verbose{0};
-  amrex::Array<amrex::Real, NUM_SPECIES + 1> m_typ_vals = {0.0};
+  amrex::GpuArray<amrex::Real, NUM_SPECIES + 1> m_typ_vals = {0.0};
   const pele::physics::eos::EosParm<
     pele::physics::PhysicsType::eos_type> * m_eosparm;
 };
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions
 #endif

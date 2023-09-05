@@ -7,6 +7,8 @@ CEPTR: Chemistry Evaluation for Pele Through Recasting
 
 We use CEPTR to generate C++ mechanism files from `Cantera <https://cantera.org>`_ yaml chemistry files. CEPTR is a python package part of the PelePhysics source code.
 
+.. _sec_ceptr_software:
+
 Software requirements
 ---------------------
 
@@ -37,14 +39,31 @@ There are three ways to use CEPTR to generate C++ mechanism files for a given ch
      $ bash ${PELE_PHYSICS_HOME}/Support/Mechanism/Models/converter.sh -f ./LiDryer/mechanism.yaml
 
 
-CEPTR can take a file with a list of ``mechanism.yaml`` files to convert::
+For non-reduced chemistries, CEPTR can take a file with a list of ``mechanism.yaml`` files to convert::
 
   $ cd ${PELE_PHYSICS_HOME}/Support/ceptr
   $ poetry run convert -l ${PELE_PHYSICS_HOME}/Support/Mechanism/Models/list_mech
 
+For reduced chemistries, CEPTR can take a file with a list of ``qssa.yaml`` and ``qssa_input.toml`` to convert::
+
+  $ cd ${PELE_PHYSICS_HOME}/Support/ceptr
+  $ poetry run convert -lq ${PELE_PHYSICS_HOME}/Support/Mechanism/Models/list_qss_mech
+
+For generating ``qssa.yaml`` for reduced chemistries, CEPTR can take a file with a list of ``skeletal.yaml`` and ``non_qssa_list.yaml``::
+
+  $ cd ${PELE_PHYSICS_HOME}/Support/ceptr
+  $ poetry run qssa -lq ${PELE_PHYSICS_HOME}/Support/Mechanism/Models/list_qss_mech
+
+To generate all mechanisms::
+
+  $ poetry run convert -l ${PELE_PHYSICS_HOME}/Support/Mechanism/Models/list_mech
+  $ poetry run qssa -lq ${PELE_PHYSICS_HOME}/Support/Mechanism/Models/list_qss_mech
+  $ poetry run convert -lq ${PELE_PHYSICS_HOME}/Support/Mechanism/Models/list_qss_mech
+
 
 Converting CHEMKIN files
 ------------------------
+.. _sec_convertCK:
 
 We rely on Cantera's ``ck2yaml`` utility to convert CHEMKIN files to the Cantera yaml format (and proceed as above with CEPTR on the resulting yaml file)::
 
@@ -76,3 +95,9 @@ The full list of options is::
     -m {0,1,2}, --method {0,1,2}
                           QSSA method (default: 2)
     -v, --visualize       Visualize quadratic coupling and QSSA dependencies
+
+For a detailed description of these options and a further information on the way QSS mechanism are treated in `CEPTR` the reader may consult :ref:`the QSS section <sec_qss>`.
+
+See Tutorials (:ref:`Generating NC12H26 QSS mechanism with analytical jacobian <sec_tutqss1>` and :ref:`Generating NC12H26 QSS mechanism without analytical jacobian <sec_tutqss2>`) for generating QSS mechanisms from the ``.yaml`` files.
+
+

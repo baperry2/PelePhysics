@@ -1,5 +1,5 @@
-#ifndef _EOS_H_
-#define _EOS_H_
+#ifndef EOS_H
+#define EOS_H
 
 #include <AMReX.H>
 #include <AMReX_REAL.H>
@@ -15,8 +15,7 @@
 #include "SRK.H"
 #include "Manifold.H"
 
-namespace pele {
-namespace physics {
+namespace pele::physics {
 #ifdef USE_GAMMALAW_EOS
 using EosType = eos::GammaLaw;
 #elif USE_FUEGO_EOS
@@ -40,6 +39,5 @@ template <typename EOSType>
 void speciesNames(amrex::Vector<std::string>& spn);
 
 } // namespace eos
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics
 #endif

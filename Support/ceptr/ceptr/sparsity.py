@@ -19,23 +19,21 @@ def sparsity(fstream, species_info):
 
     cw.writer(
         fstream,
-        "amrex::GpuArray<amrex::Real,%d> Jac = {0.0};" % (n_species + 1) ** 2,
+        f"amrex::GpuArray<amrex::Real,{(n_species+1)**2}> Jac = {{0.0}};",
     )
-    cw.writer(
-        fstream, "amrex::GpuArray<amrex::Real,%d> conc = {0.0};" % (n_species)
-    )
-    cw.writer(fstream, "for (int n=0; n<%d; n++) {" % (n_species))
-    cw.writer(fstream, "    conc[n] = 1.0/ %f ;" % (n_species))
+    cw.writer(fstream, f"amrex::GpuArray<amrex::Real,{n_species}> conc = {{0.0}};")
+    cw.writer(fstream, f"for (int n=0; n<{n_species}; n++) {{")
+    cw.writer(fstream, f"    conc[n] = 1.0/ {n_species:f} ;")
     cw.writer(fstream, "}")
-    cw.writer(fstream, "aJacobian(&Jac[0], &conc[0], 1500.0, *consP);")
+    cw.writer(fstream, "aJacobian(Jac.data(), conc.data(), 1500.0, *consP);")
     cw.writer(fstream)
 
     cw.writer(fstream, "int nJdata_tmp = 0;")
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
-    cw.writer(fstream, "if(Jac[ %d * k + l] != 0.0){" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[ {n_species+1} * k + l] != 0.0){{")
 
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1;")
 
@@ -59,28 +57,25 @@ def sparsity(fstream, species_info):
     )
     cw.writer(
         fstream,
-        "void SPARSITY_INFO_SYST( int * nJdata, const int * consP, int"
-        " NCELLS)",
+        "void SPARSITY_INFO_SYST( int * nJdata, const int * consP, int NCELLS)",
     )
     cw.writer(fstream, "{")
 
     cw.writer(
         fstream,
-        "amrex::GpuArray<amrex::Real,%d> Jac = {0.0};" % (n_species + 1) ** 2,
+        f"amrex::GpuArray<amrex::Real,{(n_species+1)**2}> Jac = {{0.0}};",
     )
-    cw.writer(
-        fstream, "amrex::GpuArray<amrex::Real,%d> conc = {0.0};" % (n_species)
-    )
-    cw.writer(fstream, "for (int n=0; n<%d; n++) {" % (n_species))
-    cw.writer(fstream, "    conc[n] = 1.0/ %f ;" % (n_species))
+    cw.writer(fstream, f"amrex::GpuArray<amrex::Real,{n_species}> conc = {{0.0}};")
+    cw.writer(fstream, f"for (int n=0; n<{n_species}; n++) {{")
+    cw.writer(fstream, f"    conc[n] = 1.0/ {n_species:f} ;")
     cw.writer(fstream, "}")
-    cw.writer(fstream, "aJacobian(&Jac[0], &conc[0], 1500.0, *consP);")
+    cw.writer(fstream, "aJacobian(Jac.data(), conc.data(), 1500.0, *consP);")
     cw.writer(fstream)
 
     cw.writer(fstream, "int nJdata_tmp = 0;")
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
     cw.writer(fstream, "if(k == l){")
 
@@ -88,7 +83,7 @@ def sparsity(fstream, species_info):
 
     cw.writer(fstream, "} else {")
 
-    cw.writer(fstream, "if(Jac[ %d * k + l] != 0.0){" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[ {n_species+1} * k + l] != 0.0){{")
 
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1;")
 
@@ -123,21 +118,19 @@ def sparsity(fstream, species_info):
 
     cw.writer(
         fstream,
-        "amrex::GpuArray<amrex::Real,%d> Jac = {0.0};" % (n_species + 1) ** 2,
+        f"amrex::GpuArray<amrex::Real,{(n_species+1)**2}> Jac = {{0.0}};",
     )
-    cw.writer(
-        fstream, "amrex::GpuArray<amrex::Real,%d> conc = {0.0};" % (n_species)
-    )
-    cw.writer(fstream, "for (int n=0; n<%d; n++) {" % (n_species))
-    cw.writer(fstream, "    conc[n] = 1.0/ %f ;" % (n_species))
+    cw.writer(fstream, f"amrex::GpuArray<amrex::Real,{n_species}> conc = {{0.0}};")
+    cw.writer(fstream, f"for (int n=0; n<{n_species}; n++) {{")
+    cw.writer(fstream, f"    conc[n] = 1.0/ {n_species:f} ;")
     cw.writer(fstream, "}")
-    cw.writer(fstream, "aJacobian_precond(&Jac[0], &conc[0], 1500.0, *consP);")
+    cw.writer(fstream, "aJacobian_precond(Jac.data(), conc.data(), 1500.0, *consP);")
     cw.writer(fstream)
 
     cw.writer(fstream, "int nJdata_tmp = 0;")
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
     cw.writer(fstream, "if(k == l){")
 
@@ -145,7 +138,7 @@ def sparsity(fstream, species_info):
 
     cw.writer(fstream, "} else {")
 
-    cw.writer(fstream, "if(Jac[ %d * k + l] != 0.0){" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[ {n_species+1} * k + l] != 0.0){{")
 
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1;")
 
@@ -173,35 +166,33 @@ def sparsity(fstream, species_info):
     )
     cw.writer(
         fstream,
-        "void SPARSITY_PREPROC_CSC(int *  rowVals, int *  colPtrs, const int *"
-        " consP, int NCELLS)",
+        "void SPARSITY_PREPROC_CSC(int *  rowVals, int *  colPtrs, const"
+        " int * consP, int NCELLS)",
     )
     cw.writer(fstream, "{")
 
     cw.writer(
         fstream,
-        "amrex::GpuArray<amrex::Real,%d> Jac = {0.0};" % (n_species + 1) ** 2,
+        f"amrex::GpuArray<amrex::Real,{(n_species+1)**2}> Jac = {{0.0}};",
     )
-    cw.writer(
-        fstream, "amrex::GpuArray<amrex::Real,%d> conc = {0.0};" % (n_species)
-    )
-    cw.writer(fstream, "for (int n=0; n<%d; n++) {" % (n_species))
-    cw.writer(fstream, "    conc[n] = 1.0/ %f ;" % (n_species))
+    cw.writer(fstream, f"amrex::GpuArray<amrex::Real,{n_species}> conc = {{0.0}};")
+    cw.writer(fstream, f"for (int n=0; n<{n_species}; n++) {{")
+    cw.writer(fstream, f"    conc[n] = 1.0/ {n_species:f} ;")
     cw.writer(fstream, "}")
-    cw.writer(fstream, "aJacobian(&Jac[0], &conc[0], 1500.0, *consP);")
+    cw.writer(fstream, "aJacobian(Jac.data(), conc.data(), 1500.0, *consP);")
     cw.writer(fstream)
 
     cw.writer(fstream, "colPtrs[0] = 0;")
     cw.writer(fstream, "int nJdata_tmp = 0;")
     cw.writer(fstream, "for (int nc=0; nc<NCELLS; nc++) {")
 
-    cw.writer(fstream, "int offset_row = nc * %d;" % (n_species + 1))
-    cw.writer(fstream, "int offset_col = nc * %d;" % (n_species + 1))
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"int offset_row = nc * {n_species + 1};")
+    cw.writer(fstream, f"int offset_col = nc * {n_species + 1};")
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
-    cw.writer(fstream, "if(Jac[%d*k + l] != 0.0) {" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[{n_species+1}*k + l] != 0.0) {{")
 
     cw.writer(fstream, "rowVals[nJdata_tmp] = l + offset_row; ")
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1; ")
@@ -227,22 +218,20 @@ def sparsity(fstream, species_info):
     )
     cw.writer(
         fstream,
-        "void SPARSITY_PREPROC_CSR(int * colVals, int * rowPtrs, const int *"
-        " consP, int NCELLS, int base)",
+        "void SPARSITY_PREPROC_CSR(int * colVals, int * rowPtrs, const int"
+        " * consP, int NCELLS, int base)",
     )
     cw.writer(fstream, "{")
 
     cw.writer(
         fstream,
-        "amrex::GpuArray<amrex::Real,%d> Jac = {0.0};" % (n_species + 1) ** 2,
+        f"amrex::GpuArray<amrex::Real,{(n_species+1)**2}> Jac = {{0.0}};",
     )
-    cw.writer(
-        fstream, "amrex::GpuArray<amrex::Real,%d> conc = {0.0};" % (n_species)
-    )
-    cw.writer(fstream, "for (int n=0; n<%d; n++) {" % (n_species))
-    cw.writer(fstream, "    conc[n] = 1.0/ %f ;" % (n_species))
+    cw.writer(fstream, f"amrex::GpuArray<amrex::Real,{n_species}> conc = {{0.0}};")
+    cw.writer(fstream, f"for (int n=0; n<{n_species}; n++) {{")
+    cw.writer(fstream, f"    conc[n] = 1.0/ {n_species:f} ;")
     cw.writer(fstream, "}")
-    cw.writer(fstream, "aJacobian(&Jac[0], &conc[0], 1500.0, *consP);")
+    cw.writer(fstream, "aJacobian(Jac.data(), conc.data(), 1500.0, *consP);")
     cw.writer(fstream)
 
     cw.writer(fstream, "if (base == 1) {")
@@ -251,12 +240,12 @@ def sparsity(fstream, species_info):
     cw.writer(fstream, "int nJdata_tmp = 1;")
     cw.writer(fstream, "for (int nc=0; nc<NCELLS; nc++) {")
 
-    cw.writer(fstream, "int offset = nc * %d;" % (n_species + 1))
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"int offset = nc * {n_species + 1};")
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
-    cw.writer(fstream, "if(Jac[%d*k + l] != 0.0) {" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[{n_species+1}*k + l] != 0.0) {{")
 
     cw.writer(fstream, "colVals[nJdata_tmp-1] = k+1 + offset; ")
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1; ")
@@ -276,12 +265,12 @@ def sparsity(fstream, species_info):
     cw.writer(fstream, "int nJdata_tmp = 0;")
     cw.writer(fstream, "for (int nc=0; nc<NCELLS; nc++) {")
 
-    cw.writer(fstream, "int offset = nc * %d;" % (n_species + 1))
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"int offset = nc * {n_species + 1};")
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
-    cw.writer(fstream, "if(Jac[%d*k + l] != 0.0) {" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[{n_species+1}*k + l] != 0.0) {{")
 
     cw.writer(fstream, "colVals[nJdata_tmp] = k + offset; ")
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1; ")
@@ -307,22 +296,20 @@ def sparsity(fstream, species_info):
     cw.writer(fstream, cw.comment("CSR format BASE is user choice"))
     cw.writer(
         fstream,
-        "void SPARSITY_PREPROC_SYST_CSR(int * colVals, int * rowPtr, const int"
-        " * consP, int NCELLS, int base)",
+        "void SPARSITY_PREPROC_SYST_CSR(int * colVals, int * rowPtr, const"
+        " int * consP, int NCELLS, int base)",
     )
     cw.writer(fstream, "{")
 
     cw.writer(
         fstream,
-        "amrex::GpuArray<amrex::Real,%d> Jac = {0.0};" % (n_species + 1) ** 2,
+        f"amrex::GpuArray<amrex::Real,{(n_species+1)**2}> Jac = {{0.0}};",
     )
-    cw.writer(
-        fstream, "amrex::GpuArray<amrex::Real,%d> conc = {0.0};" % (n_species)
-    )
-    cw.writer(fstream, "for (int n=0; n<%d; n++) {" % (n_species))
-    cw.writer(fstream, "    conc[n] = 1.0/ %f ;" % (n_species))
+    cw.writer(fstream, f"amrex::GpuArray<amrex::Real,{n_species}> conc = {{0.0}};")
+    cw.writer(fstream, f"for (int n=0; n<{n_species}; n++) {{")
+    cw.writer(fstream, f"    conc[n] = 1.0/ {n_species:f} ;")
     cw.writer(fstream, "}")
-    cw.writer(fstream, "aJacobian(&Jac[0], &conc[0], 1500.0, *consP);")
+    cw.writer(fstream, "aJacobian(Jac.data(), conc.data(), 1500.0, *consP);")
     cw.writer(fstream)
 
     cw.writer(fstream, "if (base == 1) {")
@@ -331,10 +318,10 @@ def sparsity(fstream, species_info):
     cw.writer(fstream, "int nJdata_tmp = 1;")
     cw.writer(fstream, "for (int nc=0; nc<NCELLS; nc++) {")
 
-    cw.writer(fstream, "int offset = nc * %d;" % (n_species + 1))
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"int offset = nc * {n_species + 1};")
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
     cw.writer(fstream, "if (k == l) {")
 
@@ -343,7 +330,7 @@ def sparsity(fstream, species_info):
 
     cw.writer(fstream, "} else {")
 
-    cw.writer(fstream, "if(Jac[%d*k + l] != 0.0) {" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[{n_species+1}*k + l] != 0.0) {{")
 
     cw.writer(fstream, "colVals[nJdata_tmp-1] = k+1 + offset; ")
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1; ")
@@ -365,10 +352,10 @@ def sparsity(fstream, species_info):
     cw.writer(fstream, "int nJdata_tmp = 0;")
     cw.writer(fstream, "for (int nc=0; nc<NCELLS; nc++) {")
 
-    cw.writer(fstream, "int offset = nc * %d;" % (n_species + 1))
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"int offset = nc * {n_species + 1};")
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
     cw.writer(fstream, "if (k == l) {")
 
@@ -377,7 +364,7 @@ def sparsity(fstream, species_info):
 
     cw.writer(fstream, "} else {")
 
-    cw.writer(fstream, "if(Jac[%d*k + l] != 0.0) {" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[{n_species+1}*k + l] != 0.0) {{")
 
     cw.writer(fstream, "colVals[nJdata_tmp] = k + offset; ")
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1; ")
@@ -415,35 +402,33 @@ def sparsity(fstream, species_info):
 
     cw.writer(
         fstream,
-        "amrex::GpuArray<amrex::Real,%d> Jac = {0.0};" % (n_species + 1) ** 2,
+        f"amrex::GpuArray<amrex::Real,{(n_species+1)**2}> Jac = {{0.0}};",
     )
-    cw.writer(
-        fstream, "amrex::GpuArray<amrex::Real,%d> conc = {0.0};" % (n_species)
-    )
-    cw.writer(fstream, "for (int n=0; n<%d; n++) {" % (n_species))
-    cw.writer(fstream, "    conc[n] = 1.0/ %f ;" % (n_species))
+    cw.writer(fstream, f"amrex::GpuArray<amrex::Real,{n_species}> conc = {{0.0}};")
+    cw.writer(fstream, f"for (int n=0; n<{n_species}; n++) {{")
+    cw.writer(fstream, f"    conc[n] = 1.0/ {n_species:f} ;")
     cw.writer(fstream, "}")
-    cw.writer(fstream, "aJacobian_precond(&Jac[0], &conc[0], 1500.0, *consP);")
+    cw.writer(fstream, "aJacobian_precond(Jac.data(), conc.data(), 1500.0, *consP);")
     cw.writer(fstream)
 
     cw.writer(fstream, "colPtrs[0] = 0;")
     cw.writer(fstream, "int nJdata_tmp = 0;")
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
     cw.writer(fstream, "if (k == l) {")
 
     cw.writer(fstream, "rowVals[nJdata_tmp] = l; ")
-    cw.writer(fstream, "indx[nJdata_tmp] = %d*k + l;" % (n_species + 1))
+    cw.writer(fstream, f"indx[nJdata_tmp] = {n_species + 1}*k + l;")
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1; ")
 
     cw.writer(fstream, "} else {")
 
-    cw.writer(fstream, "if(Jac[%d*k + l] != 0.0) {" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[{n_species+1}*k + l] != 0.0) {{")
 
     cw.writer(fstream, "rowVals[nJdata_tmp] = l; ")
-    cw.writer(fstream, "indx[nJdata_tmp] = %d*k + l;" % (n_species + 1))
+    cw.writer(fstream, f"indx[nJdata_tmp] = {n_species + 1}*k + l;")
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1; ")
 
     cw.writer(fstream, "}")
@@ -475,24 +460,22 @@ def sparsity(fstream, species_info):
 
     cw.writer(
         fstream,
-        "amrex::GpuArray<amrex::Real,%d> Jac = {0.0};" % (n_species + 1) ** 2,
+        f"amrex::GpuArray<amrex::Real,{(n_species+1)**2}> Jac = {{0.0}};",
     )
-    cw.writer(
-        fstream, "amrex::GpuArray<amrex::Real,%d> conc = {0.0};" % (n_species)
-    )
-    cw.writer(fstream, "for (int n=0; n<%d; n++) {" % (n_species))
-    cw.writer(fstream, "    conc[n] = 1.0/ %f ;" % (n_species))
+    cw.writer(fstream, f"amrex::GpuArray<amrex::Real,{n_species}> conc = {{0.0}};")
+    cw.writer(fstream, f"for (int n=0; n<{n_species}; n++) {{")
+    cw.writer(fstream, f"    conc[n] = 1.0/ {n_species:f} ;")
     cw.writer(fstream, "}")
-    cw.writer(fstream, "aJacobian_precond(&Jac[0], &conc[0], 1500.0, *consP);")
+    cw.writer(fstream, "aJacobian_precond(Jac.data(), conc.data(), 1500.0, *consP);")
     cw.writer(fstream)
 
     cw.writer(fstream, "if (base == 1) {")
 
     cw.writer(fstream, "rowPtr[0] = 1;")
     cw.writer(fstream, "int nJdata_tmp = 1;")
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
     cw.writer(fstream, "if (k == l) {")
 
@@ -501,7 +484,7 @@ def sparsity(fstream, species_info):
 
     cw.writer(fstream, "} else {")
 
-    cw.writer(fstream, "if(Jac[%d*k + l] != 0.0) {" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[{n_species+1}*k + l] != 0.0) {{")
 
     cw.writer(fstream, "colVals[nJdata_tmp-1] = k+1; ")
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1; ")
@@ -519,9 +502,9 @@ def sparsity(fstream, species_info):
 
     cw.writer(fstream, "rowPtr[0] = 0;")
     cw.writer(fstream, "int nJdata_tmp = 0;")
-    cw.writer(fstream, "for (int l=0; l<%d; l++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int l=0; l<{n_species+1}; l++) {{")
 
-    cw.writer(fstream, "for (int k=0; k<%d; k++) {" % (n_species + 1))
+    cw.writer(fstream, f"for (int k=0; k<{n_species+1}; k++) {{")
 
     cw.writer(fstream, "if (k == l) {")
 
@@ -530,7 +513,7 @@ def sparsity(fstream, species_info):
 
     cw.writer(fstream, "} else {")
 
-    cw.writer(fstream, "if(Jac[%d*k + l] != 0.0) {" % (n_species + 1))
+    cw.writer(fstream, f"if(Jac[{n_species+1}*k + l] != 0.0) {{")
 
     cw.writer(fstream, "colVals[nJdata_tmp] = k; ")
     cw.writer(fstream, "nJdata_tmp = nJdata_tmp + 1; ")

@@ -15,13 +15,13 @@ def emptygjs(fstream):
     )
     cw.writer(
         fstream,
-        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void sgjsolve(amrex::Real*"
-        " /*A*/, amrex::Real* /*x*/, amrex::Real* /*b*/) {",
+        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void"
+        " sgjsolve(amrex::Real* /*A*/, amrex::Real* /*x*/, amrex::Real*"
+        " /*b*/) {",
     )
     cw.writer(
         fstream,
-        'amrex::Abort("sgjsolve not implemented, choose a different'
-        ' solver ");',
+        'amrex::Abort("sgjsolve not implemented, choose a different solver ");',
     )
     cw.writer(fstream, "}")
 
@@ -41,7 +41,7 @@ def emptygjs(fstream):
     )
     cw.writer(
         fstream,
-        'amrex::Abort("sgjsolve_simplified not implemented, choose a different'
-        ' solver ");',
+        'amrex::Abort("sgjsolve_simplified not implemented, choose a'
+        ' different solver ");',
     )
     cw.writer(fstream, "}")

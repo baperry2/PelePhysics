@@ -1,7 +1,6 @@
 #include <type_traits>
 
-namespace pele {
-namespace physics {
+namespace pele::physics {
 
 // Forward declarations
 namespace eos {
@@ -23,7 +22,7 @@ template <typename EosModel, typename TransportModel>
 struct is_valid_physics_combination : public std::true_type
 {
 };
-  
+
 template <>
 struct is_valid_physics_combination<eos::GammaLaw, transport::SimpleTransport>
   : public std::false_type
@@ -31,7 +30,20 @@ struct is_valid_physics_combination<eos::GammaLaw, transport::SimpleTransport>
 };
 
 template <>
+struct is_valid_physics_combination<
+  eos::GammaLaw,
+  transport::SutherlandTransport> : public std::false_type
+{
+};
+
+template <>
 struct is_valid_physics_combination<eos::SRK, transport::ConstTransport>
+  : public std::false_type
+{
+};
+
+template <>
+struct is_valid_physics_combination<eos::SRK, transport::SutherlandTransport>
   : public std::false_type
 {
 };
@@ -62,5 +74,4 @@ struct is_valid_physics_combination<eos::Manifold, transport::ConstTransport>
 {
 };
 
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics

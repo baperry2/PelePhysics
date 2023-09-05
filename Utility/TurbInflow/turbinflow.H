@@ -1,19 +1,17 @@
-#ifndef _turbinflow_H_
-#define _turbinflow_H_
+#ifndef TURBINFLOW_H
+#define TURBINFLOW_H
 
 #include <AMReX_FArrayBox.H>
 #include <AMReX_GpuMemory.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_ParmParse.H>
 
-namespace pele {
-namespace physics {
-namespace turbinflow {
+namespace pele::physics::turbinflow {
 
 struct TurbParm
 {
   // Turbulence data file
-  std::string m_turb_file = "";
+  std::string m_turb_file;
 
   // Geometry of the turbulent data
   amrex::GpuArray<int, AMREX_SPACEDIM> npboxcells = {{0}};
@@ -87,9 +85,6 @@ private:
   amrex::Vector<TurbParm> tp;
   bool turbinflow_initialized = false;
 };
-} // namespace turbinflow
-
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::turbinflow
 
 #endif

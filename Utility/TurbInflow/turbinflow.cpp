@@ -1,8 +1,6 @@
 #include <turbinflow.H>
 
-namespace pele {
-namespace physics {
-namespace turbinflow {
+namespace pele::physics::turbinflow {
 void
 TurbInflow::init(amrex::Geometry const& /*geom*/)
 {
@@ -56,8 +54,8 @@ TurbInflow::init(amrex::Geometry const& /*geom*/)
       AMREX_ASSERT_WITH_MESSAGE(
         turb_center.size() == AMREX_SPACEDIM - 1,
         "turb_center must have AMREX_SPACEDIM-1 elements");
-      for (int idim = 0; idim < turb_center.size(); ++idim) {
-        turb_center[idim] *= tp[n].turb_scale_loc;
+      for (amrex::Real& tc : turb_center) {
+        tc *= tp[n].turb_scale_loc;
       }
 
       pp.query("turb_nplane", tp[n].nplane);
@@ -74,10 +72,12 @@ TurbInflow::init(amrex::Geometry const& /*geom*/)
       amrex::Array<int, AMREX_SPACEDIM> npts = {{0}};
       amrex::Array<amrex::Real, AMREX_SPACEDIM> probsize = {{0}};
       amrex::Array<int, AMREX_SPACEDIM> iper = {{0}};
-      is >> npts[0] >> npts[1] >> npts[2];
-      is >> probsize[0] >> probsize[1] >> probsize[2];
-      is >> iper[0] >> iper[1] >>
-        iper[2]; // Unused - we assume it is always fully periodic
+
+      AMREX_D_TERM(is >> npts[0], >> npts[1], >> npts[2]);
+      AMREX_D_TERM(is >> probsize[0], >> probsize[1], >> probsize[2]);
+      AMREX_D_TERM(
+        is >> iper[0], >> iper[1],
+        >> iper[2]); // Unused - we assume it is always fully periodic
 
       for (int idim = 0; idim < AMREX_SPACEDIM; ++idim) {
         tp[n].dx[idim] = probsize[idim] / amrex::Real(npts[idim] - 1);
@@ -87,18 +87,18 @@ TurbInflow::init(amrex::Geometry const& /*geom*/)
       // The following is relative to the injection face:
       // 0 and 1 are transverse directions, 2 is normal
       // one ghost point on each side, tangential to inflow face
-      tp[n].pboxsize[0] = probsize[0] - 2.0 * tp[n].dx[0];
-      tp[n].pboxsize[1] = probsize[1] - 2.0 * tp[n].dx[1];
-      tp[n].pboxsize[2] = probsize[2];
+      AMREX_D_TERM(tp[n].pboxsize[0] = probsize[0] - 2.0 * tp[n].dx[0];
+                   , tp[n].pboxsize[1] = probsize[1] - 2.0 * tp[n].dx[1];
+                   , tp[n].pboxsize[2] = probsize[2];)
 
-      tp[n].npboxcells[0] = npts[0] - 3;
-      tp[n].npboxcells[1] = npts[1] - 3;
-      tp[n].npboxcells[2] = npts[2];
+      AMREX_D_TERM(tp[n].npboxcells[0] = npts[0] - 3;
+                   , tp[n].npboxcells[1] = npts[1] - 3;
+                   , tp[n].npboxcells[2] = npts[2];)
 
       // Center the turbulence
-      tp[n].pboxlo[0] = turb_center[0] - 0.5 * tp[n].pboxsize[0];
-      tp[n].pboxlo[1] = turb_center[1] - 0.5 * tp[n].pboxsize[1];
-      tp[n].pboxlo[2] = 0.;
+      AMREX_D_TERM(tp[n].pboxlo[0] = turb_center[0] - 0.5 * tp[n].pboxsize[0];
+                   , tp[n].pboxlo[1] = turb_center[1] - 0.5 * tp[n].pboxsize[1];
+                   , tp[n].pboxlo[2] = 0.0;)
 
       amrex::Box sbx(
         amrex::IntVect(AMREX_D_DECL(1, 1, 1)),
@@ -106,11 +106,11 @@ TurbInflow::init(amrex::Geometry const& /*geom*/)
 
       tp[n].sdata = new amrex::FArrayBox(sbx, 3, amrex::The_Async_Arena());
 
-      tp[n].kmax = npts[2];
+      AMREX_D_TERM(, , tp[n].kmax = npts[2];)
 
-      amrex::Real rdummy;
       if (tp[n].isswirltype) {
         for (int i = 0; i < tp[n].kmax; i++) {
+          amrex::Real rdummy = 0.0;
           is >> rdummy; // Time for each plane - unused at the moment
         }
       }
@@ -163,27 +163,27 @@ TurbInflow::add_turb(
   v.setVal<amrex::RunOn::Device>(0);
 
   // Add turbulence from all the tp acting on this face
-  for (int n = 0; n < tp.size(); n++) {
+  for (auto& tpn : tp) {
 
-    if (tp[n].dir == dir && tp[n].side == side) {
+    if (tpn.dir == dir && tpn.side == side) {
 
       // 0 and 1 are the two transverse directions
       amrex::Vector<amrex::Real> x(turbBox.size()[0]), y(turbBox.size()[1]);
       for (int i = turbBox.smallEnd()[0]; i <= turbBox.bigEnd()[0]; ++i) {
         x[i - turbBox.smallEnd()[0]] =
           (geom.ProbLo()[tdir1] + (i + 0.5) * geom.CellSize(tdir1)) *
-          tp[n].turb_scale_loc;
+          tpn.turb_scale_loc;
       }
       for (int j = turbBox.smallEnd()[1]; j <= turbBox.bigEnd()[1]; ++j) {
         y[j - turbBox.smallEnd()[1]] =
           (geom.ProbLo()[tdir2] + (j + 0.5) * geom.CellSize(tdir2)) *
-          tp[n].turb_scale_loc;
+          tpn.turb_scale_loc;
       }
 
       // Get the turbulence
       amrex::Real z =
-        (time + tp[n].time_shift) * tp[n].turb_conv_vel * tp[n].turb_scale_loc;
-      fill_turb_plane(tp[n], x, y, z, v);
+        (time + tpn.time_shift) * tpn.turb_conv_vel * tpn.turb_scale_loc;
+      fill_turb_plane(tpn, x, y, z, v);
     }
   }
 
@@ -298,7 +298,6 @@ TurbInflow::read_turb_planes(TurbParm& a_tp, amrex::Real z)
   os.open(junk.c_str());
   a_tp.sdata->writeOn(os);
   os.close();
-  //amrex::Abort();
 #endif
 }
 
@@ -391,6 +390,4 @@ TurbInflow::fill_turb_plane(
   amrex::Gpu::synchronize(); // Ensure that DeviceVector's don't leave scope
                              // early
 }
-} // namespace turbinflow
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::turbinflow

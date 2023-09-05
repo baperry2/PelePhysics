@@ -1,9 +1,6 @@
 #include "ReactorUtils.H"
 
-namespace pele {
-namespace physics {
-namespace reactions {
-namespace utils {
+namespace pele::physics::reactions::utils {
 
 // Check function return value...
 //     opt == 0 means SUNDIALS function allocates memory so check if
@@ -15,8 +12,6 @@ namespace utils {
 int
 check_flag(void* flagvalue, const char* funcname, int opt)
 {
-  int* errflag;
-
   if (opt == 0 && flagvalue == nullptr) {
     if (amrex::ParallelDescriptor::IOProcessor()) {
       fprintf(
@@ -27,7 +22,7 @@ check_flag(void* flagvalue, const char* funcname, int opt)
     return (1);
   }
   if (opt == 1) {
-    errflag = (int*)flagvalue;
+    int* errflag = static_cast<int*>(flagvalue);
     if (*errflag < 0) {
       if (amrex::ParallelDescriptor::IOProcessor()) {
         fprintf(
@@ -86,7 +81,7 @@ setNVectorGPU(int nvsize, int atomic_reductions, amrex::gpuStream_t stream)
     reduce_exec_policy = new SUNHipBlockReduceExecPolicy(256, 0, stream);
   }
   N_VSetKernelExecPolicy_Hip(y, stream_exec_policy, reduce_exec_policy);
-#elif defined(AMREX_USE_DPCPP)
+#elif defined(AMREX_USE_SYCL)
   N_Vector y = N_VNewWithMemHelp_Sycl(
     nvsize, false, *amrex::sundials::The_SUNMemory_Helper(),
     &amrex::Gpu::Device::streamQueue(),
@@ -106,7 +101,4 @@ setNVectorGPU(int nvsize, int atomic_reductions, amrex::gpuStream_t stream)
   delete reduce_exec_policy;
 }
 #endif
-} // namespace utils
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions::utils

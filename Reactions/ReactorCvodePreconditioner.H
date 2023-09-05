@@ -1,5 +1,5 @@
-#ifndef _REACTORCVODEPRECONDITIONER_H_
-#define _REACTORCVODEPRECONDITIONER_H_
+#ifndef REACTORCVODEPRECONDITIONER_H
+#define REACTORCVODEPRECONDITIONER_H
 
 #include <AMReX_REAL.H>
 #include <nvector/nvector_serial.h>
@@ -12,7 +12,7 @@
 #include <nvector/nvector_hip.h>
 #endif
 
-#ifdef AMREX_USE_DPCPP
+#ifdef AMREX_USE_SYCL
 #include <nvector/nvector_sycl.h>
 #endif
 
@@ -20,10 +20,7 @@
 #include <nvector/nvector_cuda.h>
 #endif
 
-namespace pele {
-namespace physics {
-namespace reactions {
-namespace cvode {
+namespace pele::physics::reactions::cvode {
 // Basic preconditioner functions
 int Precond(
   amrex::Real tn,
@@ -90,8 +87,5 @@ int Precond_sparse(
   void* user_data);
 #endif
 #endif
-} // namespace cvode
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions::cvode
 #endif

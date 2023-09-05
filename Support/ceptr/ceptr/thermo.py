@@ -1,11 +1,12 @@
 """Thermodynamics functions."""
+import io
 import sys
 from collections import OrderedDict
 
 import ceptr.writer as cw
 
 
-def thermo(fstream, mechanism, species_info):
+def thermo(fstream, mechanism, species_info, syms=None):
     """Write thermodynamics routines."""
     species_coeffs = analyze_thermodynamics(mechanism, species_info, 0)
     if species_info.n_qssa_species > 0:
@@ -13,14 +14,14 @@ def thermo(fstream, mechanism, species_info):
 
     cv(fstream, species_info, species_coeffs)
     cp(fstream, species_info, species_coeffs)
-    gibbs(fstream, species_info, species_coeffs, 0)
+    gibbs(fstream, species_info, species_coeffs, 0, syms)
     if species_info.n_qssa_species > 0:
-        gibbs(fstream, species_info, qss_species_coeffs, 1)
+        gibbs(fstream, species_info, qss_species_coeffs, 1, syms)
     helmholtz(fstream, species_info, species_coeffs)
     species_internal_energy(fstream, species_info, species_coeffs)
-    species_enthalpy(fstream, species_info, species_coeffs, 0)
+    species_enthalpy(fstream, species_info, species_coeffs, 0, syms)
     if species_info.n_qssa_species > 0:
-        species_enthalpy(fstream, species_info, qss_species_coeffs, 1)
+        species_enthalpy(fstream, species_info, qss_species_coeffs, 1, syms)
     species_entropy(fstream, species_info, species_coeffs)
 
 
@@ -50,9 +51,7 @@ def analyze_thermodynamics(mechanism, species_info, qss_flag):
             high_range = model.coeffs[1:8]
             low_range = model.coeffs[8:15]
 
-            midpoints.setdefault(mid, []).append(
-                (species, low_range, high_range)
-            )
+            midpoints.setdefault(mid, []).append((species, low_range, high_range))
 
     else:
         for symbol in species_info.nonqssa_species_list:
@@ -73,9 +72,7 @@ def analyze_thermodynamics(mechanism, species_info, qss_flag):
             high_range = model.coeffs[1:8]
             low_range = model.coeffs[8:15]
 
-            midpoints.setdefault(mid, []).append(
-                (species, low_range, high_range)
-            )
+            midpoints.setdefault(mid, []).append((species, low_range, high_range))
 
     species_info.low_temp = low_temp
     species_info.high_temp = high_temp
@@ -90,174 +87,237 @@ def generate_thermo_routine(
     species_coeffs,
     qss_flag,
     needs_inv_temp=0,
+    syms=None,
+    inline=False,
 ):
     """Write a thermodynamics routine."""
     low_temp, high_temp, midpoints = species_coeffs
 
-    cw.writer(
-        fstream,
-        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void %s(amrex::Real *"
-        " species, const amrex::Real *  tc)" % name,
-    )
-    cw.writer(fstream, "{")
-    # declarations
-    cw.writer(fstream)
-    cw.writer(fstream, cw.comment("temperature"))
-    cw.writer(fstream, "const amrex::Real T = tc[1];")
+    if not inline:
+        cw.writer(
+            fstream,
+            f"AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void {name}(amrex::Real"
+            " * species, const amrex::Real *  tc)",
+        )
+
+    syms_g_rt = False
+    syms_g_rt_qss = False
+    syms_h_rt = False
+    syms_h_rt_qss = False
+    if name == "gibbs" and not (syms is None):
+        syms_g_rt = True
+    if name == "gibbs_qss" and not (syms is None):
+        syms_g_rt_qss = True
+    if name == "speciesEnthalpy" and not (syms is None):
+        syms_h_rt = True
+    if name == "speciesEnthalpy_qss" and not (syms is None):
+        syms_h_rt_qss = True
+
+    if not inline:
+        cw.writer(fstream, "{")
+        # declarations
+        cw.writer(fstream)
+        cw.writer(fstream, cw.comment("temperature"))
+        cw.writer(fstream, "const amrex::Real T = tc[1];")
+
     if needs_inv_temp != 0:
-        cw.writer(fstream, "const amrex::Real invT = 1 / T;")
+        cw.writer(fstream, "const amrex::Real invT = 1.0 / T;")
     if needs_inv_temp == 2:
         cw.writer(fstream, "const amrex::Real invT2 = invT*invT;")
 
+    # if name=="gibbs_qss":
+    #    print("name = ", name)
+    #    for mid_temp, species_list in list(midpoints.items()):
+    #        print("midpoints = ", mid_temp)
+    #    stop
+    # stop
     for mid_temp, species_list in list(midpoints.items()):
-        cw.writer(fstream, "")
-        cw.writer(
-            fstream,
-            cw.comment("species with midpoint at T=%g kelvin" % mid_temp),
-        )
-        cw.writer(fstream, "if (T < %g) {" % mid_temp)
-
+        lostream = io.StringIO()
         for species, low_range, _ in species_list:
             if qss_flag:
-                cw.writer(
-                    fstream,
-                    cw.comment(
-                        "species %d: %s"
-                        % (
-                            species_info.ordered_idx_map[species.name]
-                            - species_info.n_species,
-                            species.name,
-                        )
-                    ),
+                idx = (
+                    species_info.ordered_idx_map[species.name] - species_info.n_species
                 )
+                cw.writer(lostream, cw.comment(f"species {idx}: {species.name}"))
                 cw.writer(
-                    fstream,
-                    "species[%d] ="
-                    % (
-                        species_info.ordered_idx_map[species.name]
-                        - species_info.n_species
-                    ),
+                    lostream,
+                    (f"result += y[{idx}] * (" if inline else f"species[{idx}] ="),
                 )
             else:
+                idx = species_info.ordered_idx_map[species.name]
                 cw.writer(
-                    fstream,
-                    cw.comment(
-                        "species %d: %s"
-                        % (
-                            species_info.ordered_idx_map[species.name],
-                            species.name,
-                        )
-                    ),
+                    lostream,
+                    cw.comment(f"species {idx}: {species.name}"),
                 )
                 cw.writer(
-                    fstream,
-                    "species[%d] ="
-                    % (species_info.ordered_idx_map[species.name]),
+                    lostream,
+                    (f"result += y[{idx}] * (" if inline else f"species[{idx}] ="),
                 )
-            expression_generator(fstream, low_range)
+            if syms_g_rt:
+                index = species_info.ordered_idx_map[species.name]
+                syms.g_RT_smp_tmp[mid_temp]["m"][index] = expression_generator(
+                    lostream, low_range, syms
+                )
+            elif syms_g_rt_qss:
+                index = (
+                    species_info.ordered_idx_map[species.name] - species_info.n_species
+                )
+                syms.g_RT_qss_smp_tmp[mid_temp]["m"][index] = expression_generator(
+                    lostream, low_range, syms
+                )
+            elif syms_h_rt:
+                index = species_info.ordered_idx_map[species.name]
+                syms.h_RT_smp_tmp[mid_temp]["m"][index] = expression_generator(
+                    lostream, low_range, syms
+                )
+            elif syms_h_rt_qss:
+                index = (
+                    species_info.ordered_idx_map[species.name] - species_info.n_species
+                )
+                syms.h_RT_qss_smp_tmp[mid_temp]["m"][index] = expression_generator(
+                    lostream, low_range, syms
+                )
+            else:
+                expression_generator(lostream, low_range)
+            if inline:
+                spec_idx = species_info.ordered_idx_map[species.name]
+                sp = species_info.nonqssa_species[spec_idx]
+                imw = 1.0 / sp.weight
+                cw.writer(lostream, f")* {imw:.16f}")
+            cw.writer(lostream, ";")
 
-        cw.writer(fstream, "} else {")
-
+        histream = io.StringIO()
         for species, _, high_range in species_list:
             if qss_flag:
-                cw.writer(
-                    fstream,
-                    cw.comment(
-                        "species %d: %s"
-                        % (
-                            species_info.ordered_idx_map[species.name]
-                            - species_info.n_species,
-                            species.name,
-                        )
-                    ),
+                idx = (
+                    species_info.ordered_idx_map[species.name] - species_info.n_species
                 )
                 cw.writer(
-                    fstream,
-                    "species[%d] ="
-                    % (
-                        species_info.ordered_idx_map[species.name]
-                        - species_info.n_species
-                    ),
+                    histream,
+                    cw.comment(f"species {idx}: {species.name}"),
+                )
+                cw.writer(
+                    histream,
+                    (f"result += y[{idx}] * (" if inline else f"species[{idx}] ="),
                 )
             else:
+                idx = species_info.ordered_idx_map[species.name]
                 cw.writer(
-                    fstream,
-                    cw.comment(
-                        "species %d: %s"
-                        % (
-                            species_info.ordered_idx_map[species.name],
-                            species.name,
-                        )
-                    ),
+                    histream,
+                    cw.comment(f"species {idx}: {species.name}"),
                 )
                 cw.writer(
-                    fstream,
-                    "species[%d] ="
-                    % (species_info.ordered_idx_map[species.name]),
+                    histream,
+                    (f"result += y[{idx}] * (" if inline else f"species[{idx}] ="),
                 )
-            expression_generator(fstream, high_range)
+            if syms_g_rt:
+                index = species_info.ordered_idx_map[species.name]
+                syms.g_RT_smp_tmp[mid_temp]["p"][index] = expression_generator(
+                    histream, high_range, syms
+                )
+            elif syms_g_rt_qss:
+                index = (
+                    species_info.ordered_idx_map[species.name] - species_info.n_species
+                )
+                syms.g_RT_qss_smp_tmp[mid_temp]["p"][index] = expression_generator(
+                    histream, high_range, syms
+                )
+            elif syms_h_rt:
+                index = species_info.ordered_idx_map[species.name]
+                syms.h_RT_smp_tmp[mid_temp]["p"][index] = expression_generator(
+                    histream, high_range, syms
+                )
+            elif syms_h_rt_qss:
+                index = (
+                    species_info.ordered_idx_map[species.name] - species_info.n_species
+                )
+                syms.h_RT_qss_smp_tmp[mid_temp]["p"][index] = expression_generator(
+                    histream, high_range, syms
+                )
+            else:
+                expression_generator(histream, high_range)
+            if inline:
+                spec_idx = species_info.ordered_idx_map[species.name]
+                sp = species_info.nonqssa_species[spec_idx]
+                imw = 1.0 / sp.weight
+                cw.writer(histream, f")* {imw:.16f}")
+            cw.writer(histream, ";")
 
+        lostr = lostream.getvalue().rstrip("\n")
+        histr = histream.getvalue().rstrip("\n")
+        cw.writer(fstream, "")
+        if histr == lostr:
+            cw.writer(
+                fstream,
+                cw.comment("species with no change at a midpoint T"),
+            )
+            cw.writer(fstream, lostr)
+        else:
+            cw.writer(
+                fstream,
+                cw.comment(f"species with midpoint at T={mid_temp:g} kelvin"),
+            )
+            tvar = "tT" if inline else "T"
+            cw.writer(
+                fstream,
+                f"""if ({tvar} < {mid_temp:g}) {{\n{lostr}}} else {{\n{histr}}}""",
+            )
+        lostream.close()
+        histream.close()
+
+    if not inline:
         cw.writer(fstream, "}")
-
-    cw.writer(fstream, "return;")
-    cw.writer(fstream, "}")
 
 
 def cv(fstream, species_info, species_coeffs):
     """Write cv."""
     cw.writer(fstream)
     cw.writer(fstream, cw.comment("compute Cv/R at the given temperature"))
-    cw.writer(
-        fstream,
-        cw.comment("tc contains precomputed powers of T, tc[0] = log(T)"),
-    )
-    generate_thermo_routine(
-        fstream, species_info, "cv_R", cv_nasa, species_coeffs, 0
-    )
+    generate_thermo_routine(fstream, species_info, "cv_R", cv_nasa, species_coeffs, 0)
 
 
 def cp(fstream, species_info, species_coeffs):
     """Write cp."""
     cw.writer(fstream)
     cw.writer(fstream, cw.comment("compute Cp/R at the given temperature"))
-    cw.writer(
-        fstream,
-        cw.comment("tc contains precomputed powers of T, tc[0] = log(T)"),
-    )
-    generate_thermo_routine(
-        fstream, species_info, "cp_R", cp_nasa, species_coeffs, 0
-    )
+    generate_thermo_routine(fstream, species_info, "cp_R", cp_nasa, species_coeffs, 0)
 
 
-def gibbs(fstream, species_info, species_coeffs, qss_flag):
+def gibbs(fstream, species_info, species_coeffs, qss_flag, syms=None):
     """Write Gibbs."""
     if qss_flag:
         name = "gibbs_qss"
     else:
         name = "gibbs"
     cw.writer(fstream)
-    cw.writer(
-        fstream, cw.comment("compute the g/(RT) at the given temperature")
-    )
-    cw.writer(
-        fstream,
-        cw.comment("tc contains precomputed powers of T, tc[0] = log(T)"),
-    )
-    generate_thermo_routine(
-        fstream, species_info, name, gibbs_nasa, species_coeffs, qss_flag, 1
-    )
+    cw.writer(fstream, cw.comment("compute the g/(RT) at the given temperature"))
+    if syms is None:
+        generate_thermo_routine(
+            fstream,
+            species_info,
+            name,
+            gibbs_nasa,
+            species_coeffs,
+            qss_flag,
+            1,
+        )
+    else:
+        generate_thermo_routine(
+            fstream,
+            species_info,
+            name,
+            gibbs_nasa,
+            species_coeffs,
+            qss_flag,
+            1,
+            syms,
+        )
 
 
 def helmholtz(fstream, species_info, species_coeffs):
     """Write Helmholtz."""
     cw.writer(fstream)
-    cw.writer(
-        fstream, cw.comment("compute the a/(RT) at the given temperature")
-    )
-    cw.writer(
-        fstream,
-        cw.comment("tc contains precomputed powers of T, tc[0] = log(T)"),
-    )
+    cw.writer(fstream, cw.comment("compute the a/(RT) at the given temperature"))
     generate_thermo_routine(
         fstream,
         species_info,
@@ -272,13 +332,7 @@ def helmholtz(fstream, species_info, species_coeffs):
 def species_internal_energy(fstream, species_info, species_coeffs):
     """Write species internal energy."""
     cw.writer(fstream)
-    cw.writer(
-        fstream, cw.comment("compute the e/(RT) at the given temperature")
-    )
-    cw.writer(
-        fstream,
-        cw.comment("tc contains precomputed powers of T, tc[0] = log(T)"),
-    )
+    cw.writer(fstream, cw.comment("compute the e/(RT) at the given temperature"))
     generate_thermo_routine(
         fstream,
         species_info,
@@ -290,7 +344,7 @@ def species_internal_energy(fstream, species_info, species_coeffs):
     )
 
 
-def species_enthalpy(fstream, species_info, species_coeffs, qss_flag):
+def species_enthalpy(fstream, species_info, species_coeffs, qss_flag, syms=None):
     """Write species enthalpy."""
     if qss_flag:
         name = "speciesEnthalpy_qss"
@@ -301,25 +355,34 @@ def species_enthalpy(fstream, species_info, species_coeffs, qss_flag):
         fstream,
         cw.comment("compute the h/(RT) at the given temperature (Eq 20)"),
     )
-    cw.writer(
-        fstream,
-        cw.comment("tc contains precomputed powers of T, tc[0] = log(T)"),
-    )
-    generate_thermo_routine(
-        fstream, species_info, name, enthalpy_nasa, species_coeffs, qss_flag, 1
-    )
+
+    if syms is None:
+        generate_thermo_routine(
+            fstream,
+            species_info,
+            name,
+            enthalpy_nasa,
+            species_coeffs,
+            qss_flag,
+            1,
+        )
+    else:
+        generate_thermo_routine(
+            fstream,
+            species_info,
+            name,
+            enthalpy_nasa,
+            species_coeffs,
+            qss_flag,
+            1,
+            syms,
+        )
 
 
 def species_entropy(fstream, species_info, species_coeffs):
     """Write species entropy."""
     cw.writer(fstream)
-    cw.writer(
-        fstream, cw.comment("compute the S/R at the given temperature (Eq 21)")
-    )
-    cw.writer(
-        fstream,
-        cw.comment("tc contains precomputed powers of T, tc[0] = log(T)"),
-    )
+    cw.writer(fstream, cw.comment("compute the S/R at the given temperature (Eq 21)"))
     generate_thermo_routine(
         fstream,
         species_info,
@@ -341,13 +404,7 @@ def dcvpdtemp(fstream, species_info, species_coeffs):
     cw.writer(fstream)
     cw.writer(
         fstream,
-        cw.comment(
-            "compute d(Cp/R)/dT and d(Cv/R)/dT at the given temperature"
-        ),
-    )
-    cw.writer(
-        fstream,
-        cw.comment("tc contains precomputed powers of T, tc[0] = log(T)"),
+        cw.comment("compute d(Cp/R)/dT and d(Cv/R)/dT at the given temperature"),
     )
     generate_thermo_routine(
         fstream, species_info, "dcvpRdT", dcpdtemp_nasa, species_coeffs, 0
@@ -356,77 +413,191 @@ def dcvpdtemp(fstream, species_info, species_coeffs):
 
 def dcpdtemp_nasa(fstream, parameters):
     """Write NASA polynomial for dcpdtemp."""
-    cw.writer(fstream, "%+15.8e" % parameters[1])
-    cw.writer(fstream, "%+15.8e * tc[1]" % (parameters[2] * 2.0))
-    cw.writer(fstream, "%+15.8e * tc[2]" % (parameters[3] * 3.0))
-    cw.writer(fstream, "%+15.8e * tc[3];" % (parameters[4] * 4.0))
+    cw.writer(fstream, f"{parameters[1]:+15.8e}")
+    cw.writer(fstream, f"{(parameters[2] * 2.0):+15.8e} * tc[1]")
+    cw.writer(fstream, f"{(parameters[3] * 3.0):+15.8e} * tc[2]")
+    cw.writer(fstream, f"{(parameters[4] * 4.0):+15.8e} * tc[3]")
 
 
 def cv_nasa(fstream, parameters):
     """Write NASA polynomial for cv."""
-    cw.writer(fstream, "%+15.8e" % (parameters[0] - 1.0))
-    cw.writer(fstream, "%+15.8e * tc[1]" % parameters[1])
-    cw.writer(fstream, "%+15.8e * tc[2]" % parameters[2])
-    cw.writer(fstream, "%+15.8e * tc[3]" % parameters[3])
-    cw.writer(fstream, "%+15.8e * tc[4];" % parameters[4])
+    cw.writer(fstream, f"{(parameters[0] - 1.0):+15.8e}")
+    cw.writer(fstream, f"{parameters[1]:+15.8e} * tc[1]")
+    cw.writer(fstream, f"{parameters[2]:+15.8e} * tc[2]")
+    cw.writer(fstream, f"{parameters[3]:+15.8e} * tc[3]")
+    cw.writer(fstream, f"{parameters[4]:+15.8e} * tc[4]")
 
 
 def cp_nasa(fstream, parameters):
     """Write NASA polynomial for cp."""
-    cw.writer(fstream, "%+15.8e" % parameters[0])
-    cw.writer(fstream, "%+15.8e * tc[1]" % parameters[1])
-    cw.writer(fstream, "%+15.8e * tc[2]" % parameters[2])
-    cw.writer(fstream, "%+15.8e * tc[3]" % parameters[3])
-    cw.writer(fstream, "%+15.8e * tc[4];" % parameters[4])
+    cw.writer(fstream, f"{parameters[0]:+15.8e}")
+    cw.writer(fstream, f"{parameters[1]:+15.8e} * tc[1]")
+    cw.writer(fstream, f"{parameters[2]:+15.8e} * tc[2]")
+    cw.writer(fstream, f"{parameters[3]:+15.8e} * tc[3]")
+    cw.writer(fstream, f"{parameters[4]:+15.8e} * tc[4]")
 
 
-def gibbs_nasa(fstream, parameters):
+def gibbs_nasa(fstream, parameters, syms=None):
     """Write NASA polynomial for Gibbs."""
-    cw.writer(fstream, "%+20.15e * invT" % parameters[5])
-    cw.writer(fstream, "%+20.15e" % (parameters[0] - parameters[6]))
-    cw.writer(fstream, "%+20.15e * tc[0]" % (-parameters[0]))
-    cw.writer(fstream, "%+20.15e * tc[1]" % ((-parameters[1] / 2)))
-    cw.writer(fstream, "%+20.15e * tc[2]" % ((-parameters[2] / 6)))
-    cw.writer(fstream, "%+20.15e * tc[3]" % ((-parameters[3] / 12)))
-    cw.writer(fstream, "%+20.15e * tc[4];" % ((-parameters[4] / 20)))
+    record_symbolic_operations = True
+    if syms is None:
+        record_symbolic_operations = False
+
+    if record_symbolic_operations:
+        symb_smp = 0.0
+
+    cw.writer(fstream, f"{parameters[5]:+20.15e} * invT")
+    if record_symbolic_operations:
+        symb_smp += parameters[5] * syms.invT_smp
+    cw.writer(fstream, f"{(parameters[0] - parameters[6]):+20.15e}")
+    if record_symbolic_operations:
+        symb_smp += parameters[0] - parameters[6]
+    cw.writer(fstream, f"{(-parameters[0]):+20.15e} * tc[0]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[0]) * syms.tc_smp[0]
+    cw.writer(fstream, f"{((-parameters[1] / 2)):+20.15e} * tc[1]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[1] / 2) * syms.tc_smp[1]
+    cw.writer(fstream, f"{((-parameters[2] / 6)):+20.15e} * tc[2]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[2] / 6) * syms.tc_smp[2]
+    cw.writer(fstream, f"{((-parameters[3] / 12)):+20.15e} * tc[3]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[3] / 12) * syms.tc_smp[3]
+    cw.writer(fstream, f"{((-parameters[4] / 20)):+20.15e} * tc[4]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[4] / 20) * syms.tc_smp[4]
+
+    if record_symbolic_operations:
+        return symb_smp
 
 
-def helmholtz_nasa(fstream, parameters):
+def helmholtz_nasa(fstream, parameters, syms=None):
     """Write NASA polynomial for Helmholtz."""
-    cw.writer(fstream, "%+15.8e * invT" % parameters[5])
-    cw.writer(fstream, "%+15.8e" % (parameters[0] - parameters[6] - 1.0))
-    cw.writer(fstream, "%+15.8e * tc[0]" % (-parameters[0]))
-    cw.writer(fstream, "%+15.8e * tc[1]" % ((-parameters[1] / 2)))
-    cw.writer(fstream, "%+15.8e * tc[2]" % ((-parameters[2] / 6)))
-    cw.writer(fstream, "%+15.8e * tc[3]" % ((-parameters[3] / 12)))
-    cw.writer(fstream, "%+15.8e * tc[4];" % ((-parameters[4] / 20)))
+    record_symbolic_operations = True
+    if syms is None:
+        record_symbolic_operations = False
+
+    if record_symbolic_operations:
+        symb_smp = 0.0
+
+    cw.writer(fstream, f"{parameters[5]:+15.8e} * invT")
+    if record_symbolic_operations:
+        symb_smp += parameters[5] * syms.invT_smp
+    cw.writer(fstream, f"{(parameters[0] - parameters[6] - 1.0):+15.8e}")
+    if record_symbolic_operations:
+        symb_smp += parameters[0] - parameters[6] - 1.0
+    cw.writer(fstream, f"{(-parameters[0]):+15.8e} * tc[0]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[0]) * syms.tc_smp[0]
+    cw.writer(fstream, f"{((-parameters[1] / 2)):+15.8e} * tc[1]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[1] / 2) * syms.tc_smp[1]
+    cw.writer(fstream, f"{((-parameters[2] / 6)):+15.8e} * tc[2]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[2] / 6) * syms.tc_smp[2]
+    cw.writer(fstream, f"{((-parameters[3] / 12)):+15.8e} * tc[3]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[3] / 12) * syms.tc_smp[3]
+    cw.writer(fstream, f"{((-parameters[4] / 20)):+15.8e} * tc[4]")
+    if record_symbolic_operations:
+        symb_smp += (-parameters[4] / 20) * syms.tc_smp[4]
+
+    if record_symbolic_operations:
+        return symb_smp
 
 
-def internal_energy(fstream, parameters):
+def internal_energy(fstream, parameters, syms=None):
     """Write NASA polynomial for internal energy."""
-    cw.writer(fstream, "%+15.8e" % (parameters[0] - 1.0))
-    cw.writer(fstream, "%+15.8e * tc[1]" % ((parameters[1] / 2)))
-    cw.writer(fstream, "%+15.8e * tc[2]" % ((parameters[2] / 3)))
-    cw.writer(fstream, "%+15.8e * tc[3]" % ((parameters[3] / 4)))
-    cw.writer(fstream, "%+15.8e * tc[4]" % ((parameters[4] / 5)))
-    cw.writer(fstream, "%+15.8e * invT;" % (parameters[5]))
+    record_symbolic_operations = True
+    if syms is None:
+        record_symbolic_operations = False
+
+    if record_symbolic_operations:
+        symb_smp = 0.0
+
+    cw.writer(fstream, f"{(parameters[0] - 1.0):+15.8e}")
+    if record_symbolic_operations:
+        symb_smp += parameters[0] - 1.0
+    cw.writer(fstream, f"{((parameters[1] / 2)):+15.8e} * tc[1]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[1] / 2) * syms.tc_smp[1]
+    cw.writer(fstream, f"{((parameters[2] / 3)):+15.8e} * tc[2]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[2] / 3) * syms.tc_smp[2]
+    cw.writer(fstream, f"{((parameters[3] / 4)):+15.8e} * tc[3]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[3] / 4) * syms.tc_smp[3]
+    cw.writer(fstream, f"{((parameters[4] / 5)):+15.8e} * tc[4]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[4] / 5) * syms.tc_smp[4]
+    cw.writer(fstream, f"{(parameters[5]):+15.8e} * invT")
+    if record_symbolic_operations:
+        symb_smp += (parameters[5]) * syms.invT_smp
+
+    if record_symbolic_operations:
+        return symb_smp
 
 
-def enthalpy_nasa(fstream, parameters):
+def enthalpy_nasa(fstream, parameters, syms=None):
     """Write NASA polynomial for enthalpy."""
-    cw.writer(fstream, "%+15.8e" % parameters[0])
-    cw.writer(fstream, "%+15.8e * tc[1]" % ((parameters[1] / 2)))
-    cw.writer(fstream, "%+15.8e * tc[2]" % ((parameters[2] / 3)))
-    cw.writer(fstream, "%+15.8e * tc[3]" % ((parameters[3] / 4)))
-    cw.writer(fstream, "%+15.8e * tc[4]" % ((parameters[4] / 5)))
-    cw.writer(fstream, "%+15.8e * invT;" % (parameters[5]))
+    record_symbolic_operations = True
+    if syms is None:
+        record_symbolic_operations = False
+
+    if record_symbolic_operations:
+        symb_smp = 0.0
+
+    cw.writer(fstream, f"{parameters[0]:+15.8e}")
+    if record_symbolic_operations:
+        symb_smp += parameters[0]
+    cw.writer(fstream, f"{((parameters[1] / 2)):+15.8e} * tc[1]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[1] / 2) * syms.tc_smp[1]
+    cw.writer(fstream, f"{((parameters[2] / 3)):+15.8e} * tc[2]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[2] / 3) * syms.tc_smp[2]
+    cw.writer(fstream, f"{((parameters[3] / 4)):+15.8e} * tc[3]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[3] / 4) * syms.tc_smp[3]
+    cw.writer(fstream, f"{((parameters[4] / 5)):+15.8e} * tc[4]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[4] / 5) * syms.tc_smp[4]
+    cw.writer(fstream, f"{(parameters[5]):+15.8e} * invT")
+    if record_symbolic_operations:
+        symb_smp += (parameters[5]) * syms.invT_smp
+
+    if record_symbolic_operations:
+        return symb_smp
 
 
-def entropy_nasa(fstream, parameters):
+def entropy_nasa(fstream, parameters, syms=None):
     """Write NASA polynomial for entropy."""
-    cw.writer(fstream, "%+15.8e * tc[0]" % parameters[0])
-    cw.writer(fstream, "%+15.8e * tc[1]" % (parameters[1]))
-    cw.writer(fstream, "%+15.8e * tc[2]" % ((parameters[2] / 2)))
-    cw.writer(fstream, "%+15.8e * tc[3]" % ((parameters[3] / 3)))
-    cw.writer(fstream, "%+15.8e * tc[4]" % ((parameters[4] / 4)))
-    cw.writer(fstream, "%+15.8e ;" % (parameters[6]))
+    record_symbolic_operations = True
+    if syms is None:
+        record_symbolic_operations = False
+
+    if record_symbolic_operations:
+        symb_smp = 0.0
+
+    cw.writer(fstream, f"{parameters[0]:+15.8e} * tc[0]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[0]) * syms.tc_smp[0]
+    cw.writer(fstream, f"{(parameters[1]):+15.8e} * tc[1]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[1]) * syms.tc_smp[1]
+    cw.writer(fstream, f"{((parameters[2] / 2)):+15.8e} * tc[2]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[2] / 2) * syms.tc_smp[2]
+    cw.writer(fstream, f"{((parameters[3] / 3)):+15.8e} * tc[3]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[3] / 3) * syms.tc_smp[3]
+    cw.writer(fstream, f"{((parameters[4] / 4)):+15.8e} * tc[4]")
+    if record_symbolic_operations:
+        symb_smp += (parameters[4] / 4) * syms.tc_smp[4]
+    cw.writer(fstream, f"{(parameters[6]):+15.8e}")
+    if record_symbolic_operations:
+        symb_smp += parameters[6]
+
+    if record_symbolic_operations:
+        return symb_smp

@@ -1,10 +1,9 @@
-#ifndef _PHYSICSCONSTANTS_H_
-#define _PHYSICSCONSTANTS_H_
+#ifndef PHYSICSCONSTANTS_H
+#define PHYSICSCONSTANTS_H
 
 #include <AMReX_REAL.H>
 
-namespace pele {
-namespace physics {
+namespace pele::physics {
 
 struct Constants
 {
@@ -15,6 +14,5 @@ struct Constants
   static constexpr amrex::Real AIRMW = 28.97;
   static constexpr amrex::Real Avna = 6.022140857e23;
 };
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics
 #endif

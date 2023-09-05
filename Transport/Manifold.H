@@ -3,9 +3,8 @@
 
 #include "TransportParams.H"
 
-namespace pele {
-namespace physics {
-namespace transport {
+namespace pele::physics::transport {
+
 struct ManifoldTransport
 {
   using transport_type = ManifoldTransport;
@@ -64,7 +63,7 @@ struct ManifoldTransport
       }
       Ddiag[NUM_SPECIES-1] = 0.0; // Placeholder for density
     }
-    
+
     delete manfunc;
   }
 
@@ -122,7 +121,5 @@ struct ManifoldTransport
   }
 };
 
-} // namespace transport
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::transport
 #endif

@@ -1,5 +1,5 @@
-#ifndef _TRANSPORT_H_
-#define _TRANSPORT_H_
+#ifndef TRANSPORT_H
+#define TRANSPORT_H
 
 #include <cmath>
 
@@ -17,11 +17,4 @@
 #include "Sutherland.H"
 #include "Manifold.H"
 
-namespace pele {
-namespace physics {
-namespace transport {
-
-} // namespace transport
-} // namespace physics
-} // namespace pele
 #endif

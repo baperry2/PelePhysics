@@ -1,9 +1,6 @@
 #include "ReactorCvodeJacobian.H"
 
-namespace pele {
-namespace physics {
-namespace reactions {
-namespace cvode {
+namespace pele::physics::reactions::cvode {
 #ifdef AMREX_USE_GPU
 int
 cJac(
@@ -40,16 +37,19 @@ cJac(
       (SUNMatrix_cuSparse_NNZ(J) == ncells * NNZ));
 
     const auto ec = amrex::Gpu::ExecutionConfig(ncells);
-    amrex::launch_global<<<nbBlocks, nbThreads, ec.sharedMem, stream>>>(
-      [=] AMREX_GPU_DEVICE() noexcept {
-        for (int icell = blockDim.x * blockIdx.x + threadIdx.x,
-                 stride = blockDim.x * gridDim.x;
-             icell < ncells; icell += stride) {
-          fKernelComputeAJchem(
-            icell, NNZ, react_type, csr_row_count_d, csr_col_index_d, yvec_d,
-            Jdata);
-        }
-      });
+
+    AMREX_ALWAYS_ASSERT(nbThreads == CVODE_NB_THREADS);
+    amrex::launch_global<CVODE_NB_THREADS>
+      <<<nbBlocks, CVODE_NB_THREADS, ec.sharedMem, stream>>>(
+        [=] AMREX_GPU_DEVICE() noexcept {
+          for (int icell = blockDim.x * blockIdx.x + threadIdx.x,
+                   stride = blockDim.x * gridDim.x;
+               icell < ncells; icell += stride) {
+            fKernelComputeAJchem(
+              icell, NNZ, react_type, csr_row_count_d, csr_col_index_d, yvec_d,
+              Jdata);
+          }
+        });
     amrex::Gpu::Device::streamSynchronize();
 #else
     amrex::Abort(
@@ -60,14 +60,16 @@ cJac(
     amrex::Real* yvec_d = N_VGetDeviceArrayPointer(y_in);
     amrex::Real* Jdata = SUNMatrix_MagmaDense_Data(J);
     const auto ec = amrex::Gpu::ExecutionConfig(ncells);
-    amrex::launch_global<<<nbBlocks, nbThreads, ec.sharedMem, stream>>>(
-      [=] AMREX_GPU_DEVICE() noexcept {
-        for (int icell = blockDim.x * blockIdx.x + threadIdx.x,
-                 stride = blockDim.x * gridDim.x;
-             icell < ncells; icell += stride) {
-          fKernelDenseAJchem(icell, react_type, yvec_d, Jdata);
-        }
-      });
+    AMREX_ALWAYS_ASSERT(nbThreads == CVODE_NB_THREADS);
+    amrex::launch_global<CVODE_NB_THREADS>
+      <<<nbBlocks, CVODE_NB_THREADS, ec.sharedMem, stream>>>(
+        [=] AMREX_GPU_DEVICE() noexcept {
+          for (int icell = blockDim.x * blockIdx.x + threadIdx.x,
+                   stride = blockDim.x * gridDim.x;
+               icell < ncells; icell += stride) {
+            fKernelDenseAJchem(icell, react_type, yvec_d, Jdata);
+          }
+        });
     amrex::Gpu::Device::streamSynchronize();
 #else
     amrex::Abort(
@@ -106,10 +108,6 @@ cJac(
     // Offset in case several cells
     int offset = tid * (NUM_SPECIES + 1);
 
-    // MW CGS
-    amrex::Real mw[NUM_SPECIES] = {0.0};
-    get_mw(mw);
-
     // rho MKS
     amrex::Real rho = 0.0;
     for (int i = 0; i < NUM_SPECIES; i++) {
@@ -133,16 +131,19 @@ cJac(
 
     // fill the sunMat and scale
     for (int i = 0; i < NUM_SPECIES; i++) {
+      // cppcheck-suppress cstyleCast
       amrex::Real* J_col = SM_COLUMN_D(J, offset + i);
       for (int k = 0; k < NUM_SPECIES; k++) {
-        J_col[offset + k] = Jmat_tmp[i * (NUM_SPECIES + 1) + k] * mw[k] / mw[i];
+        J_col[offset + k] =
+          Jmat_tmp[i * (NUM_SPECIES + 1) + k] * mw(k) * imw(i);
       }
       J_col[offset + NUM_SPECIES] =
-        Jmat_tmp[i * (NUM_SPECIES + 1) + NUM_SPECIES] / mw[i];
+        Jmat_tmp[i * (NUM_SPECIES + 1) + NUM_SPECIES] * imw(i);
     }
+    // cppcheck-suppress cstyleCast
     amrex::Real* J_col = SM_COLUMN_D(J, offset + NUM_SPECIES);
     for (int i = 0; i < NUM_SPECIES; i++) {
-      J_col[offset + i] = Jmat_tmp[NUM_SPECIES * (NUM_SPECIES + 1) + i] * mw[i];
+      J_col[offset + i] = Jmat_tmp[NUM_SPECIES * (NUM_SPECIES + 1) + i] * mw(i);
     }
     // J_col = SM_COLUMN_D(J, offset); // Never read
   }
@@ -173,10 +174,6 @@ cJac_sps(
   auto ncells = udata->ncells;
   auto* colVals_c = udata->colVals_c;
   auto* rowPtrs_c = udata->rowPtrs_c;
-
-  // MW CGS
-  amrex::Real mw[NUM_SPECIES] = {0.0};
-  get_mw(mw);
 
   sunindextype* rowPtrs_tmp = SUNSparseMatrix_IndexPointers(J);
   sunindextype* colIndx_tmp = SUNSparseMatrix_IndexValues(J);
@@ -222,12 +219,12 @@ cJac_sps(
       // rescale
       for (int i = 0; i < NUM_SPECIES; i++) {
         for (int k = 0; k < NUM_SPECIES; k++) {
-          Jmat_tmp[k * (NUM_SPECIES + 1) + i] *= mw[i] / mw[k];
+          Jmat_tmp[k * (NUM_SPECIES + 1) + i] *= mw(i) * imw(k);
         }
-        Jmat_tmp[i * (NUM_SPECIES + 1) + NUM_SPECIES] /= mw[i];
+        Jmat_tmp[i * (NUM_SPECIES + 1) + NUM_SPECIES] *= imw(i);
       }
       for (int i = 0; i < NUM_SPECIES; i++) {
-        Jmat_tmp[NUM_SPECIES * (NUM_SPECIES + 1) + i] *= mw[i];
+        Jmat_tmp[NUM_SPECIES * (NUM_SPECIES + 1) + i] *= mw(i);
       }
     }
     // Go from Dense to Sparse
@@ -270,10 +267,6 @@ cJac_KLU(
   auto colPtrs = udata->colPtrs;
   auto rowVals = udata->rowVals;
 
-  // MW CGS
-  amrex::Real mw[NUM_SPECIES] = {0.0};
-  get_mw(mw);
-
   // Fixed RowVals
   sunindextype* colptrs_tmp = SUNSparseMatrix_IndexPointers(J);
   sunindextype* rowvals_tmp = SUNSparseMatrix_IndexValues(J);
@@ -315,12 +308,12 @@ cJac_KLU(
       // rescale
       for (int i = 0; i < NUM_SPECIES; i++) {
         for (int k = 0; k < NUM_SPECIES; k++) {
-          Jmat_tmp[k * (NUM_SPECIES + 1) + i] *= mw[i] / mw[k];
+          Jmat_tmp[k * (NUM_SPECIES + 1) + i] *= mw(i) * imw(k);
         }
-        Jmat_tmp[i * (NUM_SPECIES + 1) + NUM_SPECIES] /= mw[i];
+        Jmat_tmp[i * (NUM_SPECIES + 1) + NUM_SPECIES] *= imw(i);
       }
       for (int i = 0; i < NUM_SPECIES; i++) {
-        Jmat_tmp[NUM_SPECIES * (NUM_SPECIES + 1) + i] *= mw[i];
+        Jmat_tmp[NUM_SPECIES * (NUM_SPECIES + 1) + i] *= mw(i);
       }
     }
     // Go from Dense to Sparse
@@ -340,7 +333,4 @@ cJac_KLU(
 }
 #endif
 #endif
-} // namespace cvode
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions::cvode

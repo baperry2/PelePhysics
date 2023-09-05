@@ -62,7 +62,7 @@ main(int argc, char* argv[])
 
     const auto geomdata = geom.data();
 
-#ifdef _OPENMP
+#ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
@@ -85,11 +85,12 @@ main(int argc, char* argv[])
     amrex::MultiFab mu(ba, dm, 1, num_grow);
     amrex::MultiFab xi(ba, dm, 1, num_grow);
     amrex::MultiFab lam(ba, dm, 1, num_grow);
+    amrex::MultiFab chi(ba, dm, NUM_SPECIES, num_grow);
 
     // Get the transport data pointer
     auto const* ltransparm = trans_parms.device_trans_parm();
 
-#ifdef _OPENMP
+#ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
@@ -104,11 +105,12 @@ main(int argc, char* argv[])
       amrex::Array4<amrex::Real> const& mu_a = mu.array(mfi);
       amrex::Array4<amrex::Real> const& xi_a = xi.array(mfi);
       amrex::Array4<amrex::Real> const& lam_a = lam.array(mfi);
+      amrex::Array4<amrex::Real> const& chi_a = chi.array(mfi);
 
       amrex::launch(gbox, [=] AMREX_GPU_DEVICE(amrex::Box const& tbx) {
         auto trans = pele::physics::PhysicsType::transport();
         trans.get_transport_coeffs(
-          tbx, Y_a, T_a, rho_a, D_a, mu_a, xi_a, lam_a, ltransparm);
+          tbx, Y_a, T_a, rho_a, D_a, chi_a, mu_a, xi_a, lam_a, ltransparm);
       });
     }
 

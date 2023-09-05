@@ -1,5 +1,5 @@
-#ifndef _REACTORARKODE_H_
-#define _REACTORARKODE_H_
+#ifndef REACTORARKODE_H
+#define REACTORARKODE_H
 
 #include "ReactorBase.H"
 #include "AMReX_Sundials.H"
@@ -7,7 +7,7 @@
 #include <arkode/arkode_erkstep.h>
 #include <nvector/nvector_serial.h>
 
-#ifdef AMREX_USE_DPCPP
+#ifdef AMREX_USE_SYCL
 #include <nvector/nvector_sycl.h>
 #endif
 
@@ -26,9 +26,7 @@
 #include <sunlinsol/sunlinsol_cusolversp_batchqr.h>
 #endif
 
-namespace pele {
-namespace physics {
-namespace reactions {
+namespace pele::physics::reactions {
 
 struct ARKODEUserData
 {
@@ -94,7 +92,7 @@ public:
   cF_RHS(amrex::Real t, N_Vector y_in, N_Vector ydot, void* user_data);
 
   void flatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<const amrex::Real> const& rhoY,
     amrex::Array4<const amrex::Real> const& frcExt,
@@ -113,7 +111,7 @@ public:
   }
 
   void unflatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<amrex::Real> const& rhoY,
     amrex::Array4<amrex::Real> const& temperature,
@@ -146,8 +144,6 @@ private:
   bool m_clean_init_massfrac{false};
 };
 
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions
 
 #endif

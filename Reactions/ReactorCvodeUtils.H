@@ -1,5 +1,5 @@
-#ifndef _REACTORUTILSCVODE_H_
-#define _REACTORUTILSCVODE_H_
+#ifndef REACTORUTILSCVODE_H
+#define REACTORUTILSCVODE_H
 #include "ReactorTypes.H"
 
 #include <AMReX.H>
@@ -19,9 +19,17 @@
 #include <sunlinsol/sunlinsol_klu.h>
 #endif
 
-namespace pele {
-namespace physics {
-namespace reactions {
+#ifdef AMREX_USE_GPU
+#if defined(AMREX_USE_CUDA)
+#define CVODE_NB_THREADS 32
+#elif defined(AMREX_USE_HIP)
+#define CVODE_NB_THREADS 64
+#else
+#define CVODE_NB_THREADS 32
+#endif
+#endif
+
+namespace pele::physics::reactions {
 
 struct CVODEUserData
 {
@@ -94,10 +102,18 @@ struct CVODEUserData
 namespace cvode {
 
 #ifdef AMREX_USE_GPU
-enum linSolveType { sparseDirect, customDirect, magmaDirect, GMRES, precGMRES };
+enum linSolveType {
+  fixedPoint,
+  sparseDirect,
+  customDirect,
+  magmaDirect,
+  GMRES,
+  precGMRES
+};
 enum precondType { sparseSimpleAJac };
 #else
 enum linSolveType {
+  fixedPoint,
   denseFDDirect,
   denseDirect,
   sparseDirect,
@@ -143,9 +159,6 @@ fKernelComputeallAJ(
   int u_offset = ncell * neqs;
   amrex::Real* u_curr = u_d + u_offset;
 
-  amrex::Real mw[NUM_SPECIES] = {0.0};
-  get_mw(mw);
-
   amrex::Real rho_pt = 0.0;
   for (int n = 0; n < NUM_SPECIES; n++) {
     rho_pt = rho_pt + u_curr[n];
@@ -169,10 +182,10 @@ fKernelComputeallAJ(
   amrex::Real* csr_val_cell = csr_val_arg + jac_offset;
   for (int i = 0; i < NUM_SPECIES; i++) {
     for (int k = 0; k < NUM_SPECIES; k++) {
-      Jmat_pt[k * neqs + i] *= mw[i] / mw[k];
+      Jmat_pt[k * neqs + i] *= mw(i) * imw(k);
     }
-    Jmat_pt[i * neqs + NUM_SPECIES] /= mw[i];
-    Jmat_pt[NUM_SPECIES * neqs + i] *= mw[i];
+    Jmat_pt[i * neqs + NUM_SPECIES] *= imw(i);
+    Jmat_pt[NUM_SPECIES * neqs + i] *= mw(i);
   }
   for (int i = 1; i < NUM_SPECIES + 2; i++) {
     int nbVals = csr_row_count_d[i] - csr_row_count_d[i - 1];
@@ -261,14 +274,12 @@ fKernelComputeAJchem(
   eos.RTY2JAC(rho_pt, temp_pt, massfrac.arr, Jmat_pt.arr, consP);
 
   // Scale Jacobian
-  amrex::Real mw[NUM_SPECIES] = {0.0};
-  get_mw(mw);
   for (int i = 0; i < NUM_SPECIES; i++) {
     for (int k = 0; k < NUM_SPECIES; k++) {
-      Jmat_pt[k * neqs + i] *= mw[i] / mw[k];
+      Jmat_pt[k * neqs + i] *= mw(i) * imw(k);
     }
-    Jmat_pt[i * neqs + NUM_SPECIES] /= mw[i];
-    Jmat_pt[NUM_SPECIES * neqs + i] *= mw[i];
+    Jmat_pt[i * neqs + NUM_SPECIES] *= imw(i);
+    Jmat_pt[NUM_SPECIES * neqs + i] *= mw(i);
   }
 
   // Fill the sparse outgoing Jacobian matrix
@@ -312,51 +323,19 @@ fKernelDenseAJchem(
   eos.RTY2JAC(rho_pt, temp_pt, massfrac.arr, Jmat_pt.arr, consP);
 
   // Scale Jacobian and pass into outgoing data ptr.
-  amrex::Real mw[NUM_SPECIES] = {0.0};
-  get_mw(mw);
-
   int jac_offset = icell * (neqs * neqs);
   amrex::Real* Jcurr = Jdata + jac_offset;
 
   for (int i = 0; i < NUM_SPECIES; i++) {
     for (int k = 0; k < NUM_SPECIES; k++) {
-      Jcurr[k * neqs + i] = Jmat_pt[k * neqs + i] * mw[i] / mw[k];
+      Jcurr[k * neqs + i] = Jmat_pt[k * neqs + i] * mw(i) * imw(k);
     }
-    Jcurr[i * neqs + NUM_SPECIES] = Jmat_pt[i * neqs + NUM_SPECIES] / mw[i];
-    Jcurr[NUM_SPECIES * neqs + i] = Jmat_pt[NUM_SPECIES * neqs + i] * mw[i];
+    Jcurr[i * neqs + NUM_SPECIES] = Jmat_pt[i * neqs + NUM_SPECIES] * imw(i);
+    Jcurr[NUM_SPECIES * neqs + i] = Jmat_pt[NUM_SPECIES * neqs + i] * mw(i);
   }
 }
-
-#ifdef AMREX_USE_CUDA
-/*
-__global__ void
-fKernelDenseSolve( int ncell,
-                   amrex::Real* x_d,
-                   amrex::Real* b_d,
-                   int subsys_size,
-                   int subsys_nnz,
-                   amrex::Real* csr_val)
-{
-  int stride = blockDim.x * gridDim.x;
-
-  for (int icell = blockDim.x * blockIdx.x + threadIdx.x; icell < ncell;
-       icell += stride) {
-    int offset = icell * subsys_size;
-    int offset_A = icell * subsys_nnz;
-
-    amrex::Real* csr_val_cell = csr_val + offset_A;
-    amrex::Real* x_cell = x_d + offset;
-    amrex::Real* b_cell = b_d + offset;
-
-    sgjsolve(csr_val_cell, x_cell, b_cell);
-  }
-}
-*/
-#endif
 
 #endif
 } // namespace cvode
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions
 #endif

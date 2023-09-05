@@ -1,11 +1,9 @@
-#ifndef _REACTORRK64_H_
-#define _REACTORRK64_H_
+#ifndef REACTORRK64_H
+#define REACTORRK64_H
 
 #include "ReactorBase.H"
 
-namespace pele {
-namespace physics {
-namespace reactions {
+namespace pele::physics::reactions {
 
 // stages and coefficients for rk64
 struct RK64Params
@@ -86,7 +84,7 @@ public:
     ) override;
 
   void flatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<const amrex::Real> const& rhoY,
     amrex::Array4<const amrex::Real> const& frcExt,
@@ -105,7 +103,7 @@ public:
   }
 
   void unflatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     amrex::Array4<amrex::Real> const& rhoY,
     amrex::Array4<amrex::Real> const& temperature,
@@ -131,7 +129,5 @@ private:
   int m_reactor_type{0};
   bool m_clean_init_massfrac{false};
 };
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions
 #endif

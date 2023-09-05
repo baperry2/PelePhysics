@@ -17,7 +17,7 @@ GET_RMAP(int* _rmap)
 // Returns a count of species in a reaction, and their indices
 // and stoichiometric coefficients. (Eq 50)
 void
-CKINU(int* i, int* nspec, int* ki, int* nu)
+CKINU(const int i, int& nspec, int ki[], int nu[])
 {
   const int ns[60] = {2, 4, 3, 3, 3, 2, 4, 4, 4, 4, 3, 4, 4, 4, 3,
                       3, 3, 3, 4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 3, 4,
@@ -55,17 +55,17 @@ CKINU(int* i, int* nspec, int* ki, int* nu)
     -1, -1, 1, 1, 0, -1, -1, 1, 1, 0, -1, -1, 1, 1, 0, -1, 1,  1, 0, 0,
     -1, -1, 1, 1, 0, -1, -1, 1, 1, 0, -1, -1, 1, 1, 0, -1, -1, 1, 1, 0,
     -2, 1,  1, 0, 0, -1, -1, 1, 1, 0, -1, -1, 1, 1, 1, -1, 1,  1, 0, 0};
-  if (*i < 1) {
+  if (i < 1) {
     // Return max num species per reaction
-    *nspec = 5;
+    nspec = 5;
   } else {
-    if (*i > 60) {
-      *nspec = -1;
+    if (i > 60) {
+      nspec = -1;
     } else {
-      *nspec = ns[*i - 1];
-      for (int j = 0; j < *nspec; ++j) {
-        ki[j] = kiv[(*i - 1) * 5 + j] + 1;
-        nu[j] = nuv[(*i - 1) * 5 + j];
+      nspec = ns[i - 1];
+      for (int j = 0; j < nspec; ++j) {
+        ki[j] = kiv[(i - 1) * 5 + j] + 1;
+        nu[j] = nuv[(i - 1) * 5 + j];
       }
     }
   }
@@ -75,28 +75,26 @@ CKINU(int* i, int* nspec, int* ki, int* nu)
 // Given P, T, and mole fractions
 void
 CKKFKR(
-  amrex::Real* P,
-  amrex::Real* T,
-  amrex::Real* x,
-  amrex::Real* q_f,
-  amrex::Real* q_r)
+  const amrex::Real P,
+  const amrex::Real T,
+  const amrex::Real x[],
+  amrex::Real q_f[],
+  amrex::Real q_r[])
 {
-  int id;            // loop counter
   amrex::Real c[16]; // temporary storage
   amrex::Real PORT =
-    1e6 * (*P) /
-    (8.31446261815324e+07 * (*T)); // 1e6 * P/RT so c goes to SI units
+    1e6 * P / (8.31446261815324e+07 * T); // 1e6 * P/RT so c goes to SI units
 
   // Compute conversion, see Eq 10
-  for (id = 0; id < 16; ++id) {
+  for (int id = 0; id < 16; ++id) {
     c[id] = x[id] * PORT;
   }
 
   // convert to chemkin units
-  progressRateFR(q_f, q_r, c, *T);
+  progressRateFR(q_f, q_r, c, T);
 
   // convert to chemkin units
-  for (id = 0; id < 60; ++id) {
+  for (int id = 0; id < 60; ++id) {
     q_f[id] *= 1.0e-6;
     q_r[id] *= 1.0e-6;
   }
@@ -116,10 +114,7 @@ progressRateFR(
   gibbs(g_RT, tc);
 
   amrex::Real sc_qss[1];
-  amrex::Real kf_qss[0], qf_qss[0], qr_qss[0];
   comp_qfqr(q_f, q_r, sc, sc_qss, tc, invT);
-
-  return;
 }
 
 // save atomic weights into array
@@ -144,10 +139,9 @@ CKAWT(amrex::Real* awt)
 void
 CKNCF(int* ncf)
 {
-  int id; // loop counter
   int kd = 4;
   // Zero ncf
-  for (id = 0; id < kd * 16; ++id) {
+  for (int id = 0; id < kd * 16; ++id) {
     ncf[id] = 0;
   }
 
@@ -261,7 +255,7 @@ SPARSITY_INFO(int* nJdata, const int* consP, int NCELLS)
   for (int n = 0; n < 16; n++) {
     conc[n] = 1.0 / 16.000000;
   }
-  aJacobian(&Jac[0], &conc[0], 1500.0, *consP);
+  aJacobian(Jac.data(), conc.data(), 1500.0, *consP);
 
   int nJdata_tmp = 0;
   for (int k = 0; k < 17; k++) {
@@ -284,7 +278,7 @@ SPARSITY_INFO_SYST(int* nJdata, const int* consP, int NCELLS)
   for (int n = 0; n < 16; n++) {
     conc[n] = 1.0 / 16.000000;
   }
-  aJacobian(&Jac[0], &conc[0], 1500.0, *consP);
+  aJacobian(Jac.data(), conc.data(), 1500.0, *consP);
 
   int nJdata_tmp = 0;
   for (int k = 0; k < 17; k++) {
@@ -312,7 +306,7 @@ SPARSITY_INFO_SYST_SIMPLIFIED(int* nJdata, const int* consP)
   for (int n = 0; n < 16; n++) {
     conc[n] = 1.0 / 16.000000;
   }
-  aJacobian_precond(&Jac[0], &conc[0], 1500.0, *consP);
+  aJacobian_precond(Jac.data(), conc.data(), 1500.0, *consP);
 
   int nJdata_tmp = 0;
   for (int k = 0; k < 17; k++) {
@@ -340,7 +334,7 @@ SPARSITY_PREPROC_CSC(int* rowVals, int* colPtrs, const int* consP, int NCELLS)
   for (int n = 0; n < 16; n++) {
     conc[n] = 1.0 / 16.000000;
   }
-  aJacobian(&Jac[0], &conc[0], 1500.0, *consP);
+  aJacobian(Jac.data(), conc.data(), 1500.0, *consP);
 
   colPtrs[0] = 0;
   int nJdata_tmp = 0;
@@ -370,7 +364,7 @@ SPARSITY_PREPROC_CSR(
   for (int n = 0; n < 16; n++) {
     conc[n] = 1.0 / 16.000000;
   }
-  aJacobian(&Jac[0], &conc[0], 1500.0, *consP);
+  aJacobian(Jac.data(), conc.data(), 1500.0, *consP);
 
   if (base == 1) {
     rowPtrs[0] = 1;
@@ -416,7 +410,7 @@ SPARSITY_PREPROC_SYST_CSR(
   for (int n = 0; n < 16; n++) {
     conc[n] = 1.0 / 16.000000;
   }
-  aJacobian(&Jac[0], &conc[0], 1500.0, *consP);
+  aJacobian(Jac.data(), conc.data(), 1500.0, *consP);
 
   if (base == 1) {
     rowPtr[0] = 1;
@@ -472,7 +466,7 @@ SPARSITY_PREPROC_SYST_SIMPLIFIED_CSC(
   for (int n = 0; n < 16; n++) {
     conc[n] = 1.0 / 16.000000;
   }
-  aJacobian_precond(&Jac[0], &conc[0], 1500.0, *consP);
+  aJacobian_precond(Jac.data(), conc.data(), 1500.0, *consP);
 
   colPtrs[0] = 0;
   int nJdata_tmp = 0;
@@ -505,7 +499,7 @@ SPARSITY_PREPROC_SYST_SIMPLIFIED_CSR(
   for (int n = 0; n < 16; n++) {
     conc[n] = 1.0 / 16.000000;
   }
-  aJacobian_precond(&Jac[0], &conc[0], 1500.0, *consP);
+  aJacobian_precond(Jac.data(), conc.data(), 1500.0, *consP);
 
   if (base == 1) {
     rowPtr[0] = 1;

@@ -1,5 +1,5 @@
-#ifndef _REACTORUTILS_H_
-#define _REACTORUTILS_H_
+#ifndef REACTORUTILS_H
+#define REACTORUTILS_H
 
 #include <utility>
 #include <AMReX_Gpu.H>
@@ -8,11 +8,17 @@
 #include "ReactorTypes.H"
 #include "AMReX_Sundials.H"
 
+#include <arkode/arkode_arkstep.h>
+#include <arkode/arkode_erkstep.h>
+#include <cvode/cvode.h>
+
+#include <nvector/nvector_serial.h>
+
 #ifdef AMREX_USE_HIP
 #include <nvector/nvector_hip.h>
 #endif
 
-#ifdef AMREX_USE_DPCPP
+#ifdef AMREX_USE_SYCL
 #include <nvector/nvector_sycl.h>
 #endif
 
@@ -20,10 +26,7 @@
 #include <nvector/nvector_cuda.h>
 #endif
 
-namespace pele {
-namespace physics {
-namespace reactions {
-namespace utils {
+namespace pele::physics::reactions::utils {
 int check_flag(void* flagvalue, const char* funcname, int opt);
 
 struct YCOrder
@@ -71,6 +74,90 @@ AMREX_GPU_DEVICE AMREX_FORCE_INLINE int
 spec_index<CYOrder>(const int specie_idx, const int icell, const int ncells)
 {
   return vec_index<CYOrder>(specie_idx, icell, ncells);
+}
+
+template <typename OrderType>
+void
+set_sundials_solver_tols(
+  // cppcheck-suppress constParameter
+  sundials::Context& sunctx,
+  void* sundials_mem,
+  const int ncells,
+  const amrex::Real relTol,
+  const amrex::Real absTol,
+  const amrex::GpuArray<amrex::Real, NUM_SPECIES + 1>& typ_vals,
+  const std::string& solvername,
+  const int verbose)
+{
+  int omp_thread = 0;
+#ifdef AMREX_USE_OMP
+  omp_thread = omp_get_thread_num();
+#endif
+
+  const int neq_tot = (NUM_SPECIES + 1) * ncells;
+
+#if defined(AMREX_USE_CUDA)
+  N_Vector atol = N_VNewWithMemHelp_Cuda(
+    neq_tot, /*use_managed_mem=*/false,
+    *amrex::sundials::The_SUNMemory_Helper(), sunctx);
+  amrex::Real* ratol = N_VGetDeviceArrayPointer_Cuda(atol);
+#elif defined(AMREX_USE_HIP)
+  N_Vector atol = N_VNewWithMemHelp_Hip(
+    neq_tot, /*use_managed_mem=*/false,
+    *amrex::sundials::The_SUNMemory_Helper(), sunctx);
+  amrex::Real* ratol = N_VGetDeviceArrayPointer_Hip(atol);
+#elif defined(AMREX_USE_SYCL)
+  N_Vector atol = N_VNewWithMemHelp_Sycl(
+    neq_tot, /*use_managed_mem=*/false,
+    *amrex::sundials::The_SUNMemory_Helper(),
+    &amrex::Gpu::Device::streamQueue(), sunctx);
+  amrex::Real* ratol = N_VGetDeviceArrayPointer_Sycl(atol);
+#else
+  N_Vector atol = N_VNew_Serial(neq_tot, sunctx);
+  amrex::Real* ratol = N_VGetArrayPointer(atol);
+#endif
+
+  if (typ_vals[0] > 0.0) {
+    // cppcheck-suppress knownConditionTrueFalse
+    if ((verbose > 0) && (omp_thread == 0)) {
+      amrex::Print() << " Setting " << solvername
+                     << " tolerances with TypVals rtol = " << relTol
+                     << " atolfact = " << absTol << " in PelePhysics \n";
+    }
+
+    amrex::ParallelFor(ncells, [=] AMREX_GPU_DEVICE(int icell) {
+      for (int k = 0; k < NUM_SPECIES + 1; k++) {
+        ratol[vec_index<OrderType>(k, icell, ncells)] = typ_vals[k] * absTol;
+      }
+    });
+  } else {
+    // cppcheck-suppress knownConditionTrueFalse
+    if ((verbose > 0) && (omp_thread == 0)) {
+      amrex::Print() << " Setting " << solvername
+                     << " tolerances rtol = " << relTol << " atol = " << absTol
+                     << " in PelePhysics \n";
+    }
+    amrex::ParallelFor(
+      neq_tot, [=] AMREX_GPU_DEVICE(int i) { ratol[i] = absTol; });
+  }
+
+  // Call CVodeSVtolerances to specify the scalar relative tolerance
+  // and vector absolute tolerances
+  int flag;
+  if (solvername == "cvode") {
+    flag = CVodeSVtolerances(sundials_mem, relTol, atol);
+  } else if (solvername == "arkstep") {
+    flag = ARKStepSVtolerances(sundials_mem, relTol, atol);
+  } else if (solvername == "erkstep") {
+    flag = ERKStepSVtolerances(sundials_mem, relTol, atol);
+  } else {
+    amrex::Abort("setSundialsSolverTols not implemented for this solver type");
+  }
+  if (utils::check_flag(&flag, "SVtolerances", 1) != 0) {
+    amrex::Abort("Problem in setSundialsSolverTols");
+  }
+
+  N_VDestroy(atol);
 }
 
 template <typename OrderType>
@@ -203,7 +290,7 @@ box_unflatten(
     amrex::Abort("Wrong reactor type. Choose between 1 (e) or 2 (h).");
   }
   temperature(i, j, k, 0) = temp;
-  FC_in(i, j, k, 0) = FCunt;
+  FC_in(i, j, k, 0) = static_cast<amrex::Real>(FCunt);
 }
 
 template <typename OrderType>
@@ -215,7 +302,7 @@ public:
     "FlattenOps must have ordering type as its template argument");
 
   void flatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     const int reactor_type,
     const bool clean_init_massfrac,
@@ -243,7 +330,7 @@ public:
   }
 
   void unflatten(
-    const amrex::Box box,
+    const amrex::Box& box,
     const int ncells,
     const int reactor_type,
     const bool clean_init_massfrac,
@@ -347,8 +434,5 @@ fKernelSpec(
 N_Vector
 setNVectorGPU(int nvsize, int atomic_reduction, amrex::gpuStream_t stream);
 #endif
-} // namespace utils
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions::utils
 #endif

@@ -1,9 +1,6 @@
 #include "ReactorCvodeCustomLinSolver.H"
 
-namespace pele {
-namespace physics {
-namespace reactions {
-namespace cvode {
+namespace pele::physics::reactions::cvode {
 
 #ifdef AMREX_USE_GPU
 
@@ -241,7 +238,7 @@ SUNLinSolSolve_Sparse_custom(
   amrex::Real* x_d = N_VGetArrayPointer(x);
   amrex::Real* b_d = N_VGetArrayPointer(b);
 
-  auto* Data = (amrex::Real*)SUNSparseMatrix_Data(a_A);
+  auto* Data = static_cast<amrex::Real*>(SUNSparseMatrix_Data(a_A));
 
   for (int tid = 0; tid < SUN_CUSP_NUM_SUBSYS(S); tid++) {
     int offset = tid * SUN_CUSP_SUBSYS_NNZ(S);
@@ -255,7 +252,4 @@ SUNLinSolSolve_Sparse_custom(
   return (SUNLS_SUCCESS);
 }
 #endif
-} // namespace cvode
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions::cvode

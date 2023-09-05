@@ -8,8 +8,7 @@
 #include "AMReX_Print.H"
 #include "AMReX.H"
 
-namespace pele {
-namespace physics {
+namespace pele::physics {
 
 /** Runtime selection of options based on string keyword lookup
  *
@@ -112,7 +111,7 @@ struct Factory
     ~Register() override
     {
       if (registered) {
-        auto& tbl = Factory::table();
+        const auto& tbl = Factory::table();
         const auto& it = tbl.find(T::identifier());
         registered = (it != tbl.end());
       }
@@ -160,6 +159,5 @@ template <class T>
 bool Factory<Base, Args...>::Register<T>::registered =
   Factory<Base, Args...>::Register<T>::add_sub_type();
 
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics
 #endif /* FACTORY_H */

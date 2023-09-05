@@ -23,7 +23,7 @@ cvode.solve_type = dense_direct
 
 # If solve_type = precGMRES -> select preconditioner
 # Options are [CPU] dense_simplified_AJacobian / sparse_simplified_AJacobian / custom_simplified_AJacobian
-              [GPU] cuSparse_simplified_AJacobian
+#              [GPU] cuSparse_simplified_AJacobian
 cvode.precond_type = dense_simplified_AJacobian
 cvode.max_order = 4
 
@@ -34,6 +34,8 @@ ode.use_erkstep    = 0
 # amrex.fpe_trap_zero = 1
 # amrex.fpe_trap_overflow = 1
 
+ode.bdf_nsubsteps=2000
+ode.bdf_scheme=3
 
 # 1013250.0 * patm
 #hr.press = 5066250.0

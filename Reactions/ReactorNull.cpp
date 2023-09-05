@@ -1,8 +1,6 @@
 #include "ReactorNull.H"
 
-namespace pele {
-namespace physics {
-namespace reactions {
+namespace pele::physics::reactions {
 
 int
 ReactorNull::init(int reactor_type, int /*ncells*/)
@@ -111,6 +109,4 @@ ReactorNull::react(
 #endif
   return 0;
 }
-} // namespace reactions
-} // namespace physics
-} // namespace pele
+} // namespace pele::physics::reactions
