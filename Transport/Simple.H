@@ -102,7 +102,7 @@ struct NonIdealChungCorrections<eos::SRK>
       if (updated_mu < 0.0 and !trans_parm->clip_negative_coefficients) {
         amrex::Abort("Negative Viscosity due to Chung corrections");
       }
-      mu = std::max(updated_mu,0.0);
+      mu = std::max(updated_mu, 0.0);
     }
 
     // Set nonideal conductivity
@@ -127,7 +127,7 @@ struct NonIdealChungCorrections<eos::SRK>
       if (updated_lam < 0.0 and !trans_parm->clip_negative_coefficients) {
         amrex::Abort("Negative Thermal Conductivity due to Chung corrections");
       }
-      lam = std::max(updated_lam,0.0);
+      lam = std::max(updated_lam, 0.0);
     }
   }
 };

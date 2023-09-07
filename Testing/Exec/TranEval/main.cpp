@@ -29,7 +29,8 @@ main(int argc, char* argv[])
 
     // Stuff for setting up conditions to challenge Chung corrections
     bool linear_initialization = false;
-    amrex::Real min_T = 300.0, max_T = 1000.0, min_P = 1.0e6, max_P=20.0e6, min_Y_H2O = 0.0, max_Y_H2O = 1.0;
+    amrex::Real min_T = 300.0, max_T = 1000.0, min_P = 1.0e6, max_P = 20.0e6,
+                min_Y_H2O = 0.0, max_Y_H2O = 1.0;
     pp.query("linear_initialization", linear_initialization);
     if (linear_initialization) {
       pp.query("min_T", min_T);
@@ -40,7 +41,7 @@ main(int argc, char* argv[])
       pp.query("max_Y_H2O", max_Y_H2O);
     }
 
-    amrex::Vector<int> npts_in(AMREX_SPACEDIM,128);
+    amrex::Vector<int> npts_in(AMREX_SPACEDIM, 128);
     pp.queryarr("npts", npts_in);
 
     // Define geometry
@@ -93,17 +94,19 @@ main(int argc, char* argv[])
       auto const& rho_a = density.array(mfi);
 
       if (linear_initialization) {
-      amrex::ParallelFor(
-        bx, [Y_a, T_a, rho_a,
-             geomdata, min_T, max_T, min_P, max_P, min_Y_H2O, max_Y_H2O] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-          initialize_data_linear(i, j, k, Y_a, T_a, rho_a, geomdata, min_T, max_T, min_P, max_P, min_Y_H2O, max_Y_H2O);
-        });
+        amrex::ParallelFor(
+          bx, [Y_a, T_a, rho_a, geomdata, min_T, max_T, min_P, max_P, min_Y_H2O,
+               max_Y_H2O] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            initialize_data_linear(
+              i, j, k, Y_a, T_a, rho_a, geomdata, min_T, max_T, min_P, max_P,
+              min_Y_H2O, max_Y_H2O);
+          });
       } else {
-      amrex::ParallelFor(
-        bx, [Y_a, T_a, rho_a,
-             geomdata] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-          initialize_data(i, j, k, Y_a, T_a, rho_a, geomdata);
-        });
+        amrex::ParallelFor(
+          bx, [Y_a, T_a, rho_a,
+               geomdata] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            initialize_data(i, j, k, Y_a, T_a, rho_a, geomdata);
+          });
       }
     }
 

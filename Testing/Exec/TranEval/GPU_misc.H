@@ -84,11 +84,11 @@ initialize_data_linear(
   const amrex::Real* phi = geomdata.ProbHi();
   const amrex::Real* dx = geomdata.CellSize();
 
-  amrex::IntVect idx = {AMREX_D_DECL(i,j,k)};
+  amrex::IntVect idx = {AMREX_D_DECL(i, j, k)};
   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> alpha;
 
   for (int n = 0; n < 3; n++) {
-    alpha[n] = ((idx[n]+0.5)*dx[n])  / (phi[n] - plo[n]);
+    alpha[n] = ((idx[n] + 0.5) * dx[n]) / (phi[n] - plo[n]);
   }
 
 #ifdef H2O_ID
@@ -99,7 +99,7 @@ initialize_data_linear(
 #ifdef CO2_ID
   int idx_1 = CO2_ID;
 #else
-  int idx_1 = NUM_SPECIES-1;
+  int idx_1 = NUM_SPECIES - 1;
 #endif
   if (idx_0 == idx_1) {
     amrex::Abort("initialize_data_linear: Can't set up compositions properly");
@@ -125,9 +125,9 @@ initialize_data_linear(
   mf_arr[idx_1] = 1.0 - mf_arr[idx_0];
 #endif
   auto eos = pele::physics::PhysicsType::eos();
-  eos.PYT2R(press, mf_arr.data(), temp(i, j, k), rho(i,j,k));
+  eos.PYT2R(press, mf_arr.data(), temp(i, j, k), rho(i, j, k));
   for (int n = 0; n < NUM_SPECIES; ++n) {
-    spec(i,j,k,n) = mf_arr[n];
+    spec(i, j, k, n) = mf_arr[n];
   }
 }
 #endif
