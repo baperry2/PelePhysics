@@ -163,6 +163,14 @@ jobs:
             make realclean; \
             if [ $? -ne 0 ]; then exit 1; fi; \
           done
+          printf "\n-------- Simple - SRK - Chung Corrections --------\n"; \
+          make -j ${{env.NPROCS}} Transport_Model=Simple Chemistry_Model=LiDryer Eos_Model=Soave-Redlich-Kwong DIM=3 TINY_PROFILE=TRUE ${{matrix.amrex_build_args}}; \
+          if [ "${{matrix.comp}}" == 'gnu' ] || [ "${{matrix.comp}}" == 'llvm' ]; then \
+            ./Pele3d.${{matrix.comp}}.TPROF.ex inputs.3d_Simple_SRK; \
+          fi; \
+          make realclean; \
+          if [ $? -ne 0 ]; then exit 1; fi; \
+
       - name: Test EOS
         working-directory: ${{env.EOS_WORKING_DIRECTORY}}
         run: |

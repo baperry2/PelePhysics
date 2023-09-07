@@ -1,0 +1,9 @@
+npts = 32 32 32
+min_T = 300
+max_T = 1000
+min_P = 1e6
+max_P = 1e8
+min_Y_H2O = 0.0
+max_Y_H2O = 1.0
+linear_initialization = true
+transport.clip_negative_coefficients = false
