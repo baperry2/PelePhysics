@@ -23,10 +23,30 @@ main(int argc, char* argv[])
       trans_parms;
     trans_parms.allocate();
 
+    // Get Some inputs
+    int max_size = 32;
+    pp.query("max_size", max_size);
+
+    // Stuff for setting up conditions to challenge Chung corrections
+    bool linear_initialization = false;
+    amrex::Real min_T = 300.0, max_T = 1000.0, min_P = 1.0e6, max_P=20.0e6, min_Y_H2O = 0.0, max_Y_H2O = 1.0;
+    pp.query("linear_initialization", linear_initialization);
+    if (linear_initialization) {
+      pp.query("min_T", min_T);
+      pp.query("max_T", max_T);
+      pp.query("min_P", min_P);
+      pp.query("max_P", max_P);
+      pp.query("min_Y_H2O", min_Y_H2O);
+      pp.query("max_Y_H2O", max_Y_H2O);
+    }
+
+    amrex::Vector<int> npts_in(AMREX_SPACEDIM,128);
+    pp.queryarr("npts", npts_in);
+
     // Define geometry
     amrex::Array<int, AMREX_SPACEDIM> npts{AMREX_D_DECL(1, 1, 1)};
     for (int i = 0; i < AMREX_SPACEDIM; ++i) {
-      npts[i] = 128;
+      npts[i] = npts_in[i];
     }
 
     amrex::Box domain(
@@ -43,8 +63,6 @@ main(int argc, char* argv[])
     amrex::Geometry geom(domain, real_box, coord, is_periodic);
 
     // Define BoxArray
-    int max_size = 32;
-    pp.query("max_size", max_size);
     amrex::BoxArray ba(domain);
     ba.maxSize(max_size);
 
@@ -74,11 +92,19 @@ main(int argc, char* argv[])
       auto const& T_a = temperature.array(mfi);
       auto const& rho_a = density.array(mfi);
 
+      if (linear_initialization) {
+      amrex::ParallelFor(
+        bx, [Y_a, T_a, rho_a,
+             geomdata, min_T, max_T, min_P, max_P, min_Y_H2O, max_Y_H2O] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+          initialize_data_linear(i, j, k, Y_a, T_a, rho_a, geomdata, min_T, max_T, min_P, max_P, min_Y_H2O, max_Y_H2O);
+        });
+      } else {
       amrex::ParallelFor(
         bx, [Y_a, T_a, rho_a,
              geomdata] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
           initialize_data(i, j, k, Y_a, T_a, rho_a, geomdata);
         });
+      }
     }
 
     amrex::MultiFab D(ba, dm, NUM_SPECIES, num_grow);
