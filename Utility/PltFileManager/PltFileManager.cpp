@@ -224,7 +224,10 @@ PltFileManager::fillPatchFromPlt(
       m_geoms[0].ProbDomain().contains(a_level_geom.ProbDomain(), 0.0000001));
 
     // Check the refRatio between PltFile level 0 and ours
-    IntVect lev0rr = a_level_geom.Domain().size() / m_geoms[0].Domain().size();
+    IntVect lev0rr;
+    for (int i = 0; i < AMREX_SPACEDIM; ++i) {
+      lev0rr[i] = int(m_geoms[0].CellSize(i) /  a_level_geom.CellSize(i) );
+    }
 
     // Same domain size, just do a fill patch single level
     if (lev0rr == IntVect::TheUnitVector()) {
@@ -256,8 +259,10 @@ PltFileManager::fillPatchFromPlt(
       // Then get data from the PltFile finer levels if any
       for (int pltlev = 1; pltlev < m_geoms.size(); pltlev++) {
 
-        IntVect rr =
-          a_level_geom.Domain().size() / m_geoms[pltlev].Domain().size();
+        IntVect rr;
+        for (int i = 0; i < AMREX_SPACEDIM; ++i) {
+          rr[i] = int(m_geoms[0].CellSize(i) /  a_level_geom.CellSize(i) );
+        }
 
         // Current Plt level resolution matches our: lets interp and wrap it up
         if (rr == IntVect::TheUnitVector()) {
