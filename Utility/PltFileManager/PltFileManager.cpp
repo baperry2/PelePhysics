@@ -191,7 +191,8 @@ PltFileManager::fillPatchFromPlt(
   int pltComp,
   int dataComp,
   int nComp,
-  MultiFab& a_mf)
+  MultiFab& a_mf,
+  IntVect nghost)
 {
   // If we haven't yet, read the plot data on all levels
   if (!m_dataLoaded) {
@@ -231,8 +232,8 @@ PltFileManager::fillPatchFromPlt(
       PhysBCFunct<GpuBndryFuncFab<FillExtDirDummy>> bndry_func(
         a_level_geom, {dummyBCRec}, FillExtDirDummy{});
       FillPatchSingleLevel(
-        a_mf, IntVect(0), 0.0, {&(m_data[a_lev])}, {0.0}, pltComp, dataComp,
-        nComp, a_level_geom, bndry_func, 0);
+        a_mf, nghost, 0.0, {&(m_data[a_lev])}, {0.0}, pltComp, dataComp, nComp,
+        a_level_geom, bndry_func, 0);
 
       // Our level 0 is finer than the PltFile one.
     } else if (lev0rr.max() > 1) {
@@ -248,9 +249,9 @@ PltFileManager::fillPatchFromPlt(
         PhysBCFunct<GpuBndryFuncFab<FillExtDirDummy>> fine_bndry_func(
           a_level_geom, {dummyBCRec}, FillExtDirDummy{});
         InterpFromCoarseLevel(
-          a_mf, IntVect(0), 0.0, m_data[0], pltComp, dataComp, nComp,
-          m_geoms[0], a_level_geom, crse_bndry_func, 0, fine_bndry_func, 0,
-          lev0rr, mapper, {dummyBCRec}, 0);
+          a_mf, nghost, 0.0, m_data[0], pltComp, dataComp, nComp, m_geoms[0],
+          a_level_geom, crse_bndry_func, 0, fine_bndry_func, 0, lev0rr, mapper,
+          {dummyBCRec}, 0);
       }
 
       // Then get data from the PltFile finer levels if any
@@ -261,11 +262,11 @@ PltFileManager::fillPatchFromPlt(
 
         // Current Plt level resolution matches our: lets interp and wrap it up
         if (rr == IntVect::TheUnitVector()) {
-          MultiFab temp(m_grids[pltlev], m_dmaps[pltlev], nComp, 0);
+          MultiFab temp(m_grids[pltlev], m_dmaps[pltlev], nComp, nghost);
           PhysBCFunct<GpuBndryFuncFab<FillExtDirDummy>> bndry_func(
             m_geoms[pltlev], {dummyBCRec}, FillExtDirDummy{});
           FillPatchSingleLevel(
-            temp, IntVect(0), 0.0, {&m_data[pltlev]}, {0.0}, pltComp, 0, nComp,
+            temp, nghost, 0.0, {&m_data[pltlev]}, {0.0}, pltComp, 0, nComp,
             m_geoms[pltlev], bndry_func, 0);
 
           a_mf.ParallelCopy(temp, 0, dataComp, nComp);
@@ -274,15 +275,16 @@ PltFileManager::fillPatchFromPlt(
         }
 
         // Otherwise do another InterpFromCoarseLevel
-        MultiFab temp(refine(m_grids[pltlev], rr), m_dmaps[pltlev], nComp, 0);
+        MultiFab temp(
+          refine(m_grids[pltlev], rr), m_dmaps[pltlev], nComp, nghost);
         PhysBCFunct<GpuBndryFuncFab<FillExtDirDummy>> crse_bndry_func(
           m_geoms[pltlev], {dummyBCRec}, FillExtDirDummy{});
         PhysBCFunct<GpuBndryFuncFab<FillExtDirDummy>> fine_bndry_func(
           a_level_geom, {dummyBCRec}, FillExtDirDummy{});
         InterpFromCoarseLevel(
-          temp, IntVect(0), 0.0, m_data[pltlev], pltComp, 0, nComp,
-          m_geoms[pltlev], a_level_geom, crse_bndry_func, 0, fine_bndry_func, 0,
-          rr, mapper, {dummyBCRec}, 0);
+          temp, nghost, 0.0, m_data[pltlev], pltComp, 0, nComp, m_geoms[pltlev],
+          a_level_geom, crse_bndry_func, 0, fine_bndry_func, 0, rr, mapper,
+          {dummyBCRec}, 0);
         a_mf.ParallelCopy(temp, 0, dataComp, nComp);
       }
 
@@ -306,7 +308,7 @@ PltFileManager::fillPatchFromPlt(
       PhysBCFunct<GpuBndryFuncFab<FillExtDirDummy>> fine_bndry_func(
         a_level_geom, {dummyBCRec}, FillExtDirDummy{});
       InterpFromCoarseLevel(
-        a_mf, IntVect(0), 0.0, m_data[0], pltComp, dataComp, nComp, m_geoms[0],
+        a_mf, nghost, 0.0, m_data[0], pltComp, dataComp, nComp, m_geoms[0],
         a_level_geom, crse_bndry_func, 0, fine_bndry_func, 0, lev0rr, mapper,
         {dummyBCRec}, 0);
     }
@@ -319,11 +321,11 @@ PltFileManager::fillPatchFromPlt(
 
       // Current Plt level resolution matches our: lets interp and wrap it up
       if (rr == IntVect::TheUnitVector()) {
-        MultiFab temp(m_grids[pltlev], m_dmaps[pltlev], nComp, 0);
+        MultiFab temp(m_grids[pltlev], m_dmaps[pltlev], nComp, nghost);
         PhysBCFunct<GpuBndryFuncFab<FillExtDirDummy>> bndry_func(
           m_geoms[pltlev], {dummyBCRec}, FillExtDirDummy{});
         FillPatchSingleLevel(
-          temp, IntVect(0), 0.0, {&m_data[pltlev]}, {0.0}, pltComp, 0, nComp,
+          temp, nghost, 0.0, {&m_data[pltlev]}, {0.0}, pltComp, 0, nComp,
           m_geoms[pltlev], bndry_func, 0);
 
         a_mf.ParallelCopy(temp, 0, dataComp, nComp);
@@ -332,15 +334,16 @@ PltFileManager::fillPatchFromPlt(
       }
 
       // Otherwise do another InterpFromCoarseLevel
-      MultiFab temp(refine(m_grids[pltlev], rr), m_dmaps[pltlev], nComp, 0);
+      MultiFab temp(
+        refine(m_grids[pltlev], rr), m_dmaps[pltlev], nComp, nghost);
       PhysBCFunct<GpuBndryFuncFab<FillExtDirDummy>> crse_bndry_func(
         m_geoms[pltlev], {dummyBCRec}, FillExtDirDummy{});
       PhysBCFunct<GpuBndryFuncFab<FillExtDirDummy>> fine_bndry_func(
         a_level_geom, {dummyBCRec}, FillExtDirDummy{});
       InterpFromCoarseLevel(
-        temp, IntVect(0), 0.0, m_data[pltlev], pltComp, 0, nComp,
-        m_geoms[pltlev], a_level_geom, crse_bndry_func, 0, fine_bndry_func, 0,
-        rr, mapper, {dummyBCRec}, 0);
+        temp, nghost, 0.0, m_data[pltlev], pltComp, 0, nComp, m_geoms[pltlev],
+        a_level_geom, crse_bndry_func, 0, fine_bndry_func, 0, rr, mapper,
+        {dummyBCRec}, 0);
       a_mf.ParallelCopy(temp, 0, dataComp, nComp);
     }
   }
