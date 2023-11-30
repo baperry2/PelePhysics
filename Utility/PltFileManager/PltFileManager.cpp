@@ -199,6 +199,8 @@ PltFileManager::fillPatchFromPlt(
     readPlotFileData();
   }
 
+  // Note: if requested, ghost cells are fillpatched with these
+  // dummy domain BCs, not proper domain BCs
   Vector<BCRec> dummyBCRec(nComp);
   for (int idim = 0; idim < AMREX_SPACEDIM; idim++) {
     if (a_level_geom.isPeriodic(idim)) {
