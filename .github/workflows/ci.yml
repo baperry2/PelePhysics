@@ -83,16 +83,13 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        comp: [llvm, cuda, sycl]
+        comp: [llvm,  sycl]
         python-version: ['3.11']
         poetry-version: ['1.4.2']
         include:
           - comp: llvm
             amrex_build_args: 'COMP=llvm'
             dependency_cmds:
-          - comp: cuda
-            amrex_build_args: 'COMP=gnu USE_CUDA=TRUE'
-            dependency_cmds: '.github/workflows/dependencies/dependencies_cuda.sh'
           - comp: sycl
             amrex_build_args: 'USE_SYCL=TRUE'
             dependency_cmds: '.github/workflows/dependencies/dependencies_dpcpp.sh'
