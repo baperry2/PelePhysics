@@ -45,7 +45,7 @@ public:
 
   ~NNFuncParams() {}
 
-  virtual void initialize()
+   void initialize()
   {
     m_h_nnf_data.manmodel = ManifoldModel::NEURAL_NET;
 
@@ -229,7 +229,7 @@ public:
     amrex::Print() << std::endl;
   }
 
-  virtual void allocate()
+   void allocate()
   {
     // if(!m_device_allocated)
     // {
@@ -240,7 +240,7 @@ public:
     // }
   }
 
-  virtual void deallocate()
+   void deallocate()
   {
     amrex::The_Pinned_Arena()->free(m_h_nnf_data.varnames);
     amrex::The_Pinned_Arena()->free(m_h_nnf_data.dimnames);
@@ -251,7 +251,7 @@ public:
     // }
   }
 
-  virtual void sync_to_device()
+   void sync_to_device()
   {
     // if(!m_device_allocated)
     // {
@@ -271,9 +271,9 @@ public:
     torch::jit::script::Module nnmodel;
   };
 
-  virtual ManFuncData& host_manfunc_data() { return m_h_nnf_data; }
+   ManFuncData& host_manfunc_data() { return m_h_nnf_data; }
 
-  virtual ManFuncData* device_manfunc_data()
+   ManFuncData* device_manfunc_data()
   {
     return &m_h_nnf_data;
     // return m_d_nnf_data;
@@ -307,7 +307,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void
+   void
   get_value(const int ivar, const amrex::Real indata[], amrex::Real& out)
   {
     // Ostensibly cannot use from_blob because the indata array is const
@@ -320,7 +320,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void get_values(
+   void get_values(
     const int nvar,
     const int ivar[],
     const amrex::Real indata[],
@@ -336,7 +336,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void get_all_values(const amrex::Real indata[], amrex::Real out[])
+   void get_all_values(const amrex::Real indata[], amrex::Real out[])
   {
     // Ostensibly cannot use from_blob because the indata array is const
     torch::Tensor intensor =
@@ -348,7 +348,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void
+   void
   get_derivs(const int ivar, const amrex::Real indata[], amrex::Real derivs[])
   {
     // Ostensibly cannot use from_blob because the indata array is const
@@ -361,7 +361,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual ManifoldModel model() { return nnf_data->manmodel; }
+   ManifoldModel model() { return nnf_data->manmodel; }
 
 private:
   // Variables
@@ -407,7 +407,7 @@ private:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void get_all_values(const torch::Tensor& indata, amrex::Real out[])
+   void get_all_values(const torch::Tensor& indata, amrex::Real out[])
   {
     torch::Tensor predvars = eval_model(indata);
     auto acc = predvars.accessor<amrex::Real, 1>();

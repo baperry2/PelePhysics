@@ -13,7 +13,7 @@ public:
 
   ~NNFuncParams() {}
 
-  virtual void initialize()
+   void initialize()
   {
     m_h_nnf_data.manmodel = ManifoldModel::NEURAL_NET;
 
@@ -210,7 +210,7 @@ public:
     amrex::Print() << std::endl;
   }
 
-  virtual void allocate()
+   void allocate()
   {
     if (!m_device_allocated) {
       m_d_nnf_data = static_cast<NNFuncData*>(
@@ -220,7 +220,7 @@ public:
     }
   }
 
-  virtual void deallocate()
+   void deallocate()
   {
     amrex::The_Pinned_Arena()->free(m_h_nnf_data.nnrdata);
     amrex::The_Pinned_Arena()->free(m_h_nnf_data.nnidata);
@@ -231,7 +231,7 @@ public:
     }
   }
 
-  virtual void sync_to_device()
+   void sync_to_device()
   {
     if (!m_device_allocated) {
       amrex::Abort("Device params not allocated yet");
@@ -249,9 +249,9 @@ public:
     char nn_filename[len_str + 1]; // Path to neural network file
   };
 
-  virtual ManFuncData& host_manfunc_data() { return m_h_nnf_data; }
+   ManFuncData& host_manfunc_data() { return m_h_nnf_data; }
 
-  virtual ManFuncData* device_manfunc_data() { return m_d_nnf_data; }
+   ManFuncData* device_manfunc_data() { return m_d_nnf_data; }
 
   NNFuncData& host_nnfunc_data() { return m_h_nnf_data; }
 
@@ -280,7 +280,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void
+   void
   get_value(const int ivar, const amrex::Real indata[], amrex::Real& out)
   {
     out = nnmodel(indata)[ivar];
@@ -288,7 +288,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void get_values(
+   void get_values(
     const int nvar,
     const int ivar[],
     const amrex::Real indata[],
@@ -302,7 +302,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void get_all_values(const amrex::Real indata[], amrex::Real out[])
+   void get_all_values(const amrex::Real indata[], amrex::Real out[])
   {
     const amrex::Real* outdata = nnmodel(indata);
     for (int i = 0; i < nnf_data->Nvar; i++) {
@@ -312,7 +312,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void
+   void
   get_derivs(const int ivar, const amrex::Real indata[], amrex::Real derivs[])
   {
     // Use first-order finite difference approach for now
@@ -336,7 +336,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual ManifoldModel model() { return nnf_data->manmodel; }
+   ManifoldModel model() { return nnf_data->manmodel; }
 
 private:
   // Variables

@@ -14,9 +14,9 @@ class TabFuncParams : public ManFuncParams
 {
 public:
   TabFuncParams() {}
-  virtual ~TabFuncParams() {}
+   ~TabFuncParams() {}
 
-  virtual void initialize()
+   void initialize()
   {
     m_h_tf_data.manmodel = ManifoldModel::TABLE;
 
@@ -151,7 +151,7 @@ public:
     amrex::Real* values;
   };
 
-  virtual void allocate()
+   void allocate()
   {
     if (!m_device_allocated) {
       m_d_tf_data = static_cast<TabFuncData*>(
@@ -161,7 +161,7 @@ public:
     }
   }
 
-  virtual void deallocate()
+   void deallocate()
   {
     amrex::The_Pinned_Arena()->free(m_h_tf_data.dimLengths);
     amrex::The_Pinned_Arena()->free(m_h_tf_data.dimDataSpacing);
@@ -173,7 +173,7 @@ public:
       amrex::The_Device_Arena()->free(m_d_tf_data);
   }
 
-  virtual void sync_to_device()
+   void sync_to_device()
   {
     if (!m_device_allocated) {
       amrex::Abort("Device params not allocated yet");
@@ -183,9 +183,9 @@ public:
     }
   }
 
-  virtual ManFuncData& host_manfunc_data() { return m_h_tf_data; }
+   ManFuncData& host_manfunc_data() { return m_h_tf_data; }
 
-  virtual ManFuncData* device_manfunc_data() { return m_d_tf_data; }
+   ManFuncData* device_manfunc_data() { return m_d_tf_data; }
 
   TabFuncData& host_tabfunc_data() { return m_h_tf_data; }
 
@@ -213,7 +213,7 @@ public:
   // Lookup directly if you already know index
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void
+   void
   get_value(const int ivar, const amrex::Real interpdata[], amrex::Real& out)
   {
     // Get alphas and indices
@@ -230,7 +230,7 @@ public:
   // Lookup a few variables directly if you already know indices
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void get_values(
+   void get_values(
     const int nvar,
     const int ivar[],
     const amrex::Real interpdata[],
@@ -254,7 +254,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void get_all_values(const amrex::Real interpdata[], amrex::Real out[])
+   void get_all_values(const amrex::Real interpdata[], amrex::Real out[])
   {
     // Get alphas and indices
     int indices[MAXD_TABLE];
@@ -273,7 +273,7 @@ public:
   // finite difference
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void
+   void
   get_derivs(int ivar, const amrex::Real derivloc[], amrex::Real derivs[])
   {
     // Get alphas and indices
@@ -290,7 +290,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual ManifoldModel model() { return tf_data->manmodel; }
+   ManifoldModel model() { return tf_data->manmodel; }
 
   /*
   int idx_density;

@@ -92,7 +92,7 @@ dim_to_numel(int* dim, size_t ndim)
 class NNLayer
 {
 public:
-  virtual ~NNLayer() {}
+   ~NNLayer() {}
 
   // Template for CPU-only constructor to be used when reading in a file
   // NNLayer(std::vector<char>& types, std::vector<std::vector<int>>& sizes,
@@ -101,17 +101,17 @@ public:
   // Inputs are size nin, outputs nout (see below). Outputs should be assumed to
   // be uninitialized
   AMREX_GPU_HOST_DEVICE
-  virtual void operator()(
-    const amrex::Real* inputs, amrex::Real* outputs, const int nin) = 0;
+   void operator()(
+    const amrex::Real* inputs, amrex::Real* outputs, const int nin);
   // Return the number of floating point parameters for the layer
   AMREX_GPU_HOST_DEVICE
-  virtual int nfparams() = 0;
+   int nfparams();
   // Return the number of integer parameters for the layer, including sizes
   AMREX_GPU_HOST_DEVICE
-  virtual int niparams() = 0;
+   int niparams();
   // Pack the layer into sections of Real and int arrays; assume memory already
   // allocated
-  virtual void pack(amrex::Real* nnrd, int* nnid) = 0;
+   void pack(amrex::Real* nnrd, int* nnid);
 
   // Dimension introduced by the layer, replacing the n2 from the input
   // dimensions. -1 implies no change in shape
@@ -171,7 +171,7 @@ public:
     nout = bsize[0];
   }
 
-  virtual ~LinearNNLayer()
+   ~LinearNNLayer()
   {
     if (owns_data) {
       delete[] weight;
@@ -183,7 +183,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void
+   void
   operator()(const amrex::Real* inputs, amrex::Real* outputs, const int nin)
   {
     for (int j = 0; j < nout; j++) {
@@ -201,13 +201,13 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual int nfparams() { return dim_to_numel(wsize, 2) + bsize[0]; }
+   int nfparams() { return dim_to_numel(wsize, 2) + bsize[0]; }
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual int niparams() { return 2; }
+   int niparams() { return 2; }
 
-  virtual void pack(amrex::Real* nnrd, int* nnid)
+   void pack(amrex::Real* nnrd, int* nnid)
   {
     for (int j = 0; j < wsize[0]; j++) {
       for (int i = 0; i < wsize[1]; i++) {
@@ -261,7 +261,7 @@ public:
     neg_slope = nnrd;
   }
 
-  virtual ~LeakyReluNNLayer()
+   ~LeakyReluNNLayer()
   {
     if (owns_data) {
       delete neg_slope;
@@ -270,7 +270,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void
+   void
   operator()(const amrex::Real* inputs, amrex::Real* outputs, const int nin)
   {
     for (int i = 0; i < nin; i++) {
@@ -281,13 +281,13 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual int nfparams() { return 1; }
+   int nfparams() { return 1; }
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual int niparams() { return 0; }
+   int niparams() { return 0; }
 
-  virtual void pack(amrex::Real* nnrd, int* nnid) { nnrd[0] = neg_slope[0]; }
+   void pack(amrex::Real* nnrd, int* nnid) { nnrd[0] = neg_slope[0]; }
 
 private:
   bool owns_data = true;
@@ -339,7 +339,7 @@ public:
     bias = nnrd + wsize[0];
   }
 
-  virtual ~BatchNorm1dNNLayer()
+   ~BatchNorm1dNNLayer()
   {
     if (owns_data) {
       delete[] weight;
@@ -351,7 +351,7 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual void
+   void
   operator()(const amrex::Real* inputs, amrex::Real* outputs, const int nin)
   {
     for (int i = 0; i < nin; i++) {
@@ -361,13 +361,13 @@ public:
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual int nfparams() { return wsize[0] + bsize[0]; }
+   int nfparams() { return wsize[0] + bsize[0]; }
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  virtual int niparams() { return 1; }
+   int niparams() { return 1; }
 
-  virtual void pack(amrex::Real* nnrd, int* nnid)
+   void pack(amrex::Real* nnrd, int* nnid)
   {
     for (int i = 0; i < wsize[0]; i++) {
       nnrd[i] = weight[i];

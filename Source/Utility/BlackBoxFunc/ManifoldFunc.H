@@ -9,10 +9,10 @@ enum class ManifoldModel { TABLE = 0, NEURAL_NET = 1 };
 class ManFuncParams
 {
 public:
-  virtual void initialize() = 0;
-  virtual void allocate() = 0;
-  virtual void deallocate() = 0;
-  virtual void sync_to_device() = 0;
+   void initialize();
+   void allocate();
+   void deallocate();
+   void sync_to_device();
 
   struct ManFuncData
   {
@@ -28,10 +28,10 @@ public:
     char* varnames; // Names of the output variables
   };
 
-  virtual ManFuncData& host_manfunc_data() = 0;
-  virtual ManFuncData* device_manfunc_data() = 0;
+   ManFuncData& host_manfunc_data();
+   ManFuncData* device_manfunc_data();
 
-  virtual ~ManFuncParams() {}
+   ~ManFuncParams() {}
 
 }; // class ManFuncParams
 
@@ -62,29 +62,29 @@ class ManifoldFunc
 {
 public:
   AMREX_GPU_HOST_DEVICE
-  virtual void
-  get_value(const int ivar, const amrex::Real indata[], amrex::Real& out) = 0;
+   void
+  get_value(const int ivar, const amrex::Real indata[], amrex::Real& out);
 
   AMREX_GPU_HOST_DEVICE
-  virtual void get_values(
+   void get_values(
     const int nvar,
     const int ivar[],
     const amrex::Real indata[],
-    amrex::Real out[]) = 0;
+    amrex::Real out[]);
 
   AMREX_GPU_HOST_DEVICE
-  virtual void
-  get_all_values(const amrex::Real indata[], amrex::Real out[]) = 0;
+   void
+  get_all_values(const amrex::Real indata[], amrex::Real out[]);
 
   AMREX_GPU_HOST_DEVICE
-  virtual void get_derivs(
-    const int ivar, const amrex::Real indata[], amrex::Real derivs[]) = 0;
+   void get_derivs(
+    const int ivar, const amrex::Real indata[], amrex::Real derivs[]);
 
   AMREX_GPU_HOST_DEVICE
-  virtual ManifoldModel model() = 0;
+   ManifoldModel model();
 
   AMREX_GPU_HOST_DEVICE
-  virtual ~ManifoldFunc() {}
+   ~ManifoldFunc() {}
 
 }; // class ManifoldFunc
 } // namespace physics
