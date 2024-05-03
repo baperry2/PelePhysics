@@ -328,18 +328,18 @@ struct Manifold
 
   AMREX_GPU_HOST_DEVICE
   Manifold(const EosParm<Manifold>* eparm)
+    : eosparm(eparm),
+      manfunc_here(
+        static_cast<TabFuncParams::TabFuncData*>(eosparm->manf_data)),
+      manfunc(&manfunc_here)
   {
-    eosparm = eparm;
+    /*
+  eosparm = eparm;
 
-    if (eosparm->manf_data->manmodel == ManifoldModel::TABLE) {
-      TabFuncParams::TabFuncData* tf_data =
-        static_cast<TabFuncParams::TabFuncData*>(eosparm->manf_data);
-      manfunc = new pele::physics::TabFunc(tf_data);
-    } else {
-      NNFuncParams::NNFuncData* nnf_data =
-        static_cast<NNFuncParams::NNFuncData*>(eosparm->manf_data);
-      manfunc = new pele::physics::NNFunc(nnf_data);
-    }
+    TabFuncParams::TabFuncData* tf_data =
+      static_cast<TabFuncParams::TabFuncData*>(eosparm->manf_data);
+    manfunc = pele::physics::TabFunc(tf_data);
+    */
   }
 
   template <class... Args>
@@ -350,11 +350,12 @@ struct Manifold
   }
 
   AMREX_GPU_HOST_DEVICE
-  ~Manifold() { delete manfunc; }
+  ~Manifold() {}
 
 private:
-  pele::physics::ManifoldFunc* manfunc;
   const EosParm<Manifold>* eosparm;
+  pele::physics::TabFunc manfunc_here;
+  pele::physics::TabFunc* manfunc;
 };
 
 } // namespace eos

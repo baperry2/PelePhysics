@@ -19,7 +19,8 @@ main(int argc, char* argv[])
     amrex::ParmParse pp;
 
 #ifdef USE_MANIFOLD_EOS
-    std::unique_ptr<pele::physics::ManFuncParams> manfunc_par;
+    pele::physics::TabFuncParams manfunc_par_here;
+    pele::physics::TabFuncParams* manfunc_par = &manfunc_par_here;
     pele::physics::transport::TransportParams<
       pele::physics::PhysicsType::transport_type>
       trans_parms;
@@ -27,19 +28,9 @@ main(int argc, char* argv[])
     amrex::ParmParse ppm("manifold");
     std::string manifold_model;
     ppm.get("model", manifold_model);
-    if (manifold_model == "Table") {
-      manfunc_par.reset(new pele::physics::TabFuncParams());
-      amrex::Print() << " Initialization of Table (CPP)... \n";
-      manfunc_par->initialize();
-      trans_parms.allocate(manfunc_par->device_manfunc_data());
-    } else if (manifold_model == "NeuralNet") {
-      manfunc_par.reset(new pele::physics::NNFuncParams());
-      amrex::Print() << " Initialization of Neural Net Func. (CPP)... \n";
-      manfunc_par->initialize();
-      trans_parms.allocate(manfunc_par->device_manfunc_data());
-    } else {
-      amrex::Error("Invalid manifold model!");
-    }
+    amrex::Print() << " Initialization of Table (CPP)... \n";
+    manfunc_par->initialize();
+    trans_parms.allocate(manfunc_par->device_manfunc_data());
 #else
     pele::physics::transport::TransportParams<
       pele::physics::PhysicsType::transport_type>
