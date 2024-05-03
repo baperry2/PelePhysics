@@ -20,8 +20,8 @@ main(int argc, char* argv[])
       eos_parms;
     amrex::Print() << " Initialization of EOS (CPP)... \n";
 #ifdef USE_MANIFOLD_EOS
-    pele::physics::ManFuncParams manfunc_par_here;
-    pele::physics::ManFuncParams* manfunc_par = &manfunc_par_here;
+    pele::physics::TabFuncParams manfunc_par_here;
+    pele::physics::TabFuncParams* manfunc_par = &manfunc_par_here;
 
     amrex::ParmParse ppm("manifold");
     std::string manifold_model;
