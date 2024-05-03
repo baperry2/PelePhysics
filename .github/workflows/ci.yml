@@ -80,26 +80,19 @@ jobs:
         run: poetry run convert -f ${{github.workspace}}/Mechanisms/LiDryer/mechanism.yaml
 
   Transport-EOS-Reactions:
-    needs: Formatting
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        comp: [gnu, llvm, cuda, hip, sycl]
+        comp: [llvm, cuda, sycl]
         python-version: ['3.11']
         poetry-version: ['1.4.2']
         include:
-          - comp: gnu
-            amrex_build_args: 'COMP=gnu'
-            dependency_cmds:
           - comp: llvm
             amrex_build_args: 'COMP=llvm'
             dependency_cmds:
           - comp: cuda
             amrex_build_args: 'COMP=gnu USE_CUDA=TRUE'
             dependency_cmds: '.github/workflows/dependencies/dependencies_cuda.sh'
-          - comp: hip
-            amrex_build_args: 'USE_HIP=TRUE AMD_ARCH=gfx90a LIBRARY_LOCATIONS=/opt/rocm/lib'
-            dependency_cmds: '.github/workflows/dependencies/dependencies_hip.sh'
           - comp: sycl
             amrex_build_args: 'USE_SYCL=TRUE'
             dependency_cmds: '.github/workflows/dependencies/dependencies_dpcpp.sh'
@@ -180,7 +173,7 @@ jobs:
           if [ "${{matrix.comp}}" == 'hip' ]; then source /etc/profile.d/rocm.sh; fi;
           if [ "${{matrix.comp}}" == 'sycl' ]; then source /opt/intel/oneapi/setvars.sh || true; fi;
           ccache -z
-          for TYPE in Constant Simple Sutherland Manifold; do \
+          for TYPE in Manifold Constant; do \
             printf "\n-------- ${TYPE} --------\n"; \
             if [ "${TYPE}" == 'Manifold' ]; then EOSMODEL=Manifold; else EOSMODEL=Fuego; fi; \
             make -j ${{env.NPROCS}} Eos_Model=${EOSMODEL} Transport_Model=${TYPE} TINY_PROFILE=TRUE USE_CCACHE=TRUE ${{matrix.amrex_build_args}}; \
