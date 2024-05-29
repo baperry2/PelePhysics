@@ -8,9 +8,12 @@ namespace physics {
 namespace eos {
 
 // Default - runtime selectable Table vs. Network for MANIFOLD EOS
-// But if not using manifold, just keep table for simplicity
+// But if not using manifold, just keep 1D table for simplicity
 #ifndef MANIFOLD_EOS_TYPE
 #define MANIFOLD_EOS_TYPE 1
+#endif
+#ifndef MANIFOLD_DIM
+#define MANIFOLD_DIM 1
 #endif
 
 // Compile time choice for Table vs. Network vs. Runtime Selectable
