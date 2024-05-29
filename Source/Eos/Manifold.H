@@ -20,7 +20,7 @@ namespace eos {
 // Note right now Manifold EOS not supported for SYCL at all
 // Runtime selection is  significant performnce hit
 #if MANIFOLD_EOS_TYPE == 1
-using ManifoldFuncType = TabFunc<NUM_SPECIES - 1>;
+using ManifoldFuncType = TabFunc<MANIFOLD_DIM>;
 #elif MANIFOLD_EOS_TYPE == 0
 using ManifoldFuncType = BlackBoxFunc;
 #elif MANIFOLD_EOS_TYPE == 2
