@@ -2,6 +2,7 @@
 	path = Submodules/sundials
 	url = https://github.com/LLNL/sundials.git
 	shallow = true
+	branch = main
 	fetchRecurseSubmodules = false
 [submodule "Submodules/amrex"]
 	path = Submodules/amrex
