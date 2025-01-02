@@ -95,7 +95,7 @@ jobs:
             dependency_cmds:
           - comp: cuda
             amrex_build_args: 'COMP=gnu USE_CUDA=TRUE'
-            dependency_cmds: 'Submodules/amrex/.github/workflows/dependencies/dependencies_nvcc.sh'
+            dependency_cmds: 'Submodules/amrex/.github/workflows/dependencies/dependencies_nvcc.sh 11.2'
           - comp: hip
             amrex_build_args: 'USE_HIP=TRUE AMD_ARCH=gfx90a LIBRARY_LOCATIONS=/opt/rocm/lib'
             dependency_cmds: 'Submodules/amrex/.github/workflows/dependencies/dependencies_hip.sh'
