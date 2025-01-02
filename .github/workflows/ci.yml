@@ -96,13 +96,13 @@ jobs:
             dependency_cmds:
           - comp: cuda
             amrex_build_args: 'COMP=gnu USE_CUDA=TRUE'
-            dependency_cmds: '.github/workflows/dependencies/dependencies_cuda.sh'
+            dependency_cmds: 'Submodules/amrex/.github/workflows/dependencies/dependencies_cuda.sh'
           - comp: hip
             amrex_build_args: 'USE_HIP=TRUE AMD_ARCH=gfx90a LIBRARY_LOCATIONS=/opt/rocm/lib'
-            dependency_cmds: '.github/workflows/dependencies/dependencies_hip.sh'
+            dependency_cmds: 'Submodules/amrex/.github/workflows/dependencies/dependencies_hip.sh'
           - comp: sycl
             amrex_build_args: 'USE_SYCL=TRUE'
-            dependency_cmds: '.github/workflows/dependencies/dependencies_dpcpp.sh'
+            dependency_cmds: 'Submodules/amrex/.github/workflows/dependencies/dependencies_dpcpp.sh'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
