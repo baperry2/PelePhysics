@@ -1,0 +1,46 @@
+ncells = 8 64 8
+max_grid_size  = 16
+initFromFile = 1
+initFile = /projects/safvto/hackathon/ReactEval_latest/plotfile_with_issue
+plotfile = plt_
+fuel_name = NC12H26
+#reactFormat = 1dArray
+reactFormat = Array4
+chem_integrator = "ReactorCvode"
+
+ode.enforce_forcing_zero=0  #Works only when reactfunc=2
+ode.dt  = 3.2e-7
+ode.ndt = 1
+ode.ode_ncells = 1
+ode.reactor_type  = 2 # 1=full e, 2=full h
+ode.verbose = 1
+ode.use_typ_vals = 0
+ode.rtol = 1e-6
+ode.atol = 1e-5
+
+# Select Linear solver for CVODE Newton direction
+# Options are [CPU] dense_direct / denseAJ_direct / sparse_direct / custom_direct / GMRES / precGMRES
+#             [GPU] sparse_direct / magma_direct / GMRES / precGMRES
+#cvode.solve_type = fixed_point
+cvode.solve_type = GMRES
+
+# If solve_type = precGMRES -> select preconditioner
+# Options are [CPU] dense_simplified_AJacobian / sparse_simplified_AJacobian / custom_simplified_AJacobian
+#              [GPU] cuSparse_simplified_AJacobian
+cvode.precond_type = cuSparse_simplified_AJacobian
+cvode.max_order = 4
+
+ode.implicit_solve = 1
+#ode.use_erkstep    = 0
+
+amrex.fpe_trap_invalid = 0
+amrex.fpe_trap_zero = 1
+amrex.fpe_trap_overflow = 1
+
+ode.bdf_nsubsteps=40
+
+#dodecane_lu_qss -->trial
+#ode.typ_vals=1.00E-01 2.22E-07 2.63E-07 1.82E-06 4.61E-08 2.21E-08 8.84E-05 4.09E-09 0.000223706 1.28E-09 4.81E-10 3.80E-09 1.20E-05 0.000202713 2.40E-08 1.04E-08 1.00E-10 2.38E-09 1.54E-09 3.61E-09 1.93E-09 1.76E-10 2.71E-09 1.00E-10 2.36E-08 2.64E-08 3.17E-08 7.13E-08 4.42E-08 1.00E-10 3.40E-08 1.00E-10 1.00E-10 1.00E-10 0.001299454 1900
+
+ode.typ_vals=1.e-4 2.e-04 5.e-04 4.e-03 6.e-06 2.e-04 1.e-02 1.e-7 2.e-02 5.e-9 1.e-9 1.0e-9 1.e-02 2.e-1 1.e-8 5.e-9 2.e-10 2.0e-10 1.e-8 4.e-9 1.e-9 1.e-9 2.e-9 1.e-15 1.e-9 1.e-9 1.e-9 4.0e-9 2.e-9 2.5e-9 1.9e-9 2.e-12 -2.e-11 1.e-11 1e-4 2456.54
+
