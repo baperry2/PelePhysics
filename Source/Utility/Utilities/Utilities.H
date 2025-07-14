@@ -89,7 +89,7 @@ rectangle_circle_intersection_area(
 // x             => x location
 // idxlo        <=> output st. xtable(idxlo) <= x < xtable(idxlo+1)
 // -----------------------------------------------------------
-AMREX_GPU_DEVICE
+AMREX_GPU_HOST_DEVICE
 AMREX_FORCE_INLINE
 void
 locate(const amrex::Real* xtable, const int n, const amrex::Real& x, int& idxlo)
