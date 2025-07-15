@@ -13,6 +13,10 @@ BL_NO_FORT = TRUE
 USE_SUNDIALS = TRUE
 VERBOSE = TRUE
 
+# EXTERN_CORE is simply a list of the directories we use in Eos, Reactions, Transport and Util
+# this list will be searched for runtime parameters
+EXTERN_CORE ?=
+
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
 include $(PELE_PHYSICS_HOME)/ThirdParty/Make.ThirdParty
@@ -128,22 +132,17 @@ include $(UTILITY_HOME)/TurbInflow/Make.package
 include $(UTILITY_HOME)/BlackBoxFunction/Make.package
 include $(UTILITY_HOME)/Utilities/Make.package
 
-ifeq ($(USE_AMREX_LIB), TRUE)
-  AMREX_LIBRARY_HOME ?= $(AMREX_HOME)
-  LIBDIR := $(AMREX_LIBRARY_HOME)/lib
-  INCDIR := $(AMREX_LIBRARY_HOME)/include
-  COMPILE_CPP_FLAGS ?= $(shell awk '/Cflags:/ {$$1=$$2=""; print $$0}' $(LIBDIR)/pkgconfig/amrex.pc)
-  COMPILE_LIB_FLAGS ?= $(shell awk '/Libs:/ {$$1=$$2=""; print $$0}' $(LIBDIR)/pkgconfig/amrex.pc)
-else
-  Pdirs := Base Boundary AmrCore
-  Bpack	+= $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
-  Blocs	+= $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir))
-endif
+Pdirs   := Base Boundary AmrCore
+
+Bpack	+= $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
+Blocs	+= $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir))
 
 include $(Bpack)
 
 INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
+
+EXTERN_PARAMETERS := $(shell $(AMREX_HOME)/Tools/F_scripts/findparams.py $(EXTERN_CORE))
 
 # job_info support
 CEXE_sources += AMReX_buildInfo.cpp
@@ -166,11 +165,6 @@ else
 endif
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.rules
-
-ifeq ($(USE_AMREX_LIB), TRUE)
-  CXXFLAGS += -I$(INCDIR) $(COMPILE_CPP_FLAGS)
-  LDFLAGS += -L$(LIBDIR) $(COMPILE_LIB_FLAGS)
-endif
 
 ifeq ($(USE_CUDA),TRUE)
    CXXFLAGS+=-Xptxas --disable-optimizer-constants
