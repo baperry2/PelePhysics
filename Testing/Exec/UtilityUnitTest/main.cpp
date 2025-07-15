@@ -17,7 +17,7 @@ main(int argc, char* argv[])
   amrex::Print() << "Unit Conversion Tests Passed" << std::endl;
 
   // Test locate function
-  amrex::Array sorted_data{0.0, 0.2, 0.5, 0.9, 1.0};
+  amrex::Array<amrex::Real, 5> sorted_data{0.0, 0.2, 0.5, 0.9, 1.0};
   int length = sorted_data.size();
   int idxlo = -1;
   amrex::Real x = -50.0;
