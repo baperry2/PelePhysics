@@ -195,6 +195,14 @@ jobs:
           if [ "${{matrix.comp}}" == 'hip' ]; then source /etc/profile.d/rocm.sh; fi;
           if [ "${{matrix.comp}}" == 'sycl' ]; then source /opt/intel/oneapi/setvars.sh || true; fi;
           ccache -z
+
+          cd ${{github.workspace}}/PelePhysics-${{matrix.comp}}/Submodules/amrex/
+          ./configure --dim=2 --with-mpi=no --enable-particle=no --with-fortran=no --enable-linear-solver=no --enable-fortran-api=no --prefix=./ --enable-tiny-profile=yes ${{matrix.amrex_build_flags}}
+          make -j
+          make install
+          cd -
+          pwd
+
           for TYPE in Constant Simple Sutherland Manifold; do \
             printf "\n-------- ${TYPE} --------\n"; \
             if [ "${TYPE}" == 'Manifold' ]; then EOSMODEL=Manifold; else EOSMODEL=Fuego; fi; \
