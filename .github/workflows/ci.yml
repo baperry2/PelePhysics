@@ -176,16 +176,16 @@ jobs:
             which icpx || echo "icpx not in PATH!"; \
           fi
           cmake --version
+          printf "\n-------- Install PelePhysics TPLs --------\n"; \
           make TPL ${{matrix.amrex_build_args}};
           if [ "${{matrix.comp}}" == 'gnu' ] || [ "${{matrix.comp}}" == 'llvm' ]; then \
-            printf "\n-------- Install PelePhysics TPLs --------\n"; \
-            make TPL DEBUG=TRUE TINY_PROFILE=TRUE ${{matrix.amrex_build_args}};
+            #make TPL DEBUG=TRUE TINY_PROFILE=TRUE ${{matrix.amrex_build_args}};
             cd ${{github.workspace}}/PelePhysics-${{matrix.comp}}/Support/ceptr
             poetry install
           fi
           printf "\n-------- Install AMReX --------\n"; \
           cd ${{github.workspace}}/PelePhysics-${{matrix.comp}}/Submodules/amrex/
-          ./configure --dim=2 --with-mpi=no --enable-particle=no --with-fortran=no --enable-fortran-api=no --prefix=./ --enable-tiny-profile=yes ${{matrix.amrex_build_flags}}
+          ./configure --dim=2 --with-mpi=no --enable-particle=no --with-fortran=no --enable-linear-solver=no --enable-fortran-api=no --prefix=./ --enable-tiny-profile=yes ${{matrix.amrex_build_flags}}
           make -j
           make install
       - name: Test Transport
@@ -200,7 +200,7 @@ jobs:
             if [ "${TYPE}" == 'Manifold' ]; then EOSMODEL=Manifold; else EOSMODEL=Fuego; fi; \
             if [ "${TYPE}" == 'Manifold' ]; then CHEMISTRY=Null; else CHEMISTRY=air; fi; \
             if [ "${TYPE}" != 'Manifold' ] || [ "${{matrix.comp}}" != 'sycl' ]; then \
-              make -j ${{env.NPROCS}} Eos_Model=${EOSMODEL} Chemistry_Model=${CHEMISTRY} Transport_Model=${TYPE} TINY_PROFILE=TRUE USE_CCACHE=TRUE USE_AMREX_LIB=TRUE ${{matrix.amrex_build_args}}; \
+              make -j ${{env.NPROCS}} Eos_Model=${EOSMODEL} Chemistry_Model=${CHEMISTRY} Transport_Model=${TYPE} TINY_PROFILE=TRUE USE_AMREX_LIB=TRUE ${{matrix.amrex_build_args}}; \
             fi; \
             if [ "${{matrix.comp}}" == 'gnu' ] || [ "${{matrix.comp}}" == 'llvm' ]; then \
               ./Pele2d.${{matrix.comp}}.TPROF.ex inputs.2d_${TYPE}; \
