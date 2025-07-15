@@ -185,7 +185,7 @@ jobs:
           fi
           printf "\n-------- Install AMReX --------\n"; \
           cd ${{github.workspace}}/PelePhysics-${{matrix.comp}}/Submodules/amrex/
-          ./configure --dim=2 --with-mpi=no --enable-particle=no --with-fortan=no --enable-fortran-api=no --prefix=./ --enable-tiny-profile=yes ${{matrix.amrex_build_flags}}
+          ./configure --dim=2 --with-mpi=no --enable-particle=no --with-fortran=no --enable-fortran-api=no --prefix=./ --enable-tiny-profile=yes ${{matrix.amrex_build_flags}}
           make -j
           make install
       - name: Test Transport
