@@ -66,6 +66,10 @@ INCLUDE_LOCATIONS +=  $(AMREX_HOME)/Tools/C_scripts
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.rules
 
+ifeq ($(USE_CUDA),TRUE)
+   CXXFLAGS+=-Xptxas --disable-optimizer-constants
+endif
+
 clean::
 	$(SILENT) $(RM) AMReX_buildInfo.cpp
 
