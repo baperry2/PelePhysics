@@ -7,6 +7,7 @@ DEBUG      = FALSE
 
 # Compiler
 COMP       = gnu
+FCOMP      = gfortran
 USE_MPI    = FALSE
 USE_OMP    = FALSE
 USE_CUDA   = FALSE
