@@ -17,6 +17,17 @@ USE_HIP    = FALSE
 FUEGO_GAS  = TRUE
 TINY_PROFILE = FALSE
 
+# Activates use of SUNDIALS
+ifeq ($(USE_CUDA), TRUE)
+  PELE_USE_KLU = FALSE
+else
+  ifeq ($(USE_HIP), TRUE)
+    PELE_USE_KLU = FALSE
+  else
+    PELE_USE_KLU = FALSE
+  endif
+endif
+
 # define the location of the PELE_PHYSICS top directory
 PELE_PHYSICS_HOME    ?= ../../..
 
