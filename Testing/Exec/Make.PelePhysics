@@ -196,6 +196,10 @@ ifeq ($(USE_CUDA),TRUE)
    CXXFLAGS+=-Xptxas --disable-optimizer-constants
 endif
 
+ifeq ($(USE_SYCL), TRUE)
+   CXXFLAGS+=-fsycl-enable-function-pointers
+endif
+
 clean::
 	$(SILENT) $(RM) AMReX_buildInfo.cpp
 

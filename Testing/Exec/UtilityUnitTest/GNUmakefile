@@ -12,6 +12,7 @@ USE_MPI    = FALSE
 USE_OMP    = FALSE
 USE_CUDA   = FALSE
 USE_HIP    = FALSE
+USE_SYCL   = TRUE
 
 # PelePhysics
 FUEGO_GAS  = TRUE
